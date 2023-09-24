@@ -9,6 +9,7 @@
 * [🧬 Data Types](reference/data-types/README.md)
   * [🎭 User Information](reference/data-types/user-information.md)
   * [💬 Chats](reference/data-types/chats.md)
+  * [🤣 Content](reference/data-types/content.md)
 * [👾 API Reference](reference/api-reference/README.md)
   * [🔑 OAuth2](reference/api-reference/oauth2.md)
   * [🤖 Client](reference/api-reference/client.md)

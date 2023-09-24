@@ -31,17 +31,16 @@ description: A collection of data types relevant to Users on iFunny
     is_in_subscribers: boolean;
     num: <a data-footnote-ref href="#user-content-fn-4">UserNums</a>;
     nick_color: string; // "55FF00";
-    rating: Rating;
+    rating: <a data-footnote-ref href="#user-content-fn-5">UserRating</a>;
     original_nick: string; // If the user's name is against content policy
 }
 </code></pre>
 
-## Meme Experience
+### Meme Experience
 
-```typescript
-{
+<pre class="language-typescript"><code class="lang-typescript">{
     days: number;
-    rank: string; // MemeRank
+    rank: string; // <a data-footnote-ref href="#user-content-fn-6">MemeRank</a>
     badge_url: string; // `https://img.ifunny.co/meme_experience/${index}.png`
     badge_size: {
         w: number;
@@ -49,9 +48,9 @@ description: A collection of data types relevant to Users on iFunny
     };
     next_milestone: number;
 }
-```
+</code></pre>
 
-## Meme Rank
+### Meme Rank
 
 * Meme explorer (1-4)
 * Meme bro (5-24)
@@ -67,7 +66,7 @@ description: A collection of data types relevant to Users on iFunny
 * iFunny Veteran (1500-1999)
 * Chef's meme agent (2000+)
 
-## Profile Photo
+### Profile Photo
 
 ```typescript
 {
@@ -81,7 +80,7 @@ description: A collection of data types relevant to Users on iFunny
 }
 ```
 
-## Small Ban
+### Small Ban
 
 ```typescript
 {
@@ -91,7 +90,7 @@ description: A collection of data types relevant to Users on iFunny
 }
 ```
 
-## User Nums
+### User Nums
 
 ```typescript
 {
@@ -105,6 +104,30 @@ description: A collection of data types relevant to Users on iFunny
 }
 ```
 
+### User Rating
+
+```typescript
+{
+    points: number;
+    current_level: {
+    	id: string;
+	value: number;
+	points: number;
+    };
+    next_level: {
+    	id: string;
+	value: number;
+	points: number;
+    };
+    max_level: {
+    	id: string;
+	value: number;
+	points: number;
+    }; // Always has same values
+    is_show_level: boolean;
+}
+```
+
 [^1]: [#meme-experience](user-information.md#meme-experience "mention")
 
 [^2]: [#small-ban](user-information.md#small-ban "mention")
@@ -112,3 +135,7 @@ description: A collection of data types relevant to Users on iFunny
 [^3]: [#profile-photo](user-information.md#profile-photo "mention")
 
 [^4]: [#user-nums](user-information.md#user-nums "mention")
+
+[^5]: [#user-rating](user-information.md#user-rating "mention")
+
+[^6]: [#meme-rank](user-information.md#meme-rank "mention")
