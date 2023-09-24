@@ -4,6 +4,8 @@ description: The *unofficial* API documentation for iFunny
 
 # 🙂 iFunny API
 
+This GitBook is still a work in progress. There may be incomplete or even incorrect data
+
 ## Disclaimer
 
 {% hint style="warning" %}
