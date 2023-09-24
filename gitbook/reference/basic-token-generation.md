@@ -36,7 +36,7 @@ Choosing which token to generate depends on the API version being used as iFunny
 
 ### Step 3. Create your Basic Prefix
 
-Create your Basic Prefix in this format -> `{hex_string}_{client_id}`
+Create your Basic Prefix in this format -> `{hex_string}_{client_id}:`
 
 * `hex_string` -> Hex String generated in Step 2
 * `client_id` -> Client ID obtained as a pre-requisite
