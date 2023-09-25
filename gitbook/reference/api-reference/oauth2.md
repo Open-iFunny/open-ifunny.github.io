@@ -53,7 +53,7 @@ Your iFunny password
 {% swagger-response status="200: OK" description="Successfully logged in" %}
 {% tabs %}
 {% tab title="Schema" %}
-```json
+```typescript
 {
     access_token: "{bearer_token}",
     token_type: "bearer",
@@ -89,12 +89,13 @@ Typically returned when the username and password is incorrect
 {% swagger-response status="403: Forbidden" description="Captcha Error" %}
 {% tabs %}
 {% tab title="Schema" %}
-```json
+```typescript
 {
   error: "captcha_required",
   error_description: "Human verification is required",
   data: {
     captcha_url: "https://ifunny.co/captcha/{captcha_id}",
+    // Recaptcha is used when no user-agent is provided
     type: "fun_captcha" | "recaptcha"
   },
   status: 403
@@ -111,7 +112,7 @@ If you've received a Captcha Error, you need to open `data.captcha_url` in a bro
 {% swagger-response status="429: Too Many Requests" description="Too many user auths" %}
 {% tabs %}
 {% tab title="Schema" %}
-```json
+```typescript
 {
     error: "too_many_user_auths",
     error_description: "User auths rate exceed, please try again later.",
