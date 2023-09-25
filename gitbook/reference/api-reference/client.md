@@ -19,7 +19,7 @@ Bearer Token
 "iFunny"
 {% endswagger-parameter %}
 
-{% swagger-response status="200: OK" description="The account information" %}
+{% swagger-response status="200: OK" description="Account Information" %}
 {% tabs %}
 {% tab title="Schema" %}
 ```json
@@ -31,6 +31,16 @@ Bearer Token
 
 {% endtab %}
 {% endtabs %}
+{% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Invalid Grant" %}
+```typescript
+{
+    status: 401;
+    error: "invalid_grant";
+    error_description: "token is expired";
+}
+```
 {% endswagger-response %}
 {% endswagger %}
 
@@ -118,6 +128,10 @@ Bearer
 {% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
 "application/x-www-form-urlencoded"
 {% endswagger-parameter %}
+
+{% swagger-parameter in="body" name="email" type="String" %}
+URL encoded email address
+{% endswagger-parameter %}
 {% endswagger %}
 
 {% swagger method="get" path="/users/my/unread_chat_messages" baseUrl="https://api.ifunny.mobi/v4" summary="Unread Messages" %}
@@ -169,7 +183,7 @@ Bearer
 {% endswagger-response %}
 {% endswagger %}
 
-{% swagger method="get" path="" baseUrl="" summary="Notification Counters" %}
+{% swagger method="get" path="/counters" baseUrl="https://api.ifunny.mobi/v4" summary="Notification Counters" %}
 {% swagger-description %}
 Fetch the notification counters for the client
 {% endswagger-description %}
@@ -180,6 +194,10 @@ Basic | Bearer
 
 {% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
 "iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="is_new" type="Boolean" %}
+Doens't seem to affect responses
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Client Counters" %}

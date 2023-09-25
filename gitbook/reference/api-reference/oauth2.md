@@ -21,6 +21,55 @@ layout:
 These methods only include the headers **REQUIRED** to make the request successfully. This may be changed in the future but in order to save time I will not be including the miscellaneous headers
 {% endhint %}
 
+{% swagger method="post" path="/users" baseUrl="https://api.ifunny.mobi/v4" summary="Register Account" %}
+{% swagger-description %}
+Create a new account on iFunny
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Basic
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Content-Type" type="String" %}
+"application/x-www-form-urlencoded"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Account Created" %}
+```typescript
+{
+    data: {
+        id: string; // Your new user id
+    };
+    status: 200;
+}
+```
+{% endswagger-response %}
+
+{% swagger-response status="403: Forbidden" description="Invalid Email" %}
+```typescript
+{
+    error: "invalid_email";
+    error_description: "Domain of email was found in disposable domains list";
+    status: 403;
+}
+```
+{% endswagger-response %}
+
+{% swagger-response status="403: Forbidden" description="Email Already Exists" %}
+```typescript
+{
+    error: "email_exists";
+    error_description: "There is a user with this email";
+    status: 403;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
 {% swagger method="post" baseUrl="https://api.ifunny.mobi/v4" path="/oauth2/login" summary="Login to iFunny" %}
 {% swagger-description %}
 This will log you in with a username and password. This requires a Primed Basic Token which can be found here #
@@ -48,6 +97,10 @@ Your iFunny password
 
 {% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
 "iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
+"application/x-www-form-urlencoded"
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Successfully logged in" %}
@@ -143,6 +196,10 @@ Basic Token
 
 {% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
 "iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
+"application/x-www-form-urlencoded"
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Successfully refreshed Bearer" %}

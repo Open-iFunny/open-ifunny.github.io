@@ -17,6 +17,10 @@ Basic | Bearer
 "iFunny"
 {% endswagger-parameter %}
 
+{% swagger-parameter in="path" name="id" type="String" required="true" %}
+The ID of the user
+{% endswagger-parameter %}
+
 {% swagger-response status="200: OK" description="User Data" %}
 {% tabs %}
 {% tab title="Schema" %}
@@ -41,6 +45,10 @@ Basic | Bearer
 
 {% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
 "iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="path" name="nick" type="String" required="true" %}
+The nick of the user
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="User Profile" %}
