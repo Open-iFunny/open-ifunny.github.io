@@ -20,17 +20,12 @@ Bearer Token
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Account Information" %}
-{% tabs %}
-{% tab title="Schema" %}
-```json
-// Some code
+```typescript
+{
+    data: ClientProfile,
+    status: 200
+}
 ```
-{% endtab %}
-
-{% tab title="Second Tab" %}
-
-{% endtab %}
-{% endtabs %}
 {% endswagger-response %}
 
 {% swagger-response status="401: Unauthorized" description="Invalid Grant" %}
@@ -112,6 +107,36 @@ Empty if none
 {% endswagger-response %}
 {% endswagger %}
 
+{% swagger method="put" path="/account/email" baseUrl="https://api.ifunny.mobi/v4" summary="Update Email" %}
+{% swagger-description %}
+Update the email address associated with the client's account
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" required="true" name="ifunny-project-id" type="String" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Content-Type" type="String" %}
+"application/x-www-form-urlencoded"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="body" name="email" type="String" %}
+URL Encoded Email Address
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Successfully Updated" %}
+```typescript
+{
+    status: 200
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
 {% swagger method="post" path="/account/password_change_request" baseUrl="https://api.ifunny.mobi/v4" summary="Request Password Change" %}
 {% swagger-description %}
 Request an email to be sent to change a password
@@ -132,6 +157,45 @@ Bearer
 {% swagger-parameter in="body" name="email" type="String" %}
 URL encoded email address
 {% endswagger-parameter %}
+{% endswagger %}
+
+{% swagger method="get" path="/users/my/comments" baseUrl="https://api.ifunny/mobi/v4" summary="Client Commments" %}
+{% swagger-description %}
+Paginate through comments made by the Client
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" %}
+(Default = 30)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Client Comments" %}
+```typescript
+{
+    data: {
+        comments: {
+            items: Comment[];
+            paging: {
+                cursors: {
+                    prev: string; // UNIX in Seconds - "1632702392";
+                    next: string; // Unix in Seconds - "1632702392";
+                };
+                hasPrev: boolean;
+                hasNext: boolean;
+            };
+        };
+    };
+    status: 200;
+}
+```
+{% endswagger-response %}
 {% endswagger %}
 
 {% swagger method="get" path="/users/my/unread_chat_messages" baseUrl="https://api.ifunny.mobi/v4" summary="Unread Messages" %}
@@ -180,6 +244,68 @@ Bearer
     status: 200
 }
 </code></pre>
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/users/my/chat_invitations" baseUrl="https://api.ifunny.mobi/v4" summary="Chat Invitations" %}
+{% swagger-description %}
+Fetch the client's current pending chat invites
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Chat Invites" %}
+```typescript
+{
+    data: {
+        chats: Chat[];
+    };
+    status: 200
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/users/my/content_smiles" baseUrl="https://api.ifunny.mobi/v4" summary="Client Smiled Content" %}
+{% swagger-description %}
+Paginate through content that is smiled by the client
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" %}
+(Default = 30)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Smiled Content" %}
+```typescript
+{
+    data: {
+        content: {
+            items: Content[];
+            paging: {
+                cursors: {
+                    hasPrev: number;
+                    hasNext: number;
+                };
+            };
+        };
+    };
+    status: 200;
+}
+```
 {% endswagger-response %}
 {% endswagger %}
 

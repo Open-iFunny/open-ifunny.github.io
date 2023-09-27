@@ -34,8 +34,28 @@ Basic
 "iFunny"
 {% endswagger-parameter %}
 
-{% swagger-parameter in="header" name="Content-Type" type="String" %}
+{% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
 "application/x-www-form-urlencoded"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="body" name="reg_type" type="String" required="true" %}
+"pwd"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="body" name="nick" type="String" required="true" %}
+Username for the account
+{% endswagger-parameter %}
+
+{% swagger-parameter in="body" name="email" type="String" required="true" %}
+Email for the account
+{% endswagger-parameter %}
+
+{% swagger-parameter in="body" name="password" type="String" required="true" %}
+Password for the account
+{% endswagger-parameter %}
+
+{% swagger-parameter in="body" name="accepted_mailing" type="Number" required="true" %}
+0 for no | 1 for yes
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Account Created" %}
