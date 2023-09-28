@@ -7,64 +7,64 @@ description: A collection of data types relevant to Users on iFunny
 ## User
 
 <pre class="language-typescript"><code class="lang-typescript">{
-    is_subscribed_to_updates: boolean;
-    meme_experience: <a data-footnote-ref href="#user-content-fn-1">MemeExperience</a>;
-    messaging_privacy_status: string; // "closed" | "public" | "subscribers";
-    is_available_for_chat: boolean;
-    is_private: boolean;
-    messenger_token: string; // "1010101010101010101010101010101010101010";
-    messenger_active: boolean;
-    bans: <a data-footnote-ref href="#user-content-fn-2">SmallBan</a>[];
-    photo: <a data-footnote-ref href="#user-content-fn-3">ProfilePhoto</a>;
-    web_url: string; // `https://ifunny.co/user/${nick}`;
-    is_blocked: boolean;
-    are_you_blocked: boolean;
     about: string;
-    cover_url: string; // `https://img.ifunny.co/user_covers/${cover_id}.webp`;
+    are_you_blocked: boolean;
+    bans: <a data-footnote-ref href="#user-content-fn-1">SmallBan</a>[];
     cover_bg_color: string; // "2d2214";
+    cover_url: string; // `https://img.ifunny.co/user_covers/${cover_id}.webp`;
     id: string: // "3a5b7c86d4e9f21b2d56e0cf";
-    nick: string;
-    is_verified: boolean;
+    is_available_for_chat: boolean;
     is_banned: boolean;
+    is_blocked: boolean;
     is_deleted: boolean;
-    is_in_subscriptions: boolean;
     is_in_subscribers: boolean;
-    num: <a data-footnote-ref href="#user-content-fn-4">UserNums</a>;
+    is_in_subscriptions: boolean;
+    is_private: boolean;
+    is_subscribed_to_updates: boolean;
+    is_verified: boolean;
+    meme_experience: <a data-footnote-ref href="#user-content-fn-2">MemeExperience</a>;
+    messaging_privacy_status: "closed" | "public" | "subscribers"; // This is only checked client side
+    messenger_active: boolean;
+    messenger_token: string; // "1010101010101010101010101010101010101010";
     nick_color: string; // "55FF00";
+    nick: string;
+    num: <a data-footnote-ref href="#user-content-fn-3">UserNums</a>;
+    original_nick: string; // Different if the user's name is against content policy
+    photo: <a data-footnote-ref href="#user-content-fn-4">ProfilePhoto</a>;
     rating: <a data-footnote-ref href="#user-content-fn-5">UserRating</a>;
-    original_nick: string; // If the user's name is against content policy
+    web_url: string; // `https://ifunny.co/user/${nick}`;
 }
 </code></pre>
 
 ### Meme Experience
 
 <pre class="language-typescript"><code class="lang-typescript">{
-    days: number;
-    rank: string; // <a data-footnote-ref href="#user-content-fn-6">MemeRank</a>
-    badge_url: string; // `https://img.ifunny.co/meme_experience/${index}.png`
     badge_size: {
-        w: number;
         h: number;
+        w: number;
     };
+    badge_url: string; // `https://img.ifunny.co/meme_experience/${index}.png`
+    days: number;
     next_milestone: number;
+    rank: string; // <a data-footnote-ref href="#user-content-fn-6">MemeRank</a>
 }
 </code></pre>
 
-### Meme Rank
+### Meme Rank (days)
 
-* Meme explorer (1-4)
-* Meme bro (5-24)
-* Meme daddy (25-49)
-* Dank memer (50-99)
-* Meme master baker (100-199)
-* Deep fried memer (200-299)
-* Saucy memer (300-499)
-* Original Meme Gangster (500-665)
-* Meme demon (666-910)
-* Steal beams of memes (911-999)
-* Meme dealer (1000-1499)
-* iFunny Veteran (1500-1999)
-* Chef's meme agent (2000+)
+1. Meme explorer (1-4)
+2. Meme bro (5-24)
+3. Meme daddy (25-49)
+4. Dank memer (50-99)
+5. Meme master baker (100-199)
+6. Deep fried memer (200-299)
+7. Saucy memer (300-499)
+8. Original Meme Gangster (500-665)
+9. Meme demon (666-910)
+10. Steal beams of memes (911-999)
+11. Meme dealer (1000-1499)
+12. iFunny Veteran (1500-1999)
+13. Chef's meme agent (2000+)
 
 ### Profile Photo
 
@@ -84,8 +84,8 @@ description: A collection of data types relevant to Users on iFunny
 
 ```typescript
 {
-    id: string,
     date_until: number, // Seconds since unix epoch
+    id: string, 
     type: string;
 }
 ```
@@ -94,13 +94,13 @@ description: A collection of data types relevant to Users on iFunny
 
 ```typescript
 {
-    subscriptions: number;
-    subscribers: number;
-    total_posts: number;
+    achievements: number;
     created: number;
     featured: number;
+    subscribers: number;
+    subscriptions: number;
+    total_posts: number;
     total_smiles: number;
-    achievements: number;
 }
 ```
 
@@ -119,22 +119,23 @@ description: A collection of data types relevant to Users on iFunny
 	value: number;
 	points: number;
     };
+    // Max always has the same values
     max_level: {
     	id: string;
 	value: number;
 	points: number;
-    }; // Always has same values
+    };
     is_show_level: boolean;
 }
 ```
 
-[^1]: [#meme-experience](user-information.md#meme-experience "mention")
+[^1]: [#small-ban](user-information.md#small-ban "mention")
 
-[^2]: [#small-ban](user-information.md#small-ban "mention")
+[^2]: [#meme-experience](user-information.md#meme-experience "mention")
 
-[^3]: [#profile-photo](user-information.md#profile-photo "mention")
+[^3]: [#user-nums](user-information.md#user-nums "mention")
 
-[^4]: [#user-nums](user-information.md#user-nums "mention")
+[^4]: [#profile-photo](user-information.md#profile-photo "mention")
 
 [^5]: [#user-rating](user-information.md#user-rating "mention")
 
