@@ -92,11 +92,7 @@ Password for the account
 
 {% swagger method="post" baseUrl="https://api.ifunny.mobi/v4" path="/oauth2/login" summary="Login to iFunny" %}
 {% swagger-description %}
-This will log you in with a username and password. This requires a Primed Basic Token which can be found here #
-
-[basic-token-generation.md](../basic-token-generation.md "mention")
-
-
+This will log you in with a username and password. This requires a Primed Basic Token which can be found here #[basic-token-generation.md](../basic-token-generation.md "mention")
 {% endswagger-description %}
 
 {% swagger-parameter in="header" name="authorization" required="true" type="String" %}

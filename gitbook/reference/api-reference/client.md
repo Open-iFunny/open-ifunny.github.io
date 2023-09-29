@@ -342,4 +342,4 @@ Doens't seem to affect responses
 {% endswagger-response %}
 {% endswagger %}
 
-[^1]: [#appeal](../data-types/client.md#appeal "mention")
+[^1]: [#appeal](../data-types/client-types.md#appeal "mention")

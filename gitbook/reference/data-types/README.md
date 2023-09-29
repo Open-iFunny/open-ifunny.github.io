@@ -12,14 +12,14 @@ These data types are incomplete, but will be referenced in the response bodies o
 
 All data types sent by the iFunny API regarding user accounts. This includes all user profile information and some hidden information like ban information
 
-{% content-ref url="user-information.md" %}
-[user-information.md](user-information.md)
+{% content-ref url="user-types.md" %}
+[user-types.md](user-types.md)
 {% endcontent-ref %}
 
 ## iFunny Chats
 
 Start to understand the data types sent in chats for different WAMP events
 
-{% content-ref url="chats.md" %}
-[chats.md](chats.md)
+{% content-ref url="chat-types.md" %}
+[chat-types.md](chat-types.md)
 {% endcontent-ref %}

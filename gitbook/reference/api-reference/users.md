@@ -60,6 +60,6 @@ The nick of the user
 {% endswagger-response %}
 {% endswagger %}
 
-[^1]: [#user](../data-types/user-information.md#user "mention")
+[^1]: [#user](../data-types/user-types.md#user "mention")
 
-[^2]: [#user](../data-types/user-information.md#user "mention")
+[^2]: [#user](../data-types/user-types.md#user "mention")

@@ -2,7 +2,7 @@
 description: A collection of data types relevant to Users on iFunny
 ---
 
-# 🎭 User Information
+# 🎭 User Types
 
 ## User
 
@@ -129,14 +129,14 @@ description: A collection of data types relevant to Users on iFunny
 }
 ```
 
-[^1]: [#small-ban](user-information.md#small-ban "mention")
+[^1]: [#small-ban](user-types.md#small-ban "mention")
 
-[^2]: [#meme-experience](user-information.md#meme-experience "mention")
+[^2]: [#meme-experience](user-types.md#meme-experience "mention")
 
-[^3]: [#user-nums](user-information.md#user-nums "mention")
+[^3]: [#user-nums](user-types.md#user-nums "mention")
 
-[^4]: [#profile-photo](user-information.md#profile-photo "mention")
+[^4]: [#profile-photo](user-types.md#profile-photo "mention")
 
-[^5]: [#user-rating](user-information.md#user-rating "mention")
+[^5]: [#user-rating](user-types.md#user-rating "mention")
 
-[^6]: [#meme-rank](user-information.md#meme-rank "mention")
+[^6]: [#meme-rank](user-types.md#meme-rank "mention")
