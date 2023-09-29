@@ -1,8 +1,12 @@
+---
+description: Collection of API methods for interacting with content
+---
+
 # 😂 Content
 
 
 
-{% swagger method="get" path="/feeds/featured" baseUrl="https://api.ifunny.mobi/v4" summary="Get features" %}
+{% swagger method="get" path="/feeds/featured" baseUrl="https://api.ifunny.mobi/v4" summary="Scroll Featured" %}
 {% swagger-description %}
 Paginate through content in featured.
 {% endswagger-description %}
@@ -53,7 +57,7 @@ Seems to have no effect on responses
 {% endswagger-response %}
 {% endswagger %}
 
-{% swagger method="post" path="/feeds/collective" baseUrl="https://api.ifunny.mobi/v4" summary="Get Collective" %}
+{% swagger method="post" path="/feeds/collective" baseUrl="https://api.ifunny.mobi/v4" summary="Scroll Collective" %}
 {% swagger-description %}
 Paginate through content in collective. Unclear why iFunny made this a POST\
 instead of Get
@@ -72,11 +76,10 @@ Basic | Bearer
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Collective Content" %}
-```typescript
-{
+<pre class="language-typescript"><code class="lang-typescript">{
     data: {
         content: {
-            items: Content[];
+            items: <a data-footnote-ref href="#user-content-fn-2">Content</a>[];
             paging: {
                 cursors: {
                     prev: string; // Content ID
@@ -98,7 +101,54 @@ Basic | Bearer
     };
     status: 200;
 }
-```
+</code></pre>
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/timelines/home" baseUrl="https://api.ifunny.mobi/v4" summary="Scroll Subscription Timeline" %}
+{% swagger-description %}
+Paginate through content in the Client's subscription Feed
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" %}
+(Default = 30)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Subscription Feed" %}
+<pre class="language-typescript"><code class="lang-typescript">{
+    data: {
+        content: {
+            items: <a data-footnote-ref href="#user-content-fn-3">Content</a>[];
+            paging: {
+                cursors: {
+                    prev: string; // Content ID
+                    next: string; // Content ID
+                };
+                has_prev: boolean;
+                has_next: boolean;
+            };
+        };
+    };
+    notifications: {
+        counters: {
+            featured: number;
+            subscriptions: number;
+            collective: number;
+            news: number;
+            map: number;
+        };
+    };
+    status: 200;
+}
+</code></pre>
 {% endswagger-response %}
 {% endswagger %}
 
@@ -121,10 +171,58 @@ Basic | Bearer
 
 {% swagger-response status="200: OK" description="Content" %}
 <pre class="language-typescript"><code class="lang-typescript">{
-    data: <a data-footnote-ref href="#user-content-fn-2">Content</a>;
+    data: <a data-footnote-ref href="#user-content-fn-4">Content</a>;
     status: 200;
 }
 </code></pre>
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/feeds/reads/:ids" baseUrl="https://api.ifunny.mobi/v4" summary="Mark Content as Read" %}
+{% swagger-description %}
+Add content to the Client's "reads"
+{% endswagger-description %}
+
+{% swagger-parameter in="path" name="ids" type="String" required="true" %}
+List of Content IDs separated by a comma
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Marked as Read" %}
+```typescript
+{
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="delete" path="/feeds/reads" baseUrl="https://api.ifunny.mobi/v4" summary="Clear Read History" %}
+{% swagger-description %}
+This clears all content from the Client's "reads"
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Cleared Read History" %}
+```typescript
+{
+    status: 200;
+}
+```
 {% endswagger-response %}
 {% endswagger %}
 
@@ -146,7 +244,7 @@ Bearer
 {% endswagger-parameter %}
 
 {% swagger-parameter in="body" name="type" type="String" required="true" %}
-[Content Type](#user-content-fn-3)[^3]
+[Content Type](#user-content-fn-5)[^5]
 {% endswagger-parameter %}
 
 {% swagger-parameter in="body" name="tags" type="String[]" required="true" %}
@@ -419,4 +517,8 @@ Bearer
 
 [^2]: [#content](../data-types/content-types.md#content "mention")
 
-[^3]: [#content-type](../data-types/content-types.md#content-type "mention")
+[^3]: [#content](../data-types/content-types.md#content "mention")
+
+[^4]: [#content](../data-types/content-types.md#content "mention")
+
+[^5]: [#content-type](../data-types/content-types.md#content-type "mention")

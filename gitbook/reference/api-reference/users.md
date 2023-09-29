@@ -60,6 +60,112 @@ The nick of the user
 {% endswagger-response %}
 {% endswagger %}
 
+{% swagger method="put" path="/users/:id/subscribers" baseUrl="https://api.ifunny.mobi/v4" summary="Subscribe to User" %}
+{% swagger-description %}
+Add user to the Client's subscriptions
+{% endswagger-description %}
+
+{% swagger-parameter in="path" name="id" type="String" required="true" %}
+
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Subcribed" %}
+```typescript
+{
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="delete" path="/users/:id/subscribers" baseUrl="https://api.ifunny.mobi/v4" summary="Unsubscribe to User" %}
+{% swagger-description %}
+Removes the user from the Client's subscriptions
+{% endswagger-description %}
+
+{% swagger-parameter in="path" name="id" type="String" required="true" %}
+
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Unsubscribed" %}
+```typescript
+{
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="put" path="/users/:id/updates_subcribers" baseUrl="https://api.ifunny.mobi/v4" summary="Subscribe to User Updates" %}
+{% swagger-description %}
+Add the user to the Client's "updates" subscriptions\
+This will notify the client when the user uploads new content
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="path" name="id" type="String" %}
+
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Subscribed to Updates" %}
+```typescript
+{
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="delete" path="/users/:id/updates_subscribers" baseUrl="https://api.ifunny.mobi/v4" summary="Unsubscribe to User Updates" %}
+{% swagger-description %}
+Remove the user from the Client's "updates" subscriptions\
+This will stop iFunny notifying the Client when the user uploads new content
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="path" name="id" type="String" required="true" %}
+
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Unsubscribed to Updates" %}
+```typescript
+{
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
 [^1]: [#user](../data-types/user-types.md#user "mention")
 
 [^2]: [#user](../data-types/user-types.md#user "mention")
