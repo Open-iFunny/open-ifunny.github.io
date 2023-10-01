@@ -10,8 +10,9 @@ description: A collection of data types relevant to Users on iFunny
     about: string;
     are_you_blocked: boolean;
     bans: <a data-footnote-ref href="#user-content-fn-1">SmallBan</a>[];
-    cover_bg_color: string; // "2d2214";
-    cover_url: string; // `https://img.ifunny.co/user_covers/${cover_id}.webp`;
+    block_type?: "installation" | "user"; // Only displays when is_blocked is true
+    cover_bg_color?: string; // "2d2214";
+    cover_url?: string; // `https://img.ifunny.co/user_covers/${cover_id}.webp`;
     id: string: // "3a5b7c86d4e9f21b2d56e0cf";
     is_available_for_chat: boolean;
     is_banned: boolean;
@@ -26,12 +27,13 @@ description: A collection of data types relevant to Users on iFunny
     messaging_privacy_status: "closed" | "public" | "subscribers"; // This is only checked client side
     messenger_active: boolean;
     messenger_token: string; // "1010101010101010101010101010101010101010";
-    nick_color: string; // "55FF00";
+    nick_color?: string; // "55FF00";
     nick: string;
     num: <a data-footnote-ref href="#user-content-fn-3">UserNums</a>;
     original_nick: string; // Different if the user's name is against content policy
-    photo: <a data-footnote-ref href="#user-content-fn-4">ProfilePhoto</a>;
-    rating: <a data-footnote-ref href="#user-content-fn-5">UserRating</a>;
+    photo?: <a data-footnote-ref href="#user-content-fn-4">ProfilePhoto</a>;
+    rating?: <a data-footnote-ref href="#user-content-fn-5">UserRating</a>;
+    social?: <a data-footnote-ref href="#user-content-fn-6">UserSocials</a>;
     web_url: string; // `https://ifunny.co/user/${nick}`;
 }
 </code></pre>
@@ -46,7 +48,7 @@ description: A collection of data types relevant to Users on iFunny
     badge_url: string; // `https://img.ifunny.co/meme_experience/${index}.png`
     days: number;
     next_milestone: number;
-    rank: string; // <a data-footnote-ref href="#user-content-fn-6">MemeRank</a>
+    rank: string; // <a data-footnote-ref href="#user-content-fn-7">MemeRank</a>
 }
 </code></pre>
 
@@ -106,9 +108,8 @@ description: A collection of data types relevant to Users on iFunny
 
 ### User Rating
 
-```typescript
-{
-    points: number;
+<pre class="language-typescript"><code class="lang-typescript"><strong>{
+</strong>    points: number;
     current_level: {
     	id: string;
 	value: number;
@@ -127,7 +128,66 @@ description: A collection of data types relevant to Users on iFunny
     };
     is_show_level: boolean;
 }
+</code></pre>
+
+### User Socials
+
+{% tabs %}
+{% tab title="Socials" %}
+```typescript
+{
+    // Apple
+    apple?: UserSocial;
+    // FaceBook
+    fb?: UserSocial;
+    // Google
+    ggl?: UserSocial;
+    // Odnoklassniki (Russian Social Media)
+    ok?: UserSocial;
+    // Twitter
+    tw?: UserSocia;
+    // V Kontakte (Russian Social Media)
+    vk?: UserSocial;
+}
 ```
+{% endtab %}
+
+{% tab title="User Social" %}
+```typescript
+{
+    id: string;
+    is_hidden: boolean;
+    link: string;
+    nick?: string;
+}
+
+```
+{% endtab %}
+{% endtabs %}
+
+## Blocked User
+
+<pre class="language-typescript"><code class="lang-typescript">{
+    block_type: "installation" | "user";
+    id: string;
+    indirectly_blocked_users_count: number;
+    is_banned: boolean;
+    is_blocked: boolean;
+    is_deleted: boolean;
+    is_in_subscribers: boolean;
+    is_in_subscriptions: boolean;
+    is_verified: boolean;
+    nick: string;
+    nick_color?: string;
+    num: {
+        subscribers: number;
+        subscriptions: number;
+    };
+    original_nick: string;
+<strong>    photo?: <a data-footnote-ref href="#user-content-fn-8">ProfilePhoto</a>;
+</strong>    total_posts: number;
+}
+</code></pre>
 
 [^1]: [#small-ban](user-types.md#small-ban "mention")
 
@@ -139,4 +199,8 @@ description: A collection of data types relevant to Users on iFunny
 
 [^5]: [#user-rating](user-types.md#user-rating "mention")
 
-[^6]: [#meme-rank](user-types.md#meme-rank "mention")
+[^6]: [#user-socials](user-types.md#user-socials "mention")
+
+[^7]: [#meme-rank](user-types.md#meme-rank "mention")
+
+[^8]: [#profile-photo](user-types.md#profile-photo "mention")

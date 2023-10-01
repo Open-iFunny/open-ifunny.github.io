@@ -176,6 +176,16 @@ Basic | Bearer
 }
 </code></pre>
 {% endswagger-response %}
+
+{% swagger-response status="404: Not Found" description="Content Not Found" %}
+```typescript
+{ 
+    error: 'not_found',
+    error_description: 'Content not found',
+    status: 404 
+}
+```
+{% endswagger-response %}
 {% endswagger %}
 
 {% swagger method="get" path="/feeds/reads/:ids" baseUrl="https://api.ifunny.mobi/v4" summary="Mark Content as Read" %}

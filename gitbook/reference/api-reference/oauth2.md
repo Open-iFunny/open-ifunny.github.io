@@ -69,6 +69,16 @@ Password for the account
 ```
 {% endswagger-response %}
 
+{% swagger-response status="400: Bad Request" description="Bad Request" %}
+```typescript
+{
+    error: "bad_request" | "invalid_request";
+    error_description: string;
+    status: 400;
+};
+```
+{% endswagger-response %}
+
 {% swagger-response status="403: Forbidden" description="Invalid Email" %}
 ```typescript
 {
@@ -124,7 +134,7 @@ Your iFunny password
 {% tab title="Schema" %}
 ```typescript
 {
-    access_token: "{bearer_token}",
+    access_token:  string, // Your Bearer Token
     token_type: "bearer",
     expires_in: 315360000 // In seconds (10 Years)
 }
@@ -132,7 +142,12 @@ Your iFunny password
 {% endtab %}
 
 {% tab title="Description" %}
-The `expires_in` field is represented in seconds, which is equivalent to about 10 years
+The `expires_in` field is represented in seconds, which is equivalent to 10 years.
+
+{% hint style="info" %}
+Remember to format your bearer token in the Authorization header like so\
+`"Bearer {bearer}"`
+{% endhint %}
 {% endtab %}
 {% endtabs %}
 {% endswagger-response %}
@@ -199,7 +214,7 @@ Usually returned when the basic token has created too many bearer tokens too qui
 
 {% swagger method="post" path="/oauth2/login" baseUrl="https://api.ifunny.mobi/v4" summary="Refresh Bearer Token" %}
 {% swagger-description %}
-In case your Bearer Token has expired or is about to, this refreshes it
+
 {% endswagger-description %}
 
 {% swagger-parameter in="body" name="token" type="String" required="true" %}

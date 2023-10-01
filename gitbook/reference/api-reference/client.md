@@ -4,8 +4,6 @@ description: Collection of methods to interact with the client or user account
 
 # 🤖 Client
 
-
-
 {% swagger method="get" path="/account" baseUrl="https://api.ifunny.mobi/v4" summary="Fetch Profile" %}
 {% swagger-description %}
 Fetch account information for the client
@@ -28,12 +26,12 @@ Bearer Token
 ```
 {% endswagger-response %}
 
-{% swagger-response status="401: Unauthorized" description="Invalid Grant" %}
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
 ```typescript
 {
     status: 401;
-    error: "invalid_grant";
-    error_description: "token is expired";
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
 }
 ```
 {% endswagger-response %}
@@ -89,19 +87,19 @@ Empty if none
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Successfully edited" %}
-```json
+```typescript
 {
-    "status": 200
+    status: 200
 }
 ```
 {% endswagger-response %}
 
-{% swagger-response status="401: Unauthorized" description="Expired Token" %}
-```json
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
 {
-  "status": 401,
-  "error": "invalid_grant",
-  "error_description": "token is expired"
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
 }
 ```
 {% endswagger-response %}
@@ -120,11 +118,11 @@ Bearer
 "iFunny"
 {% endswagger-parameter %}
 
-{% swagger-parameter in="header" name="Content-Type" type="String" %}
+{% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
 "application/x-www-form-urlencoded"
 {% endswagger-parameter %}
 
-{% swagger-parameter in="body" name="email" type="String" %}
+{% swagger-parameter in="body" name="email" type="String" required="true" %}
 URL Encoded Email Address
 {% endswagger-parameter %}
 
@@ -132,6 +130,16 @@ URL Encoded Email Address
 ```typescript
 {
     status: 200
+}
+```
+{% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
 }
 ```
 {% endswagger-response %}
@@ -154,7 +162,7 @@ Bearer
 "application/x-www-form-urlencoded"
 {% endswagger-parameter %}
 
-{% swagger-parameter in="body" name="email" type="String" %}
+{% swagger-parameter in="body" name="email" type="String" required="true" %}
 URL encoded email address
 {% endswagger-parameter %}
 {% endswagger %}
@@ -196,6 +204,58 @@ Bearer
 }
 ```
 {% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/users/my/blocked" baseUrl="https://api.ifunny.mobi/v4" summary="Blocked Users" %}
+{% swagger-description %}
+Scroll through the Client's Blocked Users
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Blocked Users" %}
+```typescript
+{
+  users: {
+    items: BlockedUser[];
+    paging: {
+      cursors: {
+        next: string;
+        prev: string;
+      };
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+}
+```
+{% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
+}
+```
+{% endswagger-response %}
 {% endswagger %}
 
 {% swagger method="get" path="/users/my/unread_chat_messages" baseUrl="https://api.ifunny.mobi/v4" summary="Unread Messages" %}
@@ -218,6 +278,16 @@ Bearer
         unread_messages: number;
     };
     status: 200;
+}
+```
+{% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
 }
 ```
 {% endswagger-response %}
@@ -245,6 +315,16 @@ Bearer
 }
 </code></pre>
 {% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
+}
+```
+{% endswagger-response %}
 {% endswagger %}
 
 {% swagger method="get" path="/users/my/chat_invitations" baseUrl="https://api.ifunny.mobi/v4" summary="Chat Invitations" %}
@@ -256,7 +336,7 @@ Fetch the client's current pending chat invites
 Bearer
 {% endswagger-parameter %}
 
-{% swagger-parameter in="header" name="ifunny-project-id" type="String" %}
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
 "iFunny"
 {% endswagger-parameter %}
 
@@ -267,6 +347,16 @@ Bearer
         chats: Chat[];
     };
     status: 200
+}
+```
+{% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
 }
 ```
 {% endswagger-response %}
@@ -307,6 +397,63 @@ Bearer
 }
 ```
 {% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/feeds/reads" baseUrl="https://api.ifunny.mobi/v4" summary="Client Reads" %}
+{% swagger-description %}
+Paginate through content that the client has marked as viewed
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Basic | Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter name="ifunny-project-id" type="String" in="header" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" %}
+(Default = 50)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Content Pagination" %}
+<pre class="language-typescript"><code class="lang-typescript">{
+    data: {
+        content: {
+            items: <a data-footnote-ref href="#user-content-fn-2">Content</a>[];
+            paging: {
+                cursors: {
+                    prev: string; // Content ID
+                    next: string; // Content ID
+                };
+                has_prev: boolean;
+                has_next: boolean;
+            };
+        };
+    };
+    notifications: {
+        counters: {
+            featured: number;
+            subscriptions: number;
+            collective: number;
+            news: number;
+            map: number;
+        };
+    };
+    status: 200;
+}
+</code></pre>
+{% endswagger-response %}
 {% endswagger %}
 
 {% swagger method="get" path="/counters" baseUrl="https://api.ifunny.mobi/v4" summary="Notification Counters" %}
@@ -323,7 +470,7 @@ Basic | Bearer
 {% endswagger-parameter %}
 
 {% swagger-parameter in="query" name="is_new" type="Boolean" %}
-Doens't seem to affect responses
+Doesn't seem to affect responses
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Client Counters" %}
@@ -340,6 +487,18 @@ Doens't seem to affect responses
 }
 ```
 {% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Invalid Grant" %}
+```typescript
+{
+    status: 401,
+    error: "invalid_grant",
+    error_description: string;
+}
+```
+{% endswagger-response %}
 {% endswagger %}
 
 [^1]: [#appeal](../data-types/client-types.md#appeal "mention")
+
+[^2]: [#content](../data-types/content-types.md#content "mention")
