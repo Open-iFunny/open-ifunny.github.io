@@ -456,6 +456,66 @@ Basic | Bearer
 {% endswagger-response %}
 {% endswagger %}
 
+{% swagger method="get" path="/users/my/guests" baseUrl="https://api.ifunny.mobi/v4" summary="Client Guests" %}
+{% swagger-description %}
+Paginate through users that have viewed the Client's profile
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" required="true" %}
+(Default = 30)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Guest Pagination" %}
+<pre class="language-typescript"><code class="lang-typescript">{
+    guest: <a data-footnote-ref href="#user-content-fn-3">User</a>;
+    visit_timestamp: number;
+}
+</code></pre>
+{% endswagger-response %}
+
+{% swagger-response status="401: Unauthorized" description="Unauthorized" %}
+```typescript
+{
+    status: 401;
+    error: "unauthorized" | "invalid_grant";
+    error_description: string;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/users/my/bans" baseUrl="https://api.ifunny.mobi/v4" summary="Client Bans" %}
+{% swagger-description %}
+Paginate through the Client's bans
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" required="false" %}
+(Default = 30)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Client Bans" %}
+```
+// Some code
+```
+{% endswagger-response %}
+{% endswagger %}
+
 {% swagger method="get" path="/counters" baseUrl="https://api.ifunny.mobi/v4" summary="Notification Counters" %}
 {% swagger-description %}
 Fetch the notification counters for the client
@@ -502,3 +562,5 @@ Doesn't seem to affect responses
 [^1]: [#appeal](../data-types/client-types.md#appeal "mention")
 
 [^2]: [#content](../data-types/content-types.md#content "mention")
+
+[^3]: [#user](../data-types/user-types.md#user "mention")

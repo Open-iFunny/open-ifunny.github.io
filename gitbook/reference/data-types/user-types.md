@@ -4,7 +4,7 @@ description: A collection of data types relevant to Users on iFunny
 
 # 🎭 User Types
 
-## User
+## User Profile
 
 <pre class="language-typescript"><code class="lang-typescript">{
     about: string;
@@ -29,7 +29,7 @@ description: A collection of data types relevant to Users on iFunny
     messenger_token: string; // "1010101010101010101010101010101010101010";
     nick_color?: string; // "55FF00";
     nick: string;
-    num: <a data-footnote-ref href="#user-content-fn-3">UserNums</a>;
+    num: <a data-footnote-ref href="#user-content-fn-3">UserProfileNums</a>;
     original_nick: string; // Different if the user's name is against content policy
     photo?: <a data-footnote-ref href="#user-content-fn-4">ProfilePhoto</a>;
     rating?: <a data-footnote-ref href="#user-content-fn-5">UserRating</a>;
@@ -48,7 +48,7 @@ description: A collection of data types relevant to Users on iFunny
     badge_url: string; // `https://img.ifunny.co/meme_experience/${index}.png`
     days: number;
     next_milestone: number;
-    rank: string; // <a data-footnote-ref href="#user-content-fn-7">MemeRank</a>
+    rank: <a data-footnote-ref href="#user-content-fn-7">MemeRank</a>;
 }
 </code></pre>
 
@@ -92,7 +92,7 @@ description: A collection of data types relevant to Users on iFunny
 }
 ```
 
-### User Nums
+### User Profile Nums
 
 ```typescript
 {
@@ -165,7 +165,32 @@ description: A collection of data types relevant to Users on iFunny
 {% endtab %}
 {% endtabs %}
 
+## User
+
+<pre class="language-typescript"><code class="lang-typescript">{
+    block_type: "installation" | "user";
+    id: string;
+    is_banned: boolean;
+    is_blocked: boolean;
+    is_deleted: boolean;
+    is_in_subscribers: boolean;
+    is_in_subscriptions: boolean;
+    is_verified: boolean;
+    nick: string;
+    nick_color?: string;
+    num: {
+        subscribers: number;
+        subscriptions: number;
+    };
+    original_nick: string;
+    photo?: <a data-footnote-ref href="#user-content-fn-8">ProfilePhoto</a>;
+    total_posts: number;
+}
+</code></pre>
+
 ## Blocked User
+
+Functionally the same as a [#user](user-types.md#user "mention") type but with the addition of the blocked users field
 
 <pre class="language-typescript"><code class="lang-typescript">{
     block_type: "installation" | "user";
@@ -184,7 +209,7 @@ description: A collection of data types relevant to Users on iFunny
         subscriptions: number;
     };
     original_nick: string;
-<strong>    photo?: <a data-footnote-ref href="#user-content-fn-8">ProfilePhoto</a>;
+<strong>    photo?: <a data-footnote-ref href="#user-content-fn-9">ProfilePhoto</a>;
 </strong>    total_posts: number;
 }
 </code></pre>
@@ -193,7 +218,7 @@ description: A collection of data types relevant to Users on iFunny
 
 [^2]: [#meme-experience](user-types.md#meme-experience "mention")
 
-[^3]: [#user-nums](user-types.md#user-nums "mention")
+[^3]: [#user-profile-nums](user-types.md#user-profile-nums "mention")&#x20;
 
 [^4]: [#profile-photo](user-types.md#profile-photo "mention")
 
@@ -201,6 +226,8 @@ description: A collection of data types relevant to Users on iFunny
 
 [^6]: [#user-socials](user-types.md#user-socials "mention")
 
-[^7]: [#meme-rank](user-types.md#meme-rank "mention")
+[^7]: [#meme-rank-days](user-types.md#meme-rank-days "mention")
 
 [^8]: [#profile-photo](user-types.md#profile-photo "mention")
+
+[^9]: [#profile-photo](user-types.md#profile-photo "mention")

@@ -25,9 +25,9 @@ The ID of the user
 {% tabs %}
 {% tab title="Schema" %}
 <pre class="language-typescript"><code class="lang-typescript">{
-  data: <a data-footnote-ref href="#user-content-fn-1">User</a>,
-  status: 200,
-}
+    data: <a data-footnote-ref href="#user-content-fn-1">UserProfile</a>;
+<strong>    status: 200;
+</strong>}
 </code></pre>
 {% endtab %}
 {% endtabs %}
@@ -73,8 +73,8 @@ The nick of the user
 
 {% swagger-response status="200: OK" description="User Profile" %}
 <pre class="language-typescript"><code class="lang-typescript">{
-  data: <a data-footnote-ref href="#user-content-fn-2">User</a>,
-  status: 200,
+    data: <a data-footnote-ref href="#user-content-fn-2">UserProfile</a>;
+    status: 200;
 }
 </code></pre>
 {% endswagger-response %}
@@ -291,8 +291,8 @@ Basic | Bearer
 {% endswagger-response %}
 {% endswagger %}
 
-[^1]: [#user](../data-types/user-types.md#user "mention")
+[^1]: [#user-profile](../data-types/user-types.md#user-profile "mention")
 
-[^2]: [#user](../data-types/user-types.md#user "mention")
+[^2]: [#user-profile](../data-types/user-types.md#user-profile "mention")&#x20;
 
 [^3]: [#content](../data-types/content-types.md#content "mention")

@@ -95,7 +95,7 @@ description: Collection of data types returned by the iFunny API
         url?: string;
     };
     num: <a data-footnote-ref href="#user-content-fn-3">ContentNums</a>;
-    creator?: <a data-footnote-ref href="#user-content-fn-4">Creator</a>;
+    creator?: <a data-footnote-ref href="#user-content-fn-4">User</a>;
     size: {
         w: number;
         h: number;
@@ -196,31 +196,12 @@ These have not been observed and are likely deprecated
 * `draft` - Content is a draft that hasn't been published yet
 * `published` - Content has been published
 
-### Creator
-
-<pre class="language-typescript"><code class="lang-typescript">{
-    id: string;
-    nick: string;
-    photo: <a data-footnote-ref href="#user-content-fn-6">ProfilePhoto</a>;
-    is_verified: boolean;
-    is_banned: boolean;
-    is_deleted: boolean;
-    is_in_subcribers: boolean;
-    is_in_subscriptions: boolean;
-    is_blocked: boolean;
-    nick_color: string; // Hex Code with no #
-    rating: <a data-footnote-ref href="#user-content-fn-7">UserRating</a>;
-    original_nick: string;
-    block_type?: "user" | "installation";
-}
-</code></pre>
-
 ### Content Source
 
 <pre class="language-typescript"><code class="lang-typescript">{
     id: string;
     date_create: number; // UNIX in Seconds
-    creator?: <a data-footnote-ref href="#user-content-fn-8">ContentCreator</a>
+    creator?: <a data-footnote-ref href="#user-content-fn-6">User</a>;
 }
 </code></pre>
 
@@ -232,19 +213,19 @@ These have not been observed and are likely deprecated
     is_reply: false;
     id: string; // Id of the comment
     cid: string; // Id of the content it belongs to
-    state?: CommentState;
+    state?: <a data-footnote-ref href="#user-content-fn-7">CommentState</a>;
     date: number; // UNIX in Seconds
     text: string; // Can be empty string
-    num: CommentNum;
+    num: <a data-footnote-ref href="#user-content-fn-8">CommentNum</a>;
     is_smiled: boolean;
     is_unsmiled: boolean;
     is_edited: boolean;
-    user?: Creator;
-    deletion_reason?: CommentDeletionReason;
-    content?: Content;
-    attachments: Attachments;
-    content_thumbs?: ContentThumbnail;
-    last_reply?: <a data-footnote-ref href="#user-content-fn-9">Reply</a>;
+    user?: <a data-footnote-ref href="#user-content-fn-9">User</a>;
+    deletion_reason?: <a data-footnote-ref href="#user-content-fn-10">CommentDeletionReason</a>;
+    content?: <a data-footnote-ref href="#user-content-fn-11">Content</a>;
+    attachments: <a data-footnote-ref href="#user-content-fn-12">Attachments</a>[];
+    content_thumbs?: <a data-footnote-ref href="#user-content-fn-13">ContentThumbnail</a>;
+    last_reply?: <a data-footnote-ref href="#user-content-fn-14">Reply</a>;
 }
 </code></pre>
 {% endtab %}
@@ -254,19 +235,19 @@ These have not been observed and are likely deprecated
     is_reply: true;
     id: string; // Id of the comment
     cid: string; // Id of the content it belongs to
-    state?: <a data-footnote-ref href="#user-content-fn-10">CommentState</a>;
+    state?: <a data-footnote-ref href="#user-content-fn-15">CommentState</a>;
     date: number; // UNIX in Seconds
     text: string; // Can be empty string
-    num: <a data-footnote-ref href="#user-content-fn-11">CommentNum</a>;
+    num: <a data-footnote-ref href="#user-content-fn-16">CommentNum</a>;
     is_smiled: boolean;
     is_unsmiled: boolean;
     is_edited: boolean;
-    user?: <a data-footnote-ref href="#user-content-fn-12">Creator</a>;
-    deletion_reason?: <a data-footnote-ref href="#user-content-fn-13">CommentDeletionReason</a>;
-    content?: <a data-footnote-ref href="#user-content-fn-14">Content</a>;
-    attachments: <a data-footnote-ref href="#user-content-fn-15">Attachments</a>;
-    content_thumbs?: <a data-footnote-ref href="#user-content-fn-16">ContentThumbnail</a>;
-    last_reply?: <a data-footnote-ref href="#user-content-fn-17">Reply</a>;
+    user?: <a data-footnote-ref href="#user-content-fn-17">Creator</a>;
+    deletion_reason?: <a data-footnote-ref href="#user-content-fn-18">CommentDeletionReason</a>;
+    content?: <a data-footnote-ref href="#user-content-fn-19">Content</a>;
+    attachments: <a data-footnote-ref href="#user-content-fn-20">Attachments</a>;
+    content_thumbs?: <a data-footnote-ref href="#user-content-fn-21">ContentThumbnail</a>;
+    last_reply?: <a data-footnote-ref href="#user-content-fn-22">Reply</a>;
     root_comm_id: string; // ID of the root comment in the thread
     parent_comm_id: string; // ID of the comment this comment is replying to
     depth: number; // What index this is in the comment thread
@@ -296,10 +277,10 @@ These have not been observed and are likely deprecated
 ### Comment Attachment
 
 <pre class="language-typescript"><code class="lang-typescript">{
-    content: <a data-footnote-ref href="#user-content-fn-18">Content</a>[];
-    content_from_links: <a data-footnote-ref href="#user-content-fn-19">Content</a>[];
-    mention_user: <a data-footnote-ref href="#user-content-fn-20">UserMention</a>[];
-    giphy: <a data-footnote-ref href="#user-content-fn-21">Content</a>[];
+    content: <a data-footnote-ref href="#user-content-fn-23">Content</a>[];
+    content_from_links: <a data-footnote-ref href="#user-content-fn-24">Content</a>[];
+    mention_user: <a data-footnote-ref href="#user-content-fn-25">UserMention</a>[];
+    giphy: <a data-footnote-ref href="#user-content-fn-26">Content</a>[];
 }
 </code></pre>
 
@@ -307,7 +288,7 @@ These have not been observed and are likely deprecated
 
 <pre class="language-typescript"><code class="lang-typescript">{
     id: string;
-    creator: <a data-footnote-ref href="#user-content-fn-22">ContentCreator</a>;
+    creator: <a data-footnote-ref href="#user-content-fn-27">User</a>;
     nick: string;
     start_index: number; // Where the username starts in the text
     stop_index: number; // Where the username ends in the text
@@ -331,40 +312,50 @@ These have not been observed and are likely deprecated
 
 [^3]: [#content-nums](content-types.md#content-nums "mention")
 
-[^4]: [#creator](content-types.md#creator "mention")
+[^4]: [#user](user-types.md#user "mention")
 
 [^5]: [#content-source](content-types.md#content-source "mention")
 
-[^6]: [#profile-photo](user-types.md#profile-photo "mention")
+[^6]: [#user](user-types.md#user "mention")
 
-[^7]: [#user-rating](user-types.md#user-rating "mention")
+[^7]: [#comment-state](content-types.md#comment-state "mention")&#x20;
 
-[^8]: [#content-creator](content-types.md#content-creator "mention")
+[^8]: [#comment-nums](content-types.md#comment-nums "mention")
 
-[^9]: [#reply](content-types.md#reply "mention")
+[^9]: [#user](user-types.md#user "mention")
 
-[^10]: [#comment-state](content-types.md#comment-state "mention")
+[^10]: [#comment-deletion-reason](content-types.md#comment-deletion-reason "mention")
 
-[^11]: [#comment-nums](content-types.md#comment-nums "mention")
+[^11]: [#content](content-types.md#content "mention")
 
-[^12]: [#creator](content-types.md#creator "mention")
+[^12]: [#comment-attachment](content-types.md#comment-attachment "mention")
 
-[^13]: [#comment-deletion-reason](content-types.md#comment-deletion-reason "mention")
+[^13]: [#content-thumbnail](content-types.md#content-thumbnail "mention")
 
-[^14]: [#content](content-types.md#content "mention")
+[^14]: [#reply](content-types.md#reply "mention")
 
-[^15]: [#comment-attachment](content-types.md#comment-attachment "mention")
+[^15]: [#comment-state](content-types.md#comment-state "mention")
 
-[^16]: [#content-thumbnail](content-types.md#content-thumbnail "mention")
+[^16]: [#comment-nums](content-types.md#comment-nums "mention")
 
-[^17]: [#reply](content-types.md#reply "mention")
+[^17]: [#creator](content-types.md#creator "mention")
 
-[^18]: [#content](content-types.md#content "mention")
+[^18]: [#comment-deletion-reason](content-types.md#comment-deletion-reason "mention")
 
 [^19]: [#content](content-types.md#content "mention")
 
-[^20]: [#user-mention](content-types.md#user-mention "mention")
+[^20]: [#comment-attachment](content-types.md#comment-attachment "mention")
 
-[^21]: [#content](content-types.md#content "mention")
+[^21]: [#content-thumbnail](content-types.md#content-thumbnail "mention")
 
-[^22]: [#content-creator](content-types.md#content-creator "mention")
+[^22]: [#reply](content-types.md#reply "mention")
+
+[^23]: [#content](content-types.md#content "mention")
+
+[^24]: [#content](content-types.md#content "mention")
+
+[^25]: [#user-mention](content-types.md#user-mention "mention")
+
+[^26]: [#content](content-types.md#content "mention")
+
+[^27]: [#user](user-types.md#user "mention")
