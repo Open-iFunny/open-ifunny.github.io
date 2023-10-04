@@ -4,6 +4,42 @@ description: Collection of API methods for interacting with users
 
 # 🫂 Users
 
+{% swagger method="get" path="/search/users" baseUrl="https://api.ifunny.mobi/v4" summary="Search Users" %}
+{% swagger-description %}
+Search users by nick
+{% endswagger-description %}
+
+{% swagger-parameter in="query" name="q" type="String" required="true" %}
+Nick to search for
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" %}
+(Default = 30)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Possible Users" %}
+```typescript
+{
+    data: {
+        num: []; // Haven't observed
+        users: User[];
+    };
+    status: 200;
+}
+```
+{% endswagger-response %}
+
+{% swagger-response status="400: Bad Request" description="Empty Query" %}
+```typescript
+{
+    error: "empty_query";
+    error_description: "Empty query";
+    status: 400;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
 {% swagger method="get" path="/users/:id" baseUrl="https://api.ifunny.mobi/v4" summary="User by ID" %}
 {% swagger-description %}
 Fetch user profile by their unique ID

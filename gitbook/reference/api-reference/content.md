@@ -666,6 +666,77 @@ ID of the channel
 {% endswagger-response %}
 {% endswagger %}
 
+{% swagger method="get" path="/tags/suggested" baseUrl="https://api.ifunny.mobi/v4" summary="Search Tags" %}
+{% swagger-description %}
+Search tags suggested by iFunny
+{% endswagger-description %}
+
+{% swagger-parameter in="query" name="q" type="String" required="true" %}
+Query
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Basic | Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Suggested Tags" %}
+```typescript
+{
+    data: {
+        tags: {
+            items: Tag[];
+        };
+    };
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/search/content" baseUrl="https://api.ifunny.mobi/v4" summary="Search Content" %}
+{% swagger-description %}
+
+{% endswagger-description %}
+
+{% swagger-parameter in="query" name="tag" type="String" required="true" %}
+Tag to search for
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Basic | Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Content Pagination" %}
+```typescript
+{
+    data: {
+        content: {
+            items: Content[];
+            paging: {
+                cursors: {
+                    prev: string; // Content ID
+                    next: string; // Content ID
+                };
+                has_prev: boolean;
+                has_next: boolean;
+            };
+        };
+        num: []; // Unknown data type
+    };
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
 [^1]: [#content](../data-types/content-types.md#content "mention")
 
 [^2]: [#content](../data-types/content-types.md#content "mention")
