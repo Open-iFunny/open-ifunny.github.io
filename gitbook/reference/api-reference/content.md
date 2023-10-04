@@ -321,6 +321,16 @@ Bearer
 }
 ```
 {% endswagger-response %}
+
+{% swagger-response status="404: Not Found" description="Not Found" %}
+```typescript
+{ 
+    error: "not_found";
+    error_description: string;
+    status: 404;
+}
+```
+{% endswagger-response %}
 {% endswagger %}
 
 {% swagger method="delete" path="/content/:id/republished" baseUrl="https://api.ifunny.mobi/v4" summary="Delete Republish" %}
@@ -576,6 +586,83 @@ Basic | Bearer
     status: 404;
 }
 ```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/channels" baseUrl="https://api.ifunny.mobi/v4" summary="Get Channels" %}
+{% swagger-description %}
+Fetch all available channels
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Basic | Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Channels" %}
+```typescript
+{
+    data: {
+        channels: {
+            items: Channel[];
+        };
+    };
+    status: 200;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
+{% swagger method="get" path="/channels/:id/items" baseUrl="https://api.ifunny.mobi/v4" summary="Get Channel Items" %}
+{% swagger-description %}
+Paginate through content in a channel
+{% endswagger-description %}
+
+{% swagger-parameter in="path" name="id" type="String" required="true" %}
+ID of the channel
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Channel Content" %}
+```typescript
+{
+    data: {
+        content: {
+            items: Content[];
+            paging: {
+                cursors: {
+                    next: string | null;
+                    prev: string | null;
+                };
+                hasNext: boolean;
+                hasPrev: boolean;
+            };
+        };
+    };
+    status: 200;
+}
+            
+```
+{% endswagger-response %}
+
+{% swagger-response status="400: Bad Request" description="Bad Request" %}
+<pre class="language-typescript"><code class="lang-typescript">{
+    error: "bad_request";
+<strong>    error_description: string;
+</strong>    status: 400;
+}
+</code></pre>
+{% endswagger-response %}
+
+{% swagger-response status="404: Not Found" description="Not Found" %}
+<pre class="language-typescript"><code class="lang-typescript">{
+<strong>    error: "not_found";
+</strong>    error_description: "Channel not found";
+<strong>    status: 404;
+</strong>}
+</code></pre>
 {% endswagger-response %}
 {% endswagger %}
 
