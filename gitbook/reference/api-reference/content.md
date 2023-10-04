@@ -188,7 +188,7 @@ Basic | Bearer
 {% endswagger-response %}
 {% endswagger %}
 
-{% swagger method="get" path="/feeds/reads/:ids" baseUrl="https://api.ifunny.mobi/v4" summary="Mark Content as Read" %}
+{% swagger method="get" path="/reads/:ids" baseUrl="https://api.ifunny.mobi/v4" summary="Mark Content as Read" %}
 {% swagger-description %}
 Add content to the Client's "reads"
 {% endswagger-description %}
