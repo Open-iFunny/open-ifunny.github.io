@@ -180,9 +180,9 @@ Basic | Bearer
 {% swagger-response status="404: Not Found" description="Content Not Found" %}
 ```typescript
 { 
-    error: 'not_found',
-    error_description: 'Content not found',
-    status: 404 
+    error: "not_found";
+    error_description: "Content not found" ;
+    status: 404;
 }
 ```
 {% endswagger-response %}
@@ -523,6 +523,62 @@ Bearer
 {% endswagger-response %}
 {% endswagger %}
 
+{% swagger method="get" path="/content/:id/comments" baseUrl="https://api.ifunny.mobi/v4" summary="Get Content Comments" %}
+{% swagger-description %}
+Paginate through comments on some Content
+{% endswagger-description %}
+
+{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
+Basic | Bearer
+{% endswagger-parameter %}
+
+{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
+"iFunny"
+{% endswagger-parameter %}
+
+{% swagger-parameter in="path" name="id" type="String" required="true" %}
+
+{% endswagger-parameter %}
+
+{% swagger-parameter in="query" name="limit" type="Number" %}
+(Default = 30)
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Comment Pagination" %}
+<pre class="language-typescript"><code class="lang-typescript">{
+    data: {
+        comments: {
+            items: <a data-footnote-ref href="#user-content-fn-6">Comment</a>[];
+            paging: {
+                cursors: {
+                    next: string; // "1:1632791852";
+                    prev: string; // "5:1632791359";
+                };
+                hasNext: boolean;
+                hasPrev: boolean;
+            };    
+        };
+        content: {
+            comments_count: number;
+            replies_count: number;
+        };
+    };
+    status: 200;
+}
+</code></pre>
+{% endswagger-response %}
+
+{% swagger-response status="404: Not Found" description="Content Not Found" %}
+```typescript
+{ 
+    error: 'not_found';
+    error_description: string;
+    status: 404;
+}
+```
+{% endswagger-response %}
+{% endswagger %}
+
 [^1]: [#content](../data-types/content-types.md#content "mention")
 
 [^2]: [#content](../data-types/content-types.md#content "mention")
@@ -532,3 +588,5 @@ Bearer
 [^4]: [#content](../data-types/content-types.md#content "mention")
 
 [^5]: [#content-type](../data-types/content-types.md#content-type "mention")
+
+[^6]: [#content](../data-types/content-types.md#content "mention")
