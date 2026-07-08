@@ -27,14 +27,23 @@
           buildInputs = with pkgs; [
             bun
             nodejs
+            bun2nix.packages.${system}.bun2nix
           ];
 
           shellHook = ''
+            if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+              toplevel="$(git rev-parse --show-toplevel)"
+              git config extensions.worktreeConfig true
+              git config --worktree core.hooksPath "$toplevel/.githooks"
+              chmod +x "$toplevel/.githooks/pre-commit" 2>/dev/null || true
+            fi
+
             echo "iFunny API Docs Development Environment"
             echo "Available commands:"
             echo "  bun install       - Install dependencies"
             echo "  bun run build     - Build Redoc static site"
             echo "  bun run lint      - Lint OpenAPI spec"
+            echo "  bun2nix -o bun.nix - Regenerate Nix deps from bun.lock (auto-run on commit)"
             echo "  nix build         - Build docs reproducibly via Nix"
           '';
         };
