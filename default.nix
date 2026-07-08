@@ -1,69 +1,67 @@
-{ pkgs ? import <nixpkgs> { }, bun2nixLib }:
+{ pkgs ? import <nixpkgs> { } }:
 
 # This file is called by flake.nix via pkgs.callPackage.
 # It defines the reproducible build for the Redoc static documentation site.
 #
-# Note: This requires bun.lock and bun.nix to be committed in the repository.
-# See bun.lock.md for instructions on generating these files.
+# Uses nixpkgs' built-in fetchYarnDeps/yarnConfigHook/yarnBuildHook (Yarn
+# Classic v1 offline-mirror support), NOT bun2nix or yarn2nix-moretea:
+#
+# - bun2nix only populates bun's extracted-package/tarball cache, not its
+#   separate manifest cache, so `bun install` always needs live network
+#   access to resolve dependencies -- a known, open upstream limitation
+#   (see nix-community/bun2nix#77).
+# - yarn2nix-moretea (the third-party "yarn2nix" package set that used to
+#   live at pkgs.yarn2nix-moretea) was removed from nixpkgs upstream on
+#   2026-04-25 ("'yarn2nix' and its tooling has been removed as it was
+#   unusable within nodePackages. Use the standard yarn v1 hooks available
+#   in nixpkgs instead." -- see pkgs/top-level/aliases.nix), which is what
+#   we're doing here.
+#
+# fetchYarnDeps is a fixed-output derivation (network access allowed, hash
+# pinned below) that prefetches every tarball referenced by yarn.lock into
+# an offline mirror. yarnConfigHook then runs `yarn install --offline
+# --frozen-lockfile` against that mirror (no network needed at all in the
+# main build), and yarnBuildHook runs `yarn --offline build`, i.e. our
+# package.json's own "build" script.
 
 let
   pname = "ifunny-api-docs";
   version = "1.0.0";
-  src = ./.;
 
-  # Fetch Bun dependencies using bun2nix
-  # The bun.nix file should be generated via: bun2nix -o bun.nix
-  bunDeps = bun2nixLib.fetchBunDeps {
-    inherit src;
-    bunNix = ./bun.nix;
+  # Filter out node_modules/_site explicitly rather than relying solely on
+  # .gitignore: a stray node_modules left over in the worktree (e.g. from
+  # running `yarn install` locally to (re)generate yarn.lock) would
+  # otherwise get copied in by `./.` and shadow the Nix-built one with
+  # unpatched, non-Nix-built files -- this bit us once already.
+  src = pkgs.lib.cleanSourceWith {
+    src = ./.;
+    filter = name: type:
+      let base = baseNameOf name; in
+      !(builtins.elem base [ "node_modules" "_site" "result" ]);
+  };
+
+  offlineCache = pkgs.fetchYarnDeps {
+    yarnLock = ./yarn.lock;
+    hash = "sha256-/mv7ioEId2JL1xNuhq01pqF4gJl3W9hSpDMsNS7szWU=";
   };
 in
-bun2nixLib.mkDerivation {
+pkgs.stdenv.mkDerivation {
   inherit pname version src;
 
-  bunDeps = bunDeps;
+  yarnOfflineCache = offlineCache;
 
-  # --linker=isolated matches bun2nix's own default install flags (see
-  # nix/mk-derivation/hook.nix in the bun2nix source); we have to repeat it
-  # here since setting this attribute at all replaces the hook's defaults
-  # rather than extending them. --frozen-lockfile stops bun from trying to
-  # rewrite bun.lock. This is a plain (unquoted, space-separated) string
-  # rather than a Nix list: this derivation isn't built with
-  # __structuredAttrs, so a list here would not actually become a bash array
-  # -- verified this directly (a Nix list produced a single escaped-space
-  # string and broke --linker).
-  #
-  # NOTE: as of bun2nix 2.1.1 / bun 1.3.13, `nix build` on this package still
-  # fails with "ConnectionRefused downloading package manifest @redocly/cli",
-  # even with these flags and a fully populated bunDeps cache. This is a
-  # known, open upstream bun2nix limitation, not something fixable from
-  # here: bun2nix's fetchBunDeps only populates bun's extracted-package
-  # tarball cache, not bun's separate `*.npm` manifest-cache files, and
-  # bun's dependency resolution step needs the manifest cache (or network
-  # access) regardless of --frozen-lockfile or exact version pins. See
-  # https://github.com/nix-community/bun2nix/issues/77 for the same failure
-  # signature reported against a different project, and bun2nix's own
-  # tracking of bun's upstream --offline flag (oven-sh/bun#26227), which
-  # would still require manifest caches to exist.
-  #
-  # This does not block the actual publishing pipeline: GitHub Actions
-  # builds the site with plain `npx @redocly/cli` (real network access, no
-  # Nix sandbox), so `.github/workflows/openapi.yml` is unaffected. `nix
-  # build .#docs` remains broken until bun2nix fixes this upstream, or
-  # someone reimplements the install phase to bypass `bun install` entirely.
-  bunInstallFlags = "--linker=isolated --frozen-lockfile";
-
-  buildPhase = ''
-    export HOME=$(mktemp -d)
-
-    # Run the build script from package.json
-    bun run build
-  '';
+  nativeBuildInputs = with pkgs; [
+    nodejs
+    yarnConfigHook
+    yarnBuildHook
+  ];
 
   installPhase = ''
+    runHook preInstall
     mkdir -p $out
     cp -r _site/* $out/
     cp gitbook/openapi/ifunny-api.yaml $out/
+    runHook postInstall
   '';
 
   meta = with pkgs.lib; {
