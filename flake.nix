@@ -1,0 +1,53 @@
+{
+  description = "iFunny API documentation - OpenAPI 3.1 spec with Redoc static site generation";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    bun2nix.url = "github:nix-community/bun2nix";
+    bun2nix.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  nixConfig = {
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+  };
+
+  outputs = { self, nixpkgs, flake-utils, bun2nix }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            bun
+            nodejs
+          ];
+
+          shellHook = ''
+            echo "iFunny API Docs Development Environment"
+            echo "Available commands:"
+            echo "  bun install       - Install dependencies"
+            echo "  bun run build     - Build Redoc static site"
+            echo "  bun run lint      - Lint OpenAPI spec"
+            echo "  nix build         - Build docs reproducibly via Nix"
+          '';
+        };
+
+        packages.default =
+          let
+            bun2nixLib = bun2nix.packages.${system}.default;
+          in
+          pkgs.callPackage ./default.nix {
+            inherit bun2nixLib;
+          };
+
+        packages.docs = self.packages.${system}.default;
+      }
+    );
+}
