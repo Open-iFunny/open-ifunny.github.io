@@ -66,6 +66,22 @@ function pascalCase(s) {
     .join('');
 }
 
+function lowerFirst(s) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+function pascalToSnakeUpper(s) {
+  return s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
+}
+
+function labelToSnakeUpper(s) {
+  return s
+    .trim()
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toUpperCase();
+}
+
 // ---------------------------------------------------------------------------
 // Named-type resolution, scoped per schema block.
 //
@@ -287,14 +303,71 @@ function renderTS(name, ir) {
   return `interface ${name} {\n${lines.join('\n')}\n}`;
 }
 
-function goType(node) {
+// An integer enum (`type: integer, enum: [...]`) is rendered in Go as a
+// local, unexported `<name>Kind` type plus a `const (...)` block, rather
+// than collapsing straight to a bare `int` and discarding the enum. This
+// applies to both named schemas reached via $ref (e.g. ChatType) and
+// anonymous inline enum properties (e.g. `accepted_mailing`) - see
+// isIntEnumIR()'s two call sites in renderSchemaBlock/goFieldType below.
+function isIntEnumIR(ir) {
+  return !!ir && ir.kind === 'integer' && Array.isArray(ir.enum) && ir.enum.length > 0 && ir.const === undefined;
+}
+
+// Best-effort extraction of {value: label} pairs out of a free-text enum
+// description, e.g. "1=Private Direct Message, 2=Private Group Chat" or
+// "1: True - 0: False". Returns null if a label can't be found for every
+// value in `values`, so callers can fall back to numbering variants instead.
+function parseEnumLabels(description, values) {
+  if (!description) return null;
+  const re = /(-?\d+)\s*[:=]\s*([A-Za-z][A-Za-z0-9 _/]*?)(?=\s*(?:,|;|-\s*-?\d|\.|$))/g;
+  const map = new Map();
+  let m;
+  while ((m = re.exec(description))) {
+    map.set(Number(m[1]), m[2].trim());
+  }
+  return values.every((v) => map.has(v)) ? map : null;
+}
+
+// Enum values are "sequential" (representable with Go's `iota`) if, in the
+// order given, each is exactly one more than the previous.
+function isSequential(values) {
+  return values.every((v, i) => v === values[0] + i);
+}
+
+// Builds a local, unexported `<base>Kind` integer type plus a `const (...)`
+// block enumerating its values - mirroring the `Enum_VARIANT_NAME` style
+// used by protobuf-generated Go, just with an unexported underlying type.
+// Returns the type name to use for struct fields plus the Go source for the
+// type + const block (to be appended to the codeblock's output once).
+function buildGoEnum(baseName, values, description) {
+  const kindName = `${lowerFirst(baseName)}Kind`;
+  const thingSnake = pascalToSnakeUpper(baseName);
+  const labels = parseEnumLabels(description, values);
+  const sequential = isSequential(values);
+  const offset = values[0];
+  const entries = values.map((v) => {
+    const label = labels && labels.has(v) ? labelToSnakeUpper(labels.get(v)) : v < 0 ? `NEG_${Math.abs(v)}` : String(v);
+    const rhs = sequential
+      ? offset === 0
+        ? `${kindName}(iota)`
+        : `${kindName}(iota + ${offset})`
+      : `${kindName}(${v})`;
+    return { name: `${thingSnake}_${label}`, rhs };
+  });
+  const width = Math.max(...entries.map((e) => e.name.length));
+  const constLines = entries.map((e) => `\t${e.name.padEnd(width)} = ${e.rhs}`);
+  const code = `type ${kindName} int\n\nconst (\n${constLines.join('\n')}\n)`;
+  return { kindName, code };
+}
+
+function goType(node, goCtx) {
   switch (node.kind) {
     case 'ref':
-      return node.name;
+      return (goCtx && goCtx.refKindOverride.get(node.name)) || node.name;
     case 'array':
-      return `[]${goType(node.items)}`;
+      return `[]${goType(node.items, goCtx)}`;
     case 'oneOf':
-      return node.variants.map(goType).join(' /* or */ ');
+      return node.variants.map((v) => goType(v, goCtx)).join(' /* or */ ');
     case 'string':
       return 'string';
     case 'integer':
@@ -308,19 +381,29 @@ function goType(node) {
   }
 }
 
-function goFieldType(p) {
-  const base = goType(p.node);
-  const scalar = ['string', 'integer', 'number', 'boolean'].includes(p.node.kind);
+function goFieldType(p, ownerName, goCtx) {
+  // Anonymous inline enum (e.g. a property with its own `enum` and no $ref):
+  // synthesize a Kind type scoped to this property, same naming convention
+  // used for anonymous nested objects elsewhere in this file.
+  if (isIntEnumIR(p.node)) {
+    const baseName = `${ownerName}${pascalCase(p.name)}`;
+    const { kindName, code } = buildGoEnum(baseName, p.node.enum, p.description);
+    if (goCtx && !goCtx.enumBlocks.has(kindName)) goCtx.enumBlocks.set(kindName, code);
+    return p.required ? kindName : `*${kindName}`;
+  }
+  const isEnumRef = p.node.kind === 'ref' && !!goCtx && goCtx.refKindOverride.has(p.node.name);
+  const base = goType(p.node, goCtx);
+  const scalar = isEnumRef || ['string', 'integer', 'number', 'boolean'].includes(p.node.kind);
   return !p.required && scalar ? `*${base}` : base;
 }
 
-function renderGo(name, ir) {
+function renderGo(name, ir, goCtx) {
   if (ir.kind !== 'object') {
-    return `type ${name} ${goType(ir)}`;
+    return `type ${name} ${goType(ir, goCtx)}`;
   }
   const lines = ir.properties.map((p) => {
     const tag = `\`json:"${p.name}${p.required ? '' : ',omitempty'}"\``;
-    return `\t${pascalCase(p.name) || 'Field'} ${goFieldType(p)} ${tag}`;
+    return `\t${pascalCase(p.name) || 'Field'} ${goFieldType(p, name, goCtx)} ${tag}`;
   });
   return `type ${name} struct {\n${lines.join('\n')}\n}`;
 }
@@ -331,7 +414,31 @@ function renderSchemaBlock(schemaData, name) {
   const { topIR, nested } = schemaData;
   const jsonText = [renderJSON(name, topIR), ...nested.map((n) => renderJSON(n.name, n.ir))].join('\n\n');
   const tsText = [renderTS(name, topIR), ...nested.map((n) => renderTS(n.name, n.ir))].join('\n\n');
-  const goText = [renderGo(name, topIR), ...nested.map((n) => renderGo(n.name, n.ir))].join('\n\n');
+
+  const goCtx = { refKindOverride: new Map(), enumBlocks: new Map() };
+  const allEntries = [{ name, ir: topIR }, ...nested];
+
+  // First pass: find every named entry that's actually an integer enum, and
+  // register its `<name>Kind` type + const block up front, so any struct
+  // field referencing it (a 'ref' node) resolves to the Kind type even if
+  // that struct is rendered before we'd otherwise reach the enum itself.
+  const enumNames = new Set();
+  for (const entry of allEntries) {
+    if (isIntEnumIR(entry.ir)) {
+      const { kindName, code } = buildGoEnum(entry.name, entry.ir.enum, entry.ir.description);
+      goCtx.refKindOverride.set(entry.name, kindName);
+      goCtx.enumBlocks.set(kindName, code);
+      enumNames.add(entry.name);
+    }
+  }
+
+  // Second pass: render everything else, then append the Kind/const blocks
+  // (including any synthesized from anonymous inline enum properties,
+  // collected into goCtx.enumBlocks as a side effect of goFieldType above).
+  const goParts = allEntries.filter((e) => !enumNames.has(e.name)).map((e) => renderGo(e.name, e.ir, goCtx));
+  goParts.push(...goCtx.enumBlocks.values());
+  const goText = goParts.join('\n\n');
+
   return {
     json: esc(jsonText),
     ts: highlight(tsText, 'typescript'),
