@@ -17,6 +17,7 @@
   * [🫂 Users](reference/api-reference/users.md)
   * [😂 Content](reference/api-reference/content.md)
   * [💭 Comments](reference/api-reference/comments.md)
+  * [📄 OpenAPI Spec](reference/api-reference/openapi.md)
 * [💬 Chats](reference/chats/README.md)
   * [WAMP](reference/chats/wamp.md)
   * [Connection](reference/chats/connection.md)
