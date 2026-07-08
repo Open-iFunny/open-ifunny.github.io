@@ -2,12 +2,11 @@
 
 # This file is called by flake.nix via pkgs.callPackage.
 # It defines a reproducible build of scripts/generate-docs.js, which reads
-# gitbook/openapi/ifunny-api.yaml and renders GitBook-native Markdown into
-# gitbook/reference/api-reference/. `nix build .#docs` exists as a
-# hermetic reproducibility check for the generator (the actual generated
-# Markdown that GitBook syncs from is committed to git directly by the
-# `render` job in .github/workflows/openapi.yml, not produced by this
-# build).
+# gitbook/openapi/ifunny-api.yaml and renders MkDocs Material-native
+# Markdown into docs/reference/api/. `nix build .#docs` produces the full
+# docs/ source tree (narrative pages + freshly generated API reference
+# pages) as $out - the mkdocs build in CI then consumes that tree to
+# produce the static site deployed to GitHub Pages.
 #
 # Uses nixpkgs' built-in fetchYarnDeps/yarnConfigHook/yarnBuildHook (Yarn
 # Classic v1 offline-mirror support), NOT bun2nix or yarn2nix-moretea:
@@ -65,12 +64,12 @@ pkgs.stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out
-    cp -r gitbook/. $out/
+    cp -r docs/. $out/
     runHook postInstall
   '';
 
   meta = with pkgs.lib; {
-    description = "iFunny API documentation - OpenAPI 3.1 spec rendered into GitBook-native Markdown";
+    description = "iFunny API documentation - OpenAPI 3.1 spec rendered into MkDocs Material Markdown";
     homepage = "https://github.com/Open-iFunny/api-docs";
     license = licenses.gpl3;
     maintainers = [];

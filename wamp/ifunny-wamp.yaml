@@ -1,0 +1,282 @@
+wampspec: "1.0"
+
+info:
+  title: iFunny Chats WAMP API
+  description: |
+    WAMP catalog for iFunny's chat realm. Procedures cover channel
+    management, message pagination, invites, and moderation; topics
+    cover per-user channel/invite streams and per-channel event
+    streams.
+
+    All URIs live under the `co.fun.chat.` namespace. Payloads on the
+    wire are JSON; the renderer emits JSON, TypeScript, and Go type
+    layouts identical to the REST reference.
+  version: "1.0"
+
+servers:
+  - name: production
+    url: wss://chat.ifunny.co/chat
+    realm: co.fun.chat.ifunny
+    # The turnpike Go library (gastrodon fork) advertises "wamp.json"
+    # from the WAMP1 era rather than the spec-mandated "wamp.2.json".
+    # Servers accept either.
+    subprotocols: [wamp.json, wamp.2.json]
+    auth:
+      $ref: "#/components/auths/ticket"
+    description: |
+      Production chat gateway. Realm names look like WAMP URIs but
+      that is a historical iFunny quirk; only `co.fun.chat.ifunny` is
+      served here.
+
+tags:
+  - name: channels
+    emoji: 💬
+    description: Create, discover, join, leave, and hide chat channels.
+  - name: messages
+    emoji: ✉️
+    description: Read message history and publish new messages.
+  - name: invites
+    emoji: 📨
+    description: Extend, accept, and decline channel invitations.
+  - name: moderation
+    emoji: 🛡️
+    description: Remove users from channels.
+  - name: subscriptions
+    emoji: 📬
+    description: Topic subscriptions and event patterns.
+
+procedures:
+  - uri: co.fun.chat.hide_chat
+    tag: channels
+    summary: Hide a channel from your channel list
+    description: |
+      Hides the channel from the caller's chats without leaving it.
+      The channel remains joined server-side; other participants see
+      no change.
+    kwargs:
+      type: object
+      required: [chat_name]
+      properties:
+        chat_name:
+          type: string
+          description: Canonical channel name.
+
+  - uri: co.fun.chat.create_channel
+    tag: channels
+    summary: Create a new channel
+    kwargs:
+      type: object
+      required: [type, id, title]
+      properties:
+        type: { $ref: "#/components/schemas/ChannelType" }
+        id:
+          type: string
+          description: Client-generated channel identifier (usually a UUID).
+        title: { type: string }
+        description: { type: string }
+        coverURL: { type: string, format: uri }
+        inviteMembersIDs:
+          type: array
+          items: { type: string }
+          description: User IDs to invite at creation time.
+
+  - uri: co.fun.chat.get_or_create_chat
+    tag: channels
+    summary: Get or create a direct-message channel
+    description: |
+      Idempotently resolves a DM channel between the caller and one
+      or more other users. The canonical `name` for a DM channel is
+      the sorted user IDs joined with `_` in reverse order (see the
+      `DMChannelName` helper in ifunny-go/compose/channel.go).
+    kwargs:
+      type: object
+      required: [type, users, name]
+      properties:
+        type: { $ref: "#/components/schemas/ChannelType" }
+        users:
+          type: array
+          items: { type: string }
+        name:
+          type: string
+          description: Canonical DM channel name.
+
+  - uri: co.fun.chat.new_chat
+    tag: channels
+    summary: Create a new named channel
+    description: |
+      Creates a public or private group channel. Private channels do
+      not accept a `description`.
+    kwargs:
+      type: object
+      required: [type, name, title, users]
+      properties:
+        type: { $ref: "#/components/schemas/ChannelType" }
+        name: { type: string }
+        title: { type: string }
+        description: { type: string }
+        users:
+          type: array
+          items: { type: string }
+
+  - uri: co.fun.chat.get_chat
+    tag: channels
+    summary: Fetch channel details by name
+    kwargs:
+      type: object
+      required: [chat_name]
+      properties:
+        chat_name: { type: string }
+
+  - uri: co.fun.chat.join_chat
+    tag: channels
+    summary: Join a channel by name
+    kwargs:
+      type: object
+      required: [chat_name]
+      properties:
+        chat_name: { type: string }
+
+  - uri: co.fun.chat.leave_chat
+    tag: channels
+    summary: Leave a channel by name
+    kwargs:
+      type: object
+      required: [chat_name]
+      properties:
+        chat_name: { type: string }
+
+  - uri: co.fun.chat.list_messages
+    tag: messages
+    summary: List messages in a channel
+    description: |
+      Paginated message history. `next`/`prev` cursors are integer
+      message IDs; omit both to fetch the newest page.
+    kwargs:
+      type: object
+      required: [chat_name, limit]
+      properties:
+        chat_name: { type: string }
+        limit: { type: integer, minimum: 1 }
+        next: { type: integer, description: Fetch messages older than this cursor. }
+        prev: { type: integer, description: Fetch messages newer than this cursor. }
+
+  - uri: co.fun.chat.invite.invite
+    tag: invites
+    summary: Invite users to a channel
+    kwargs:
+      type: object
+      required: [chat_name, users]
+      properties:
+        chat_name: { type: string }
+        users:
+          type: array
+          items: { type: string }
+
+  - uri: co.fun.chat.invite.accept
+    tag: invites
+    summary: Accept a channel invitation
+    kwargs:
+      type: object
+      required: [chat_name]
+      properties:
+        chat_name: { type: string }
+
+  - uri: co.fun.chat.invite.decline
+    tag: invites
+    summary: Decline a channel invitation
+    kwargs:
+      type: object
+      required: [chat_name]
+      properties:
+        chat_name: { type: string }
+
+  - uri: co.fun.chat.kick_member
+    tag: moderation
+    summary: Remove a user from a channel
+    kwargs:
+      type: object
+      required: [chat_name, user_id]
+      properties:
+        chat_name: { type: string }
+        user_id: { type: string }
+
+topics:
+  - uri: co.fun.chat.user.{id}.chats
+    tag: subscriptions
+    summary: Subscribe to updates about your joined channels
+    uri_parameters:
+      - name: id
+        description: The subscribing user's iFunny numeric ID.
+        schema: { type: string }
+    kwargs:
+      type: object
+      description: Channel-update payload; shape mirrors `get_chat` results.
+
+  - uri: co.fun.chat.user.{id}.invites
+    tag: subscriptions
+    summary: Subscribe to incoming channel invitations
+    uri_parameters:
+      - name: id
+        description: The subscribing user's iFunny numeric ID.
+        schema: { type: string }
+    kwargs:
+      type: object
+      required: [type]
+      properties:
+        type:
+          $ref: "#/components/schemas/EventType"
+          description: Always `300` (INVITED) on this topic.
+
+  - uri: co.fun.chat.chat.{channel_name}
+    tag: subscriptions
+    summary: Subscribe to events in a channel
+    description: |
+      Every join, exit, message, and invite dispatched to a channel
+      arrives on this topic. Dispatch on the `type` field to decode.
+    uri_parameters:
+      - name: channel_name
+        description: Canonical channel name (see `co.fun.chat.get_chat`).
+        schema: { type: string }
+    kwargs:
+      type: object
+      required: [type]
+      properties:
+        type: { $ref: "#/components/schemas/EventType" }
+        message_type:
+          type: integer
+          description: Present on `MESSAGE` events; `1` for plain text.
+        text:
+          type: string
+          description: Present on `MESSAGE` events.
+
+components:
+  auths:
+    ticket:
+      type: ticket
+      description: |
+        WAMP `ticket` authmethod. The ticket string is the caller's
+        iFunny OAuth2 bearer token. On CHALLENGE, reply with an
+        AUTHENTICATE frame carrying the bearer as the signature; no
+        authid needs to be sent.
+      credential_ref: reference/api/oauth2.md#op-loginorrefresh
+
+  schemas:
+    ChannelType:
+      type: integer
+      description: |
+        Channel kind. `1` = DM, `2` = private group, `3` = public
+        group.
+      enum: [1, 2, 3]
+
+    ChannelJoinState:
+      type: integer
+      description: Caller's membership state on a channel.
+      enum: [0, 1, 2]
+
+    EventType:
+      type: integer
+      description: |
+        Chat event discriminator. `100` = JOIN, `101` = EXIT, `200` =
+        MESSAGE, `300` = INVITED. Any other value should be treated
+        as unknown.
+      enum: [100, 101, 200, 300]

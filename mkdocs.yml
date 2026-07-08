@@ -1,0 +1,121 @@
+site_name: iFunny API (Unofficial)
+site_description: Unofficial, reverse-engineered documentation for the iFunny API.
+site_url: https://open-ifunny.github.io/api-docs/
+repo_url: https://github.com/Open-iFunny/api-docs
+repo_name: Open-iFunny/api-docs
+edit_uri: edit/main/docs/
+copyright: >
+  Community-maintained, not affiliated with iFunny or FunCorp.
+
+# Emit explicit foo.html files rather than foo/index.html + pretty URLs.
+# Internal links are rewritten to include the .html extension so the site
+# is browsable directly (including over file:// for local previews) and
+# every anchor points at a concrete resource.
+use_directory_urls: false
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.code.copy
+    - content.tabs.link
+    - navigation.indexes
+    - navigation.instant
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  # Base MkDocs extensions
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  # PyMdown Extensions - required by Material for tabs, code blocks, etc.
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      # Snippet includes (--8<-- "...") resolve relative to docs/ so
+      # generated fragments under docs/_snippets/ (schema and operation
+      # trios emitted by scripts/generate-docs.js) are addressable as
+      # "_snippets/schemas/UserProfile.md" etc.
+      base_path: [docs]
+      check_paths: true
+      auto_append: []
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  - search
+
+# Snippet fragments under docs/_snippets/ are included into other pages
+# via pymdownx.snippets; they are not themselves pages, so keep them out
+# of the built site.
+exclude_docs: |
+  _snippets/
+
+nav:
+  - Home: index.md
+  - Quick Start: quick-start.md
+  - Reference:
+      - API Reference:
+          - reference/api/index.md
+          - 🔑 OAuth2: reference/api/oauth2.md
+          - 🤖 Client: reference/api/client.md
+          - 🫂 Users: reference/api/users.md
+          - 😂 Content: reference/api/content.md
+          - 💭 Comments: reference/api/comments.md
+          - 📡 Chat: reference/api/chat.md
+          - 🧭 Discovery: reference/api/discovery.md
+          - ⏳ Tasks: reference/api/tasks.md
+      - Data Types:
+          - reference/data-types/index.md
+          - 🤖 Client, OAuth & Basic Token: reference/data-types/client-types.md
+          - 🎭 User Types: reference/data-types/user-types.md
+          - 🤣 Content, Comments & Tasks: reference/data-types/content-types.md
+          - 🔍 Search & Discovery: reference/data-types/search-discovery.md
+      - Chat Types:
+          - reference/chat-types/index.md
+          - 🤝 Auth: reference/chat-types/auth.md
+          - 💬 Chats + DMs: reference/chat-types/chats-dms.md
+          - 📢 Channels + Explore: reference/chat-types/channels-explore.md
+          - 📬 Subscriptions + Events: reference/chat-types/subscriptions-events.md
+          - 🌀 WAMP: reference/chat-types/wamp.md

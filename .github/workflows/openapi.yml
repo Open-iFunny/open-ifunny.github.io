@@ -1,11 +1,14 @@
-name: OpenAPI
+name: Docs (OpenAPI + WAMP)
 
 on:
   push:
     branches: [main, staging]
     paths:
       - "gitbook/openapi/**"
+      - "wamp/**"
+      - "docs/**"
       - "scripts/**"
+      - "mkdocs.yml"
       - "package.json"
       - "yarn.lock"
       - "flake.nix"
@@ -15,7 +18,10 @@ on:
   pull_request:
     paths:
       - "gitbook/openapi/**"
+      - "wamp/**"
+      - "docs/**"
       - "scripts/**"
+      - "mkdocs.yml"
       - "package.json"
       - "yarn.lock"
       - "flake.nix"
@@ -27,50 +33,64 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  lint-openapi:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Lint OpenAPI spec
         run: npx --yes @redocly/cli@1.25.5 lint gitbook/openapi/ifunny-api.yaml
 
-  render:
-    needs: lint
-    if: github.event_name == 'push'
+  lint-wamp:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          ref: ${{ github.ref_name }}
+          node-version: 20
+      - name: Install js-yaml (only dep the parser uses at runtime)
+        run: npm install --no-save js-yaml@4
+      # scripts/wamp/parse.js resolves $refs and runs the shape checks
+      # from scripts/wamp/schema.json. It exits non-zero on any failure,
+      # which is exactly what we want a lint job to do.
+      - name: Lint WAMP-Spec document
+        run: node scripts/wamp/parse.js wamp/ifunny-wamp.yaml
+
+  build:
+    needs: [lint-openapi, lint-wamp]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Install Nix
         uses: cachix/install-nix-action@v27
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
             experimental-features = nix-command flakes
-      # scripts/generate-docs.js is the single source of the Markdown under
-      # gitbook/reference/api-reference/ (plus gitbook/SUMMARY.md) - GitBook
-      # syncs its content straight from this repo, so the rendered output
-      # has to be committed, not just built as an ephemeral artifact.
-      - name: Render GitBook markdown from the OpenAPI spec (via Nix, reproducibly)
-        run: |
-          nix build .#docs --print-build-logs
-          # -L dereferences the `result` symlink into the read-only nix
-          # store, copying the freshly rendered files over the checked-out
-          # working tree so git sees real, writable files to diff/commit.
-          cp -rL result/reference/api-reference/. gitbook/reference/api-reference/
-          cp -L result/SUMMARY.md gitbook/SUMMARY.md
-          chmod -R u+w gitbook/reference/api-reference gitbook/SUMMARY.md
-      - name: Commit and push regenerated docs
-        run: |
-          if git diff --quiet -- gitbook/; then
-            echo "Generated docs are already up to date, nothing to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add gitbook/
-          git commit -m "Regenerate API reference docs from OpenAPI spec"
-          git push origin "HEAD:${{ github.ref_name }}"
+      # `.#site` runs generate-docs.js under yarnBuildHook to render the
+      # API reference into docs/, then mkdocs build --strict against the
+      # combined tree. --strict fails on broken links, so this doubles as
+      # a link check for every PR.
+      - name: Build MkDocs Material site
+        run: nix build .#site --print-build-logs
+      - name: Upload built site
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # `result` is a symlink into the nix store; upload-pages-artifact
+          # tars the target, so pointing at `result/` gets us the HTML.
+          path: result/
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

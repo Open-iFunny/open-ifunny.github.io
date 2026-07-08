@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "OpenAPI 3.1 specification for the iFunny API, rendered into GitBook-native Markdown",
   "scripts": {
-    "build": "node scripts/generate-docs.js",
+    "build": "node scripts/generate-docs.js && node scripts/wamp/render.js",
     "lint": "redocly lint gitbook/openapi/ifunny-api.yaml"
   },
   "dependencies": {

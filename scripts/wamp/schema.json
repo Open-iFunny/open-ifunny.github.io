@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-ifunny.github.io/wamp-spec/1.0/schema.json",
+  "title": "WAMP-Spec",
+  "description": "A specification format for describing WAMP (Web Application Messaging Protocol) APIs. Companion to OpenAPI for message-oriented WAMP realms - catalogs procedures (RPC) and topics (pub/sub) rather than HTTP paths. Payloads are JSON Schema 2020-12; the renderer emits JSON/TypeScript/Go type layouts identical to the OpenAPI reference.",
+  "type": "object",
+  "required": ["wampspec", "info", "servers"],
+  "additionalProperties": false,
+  "properties": {
+    "wampspec": {
+      "type": "string",
+      "const": "1.0",
+      "description": "WAMP-Spec version. Currently only \"1.0\" is defined."
+    },
+    "info": {
+      "type": "object",
+      "required": ["title", "version"],
+      "additionalProperties": true,
+      "properties": {
+        "title":       { "type": "string" },
+        "description": { "type": "string" },
+        "version":     { "type": "string" }
+      }
+    },
+    "servers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/server" }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name":        { "type": "string" },
+          "emoji":       { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "procedures": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/procedure" }
+    },
+    "topics": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/topic" }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemas": {
+          "type": "object",
+          "additionalProperties": { "type": "object" }
+        },
+        "auths": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/auth" }
+        },
+        "errors": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/errorDef" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "server": {
+      "type": "object",
+      "required": ["url", "realm"],
+      "additionalProperties": false,
+      "properties": {
+        "name":         { "type": "string" },
+        "url":          { "type": "string", "description": "WebSocket URL, e.g. wss://chat.example.com/ws." },
+        "realm":        { "type": "string", "description": "WAMP realm to join after HELLO." },
+        "subprotocols": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "WebSocket subprotocols advertised in the Sec-WebSocket-Protocol handshake, in preference order."
+        },
+        "auth":         { "$ref": "#/$defs/authRef" },
+        "description":  { "type": "string" }
+      }
+    },
+
+    "auth": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ticket", "wampcra", "anonymous", "cookie"],
+          "description": "WAMP authmethod. \"ticket\" is a shared-secret string passed in the AUTHENTICATE message; iFunny reuses the OAuth2 bearer token here."
+        },
+        "description":    { "type": "string" },
+        "authid_source":  { "type": "string", "description": "Human-readable note on where the authid comes from (e.g. \"user's iFunny numeric ID\")." },
+        "credential_ref": { "type": "string", "description": "Cross-reference to how the credential is obtained (e.g. \"reference/api/oauth2.md#op-getbearer\")." }
+      }
+    },
+
+    "authRef": {
+      "type": "object",
+      "required": ["$ref"],
+      "additionalProperties": false,
+      "properties": {
+        "$ref": { "type": "string", "description": "Pointer into #/components/auths, e.g. \"#/components/auths/ticket\"." }
+      }
+    },
+
+    "procedure": {
+      "type": "object",
+      "required": ["uri", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "id":          { "type": "string", "description": "Stable slug for anchor generation. Defaults to the URI with dots replaced." },
+        "uri":         { "type": "string", "description": "Fully-qualified WAMP URI, e.g. co.fun.chat.new_chat." },
+        "tag":         { "type": "string", "description": "Tag name (matches #/tags/*/name) grouping this procedure into a page." },
+        "summary":     { "type": "string" },
+        "description": { "type": "string" },
+        "server":      { "type": "string", "description": "Server name (matches #/servers/*/name). Defaults to first server." },
+        "args":        {
+          "type": "array",
+          "items": { "$ref": "#/$defs/positionalArg" },
+          "description": "Positional CALL arguments in the WAMP message's args list."
+        },
+        "kwargs":      {
+          "type": "object",
+          "description": "Named CALL arguments in the WAMP message's kwargs dict, as a JSON Schema (typically an object schema)."
+        },
+        "result":      { "$ref": "#/$defs/result" },
+        "errors":      {
+          "type": "array",
+          "items": { "$ref": "#/$defs/errorRef" }
+        }
+      }
+    },
+
+    "topic": {
+      "type": "object",
+      "required": ["uri", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "id":            { "type": "string" },
+        "uri":           { "type": "string", "description": "Topic URI; may contain {param} template segments, e.g. user.{id}.chats." },
+        "tag":           { "type": "string" },
+        "summary":       { "type": "string" },
+        "description":   { "type": "string" },
+        "server":        { "type": "string" },
+        "uri_parameters": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uriParameter" },
+          "description": "Bindings for the {param} placeholders in the URI."
+        },
+        "args": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/positionalArg" },
+          "description": "Positional args on the PUBLISH message."
+        },
+        "kwargs": {
+          "type": "object",
+          "description": "Named args on the PUBLISH message, as a JSON Schema."
+        }
+      }
+    },
+
+    "positionalArg": {
+      "type": "object",
+      "required": ["name", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "name":        { "type": "string" },
+        "description": { "type": "string" },
+        "required":    { "type": "boolean", "default": true },
+        "schema":      { "type": "object", "description": "JSON Schema for this arg." }
+      }
+    },
+
+    "uriParameter": {
+      "type": "object",
+      "required": ["name", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "name":        { "type": "string" },
+        "description": { "type": "string" },
+        "schema":      { "type": "object" }
+      }
+    },
+
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": { "type": "string" },
+        "args": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/positionalArg" },
+          "description": "Positional args on the RESULT message."
+        },
+        "kwargs": {
+          "type": "object",
+          "description": "Named args on the RESULT message, as a JSON Schema."
+        }
+      }
+    },
+
+    "errorDef": {
+      "type": "object",
+      "required": ["uri"],
+      "additionalProperties": false,
+      "properties": {
+        "uri":         { "type": "string", "description": "Error URI, e.g. wamp.error.no_such_procedure." },
+        "description": { "type": "string" },
+        "kwargs":      { "type": "object", "description": "JSON Schema for the error kwargs payload." }
+      }
+    },
+
+    "errorRef": {
+      "type": "object",
+      "required": ["$ref"],
+      "additionalProperties": false,
+      "properties": {
+        "$ref": { "type": "string", "description": "Pointer into #/components/errors." }
+      }
+    }
+  }
+}
