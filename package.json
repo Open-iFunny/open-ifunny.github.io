@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@redocly/cli": "1.25.5",
+    "highlight.js": "^11.9.0",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {}

@@ -42,7 +42,7 @@ let
 
   offlineCache = pkgs.fetchYarnDeps {
     yarnLock = ./yarn.lock;
-    hash = "sha256-/mv7ioEId2JL1xNuhq01pqF4gJl3W9hSpDMsNS7szWU=";
+    hash = "sha256-ky7lKXlHXqpS6mgxIOKVMgnlopD+tQnYXhdlYAq5+Z8=";
   };
 in
 pkgs.stdenv.mkDerivation {

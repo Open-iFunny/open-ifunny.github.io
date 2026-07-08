@@ -1,0 +1,108 @@
+# Async task polling and pre-signup availability checks.
+
+"/tasks/{task_id}":
+  get:
+    operationId: getTaskStatus
+    tags: [Tasks]
+    summary: Get Task Status
+    description: |
+      Poll the status of an asynchronous task returned from a previous call
+      (e.g. `POST /content` upload). Response shape matches the 202 envelope
+      returned when the task was created.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: task_id
+        in: path
+        required: true
+        description: UUID v1 task ID.
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Task status
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: "../schemas/task.yaml#/Task"
+                status:
+                  type: integer
+                  const: 200
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"
+
+"/nicks/available":
+  get:
+    operationId: checkNickAvailability
+    tags: [OAuth2]
+    summary: Check Nick Availability
+    description: |
+      Check whether a nickname is available for signup or account rename.
+      Returns `{available: boolean}`.
+    security:
+      - BasicAuth: []
+        ProjectId: []
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: nick
+        in: query
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Availability result
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    available:
+                      type: boolean
+                status:
+                  type: integer
+                  const: 200
+
+"/emails/available":
+  get:
+    operationId: checkEmailAvailability
+    tags: [OAuth2]
+    summary: Check Email Availability
+    description: |
+      Check whether an email address is available for signup or account
+      rebinding. Returns `{available: boolean}`.
+    security:
+      - BasicAuth: []
+        ProjectId: []
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Availability result
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    available:
+                      type: boolean
+                status:
+                  type: integer
+                  const: 200

@@ -1,0 +1,33 @@
+# Generic async task envelope. Same shape returned by the `POST /content`
+# 202 upload response and by `GET /tasks/{task_id}` polls.
+
+Task:
+  type: object
+  properties:
+    id:
+      type: string
+      description: UUID v1 task ID.
+    type:
+      type: string
+      description: |
+        Task type discriminator. Known values include `content_uploading`
+        and `content_deleting`.
+    state:
+      type: string
+      enum: [pending, success, failure]
+    retry_after:
+      type: integer
+      description: Seconds to wait before re-polling. Present only on `pending`.
+    result:
+      type: object
+      description: Present only on `success`.
+      properties:
+        cid:
+          type: string
+          description: Resulting content ID (for content_uploading tasks).
+    error:
+      type: string
+      description: Machine-readable error code. Present only on `failure`.
+    error_description:
+      type: string
+      description: Human-readable error message. Present only on `failure`.

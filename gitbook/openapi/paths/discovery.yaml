@@ -1,0 +1,155 @@
+# Explore, digests, and by-nick timeline discovery endpoints.
+
+"/explore/compilation/{id}":
+  post:
+    operationId: getExploreCompilation
+    tags: [Discovery]
+    summary: Get Explore Compilation
+    description: |
+      Fetch a page of an explore compilation feed (curated content shelves).
+      Method is POST (matching upstream behaviour) despite semantically being
+      a read.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Compilation ID (see EXPLORE_COMPILATION_IDS in client types).
+        schema:
+          type: string
+      - $ref: "../ifunny-api.yaml#/components/parameters/Limit30"
+      - name: next
+        in: query
+        schema:
+          type: string
+      - name: prev
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Compilation page
+        content:
+          application/json:
+            schema:
+              $ref: "../ifunny-api.yaml#/components/schemas/FeedResponse"
+
+"/digest_groups":
+  get:
+    operationId: getDigestGroups
+    tags: [Discovery]
+    summary: Get Weekly Digest Groups
+    description: |
+      Paginated list of weekly digests. Optional `comments` / `contents` flags
+      inline extended detail data in each digest entry.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - $ref: "../ifunny-api.yaml#/components/parameters/Limit30"
+      - name: next
+        in: query
+        schema:
+          type: string
+      - name: comments
+        in: query
+        schema:
+          type: integer
+          enum: [0, 1]
+        description: 1 to include comment detail data.
+      - name: contents
+        in: query
+        schema:
+          type: integer
+          enum: [0, 1]
+        description: 1 to include content detail data.
+    responses:
+      "200":
+        description: Digest groups page
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    digest_groups:
+                      allOf:
+                        - $ref: "../ifunny-api.yaml#/components/schemas/PagedResult"
+                        - properties:
+                            items:
+                              type: array
+                              items:
+                                $ref: "../schemas/digest.yaml#/DigestGroup"
+                status:
+                  type: integer
+                  const: 200
+
+"/digests/{digest_id}/reads/{count}":
+  get:
+    operationId: markDigestRead
+    tags: [Discovery]
+    summary: Mark Digest Posts as Read
+    description: |
+      Mark the first `count` posts of a digest as read. Path-only endpoint
+      (no query or body). Method is GET matching upstream (side-effectful).
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: digest_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: count
+        in: path
+        required: true
+        description: How many leading posts of the digest to mark read.
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: Read state updated
+
+"/timelines/users/by_nick/{nick}":
+  get:
+    operationId: getUserTimelineByNick
+    tags: [Content]
+    summary: Get User Timeline by Nick
+    description: |
+      Paginated posts on a user's profile timeline, addressed by nickname.
+      Cursor-paginated. `/timelines/user/{id}` (root spec) is the equivalent
+      addressed by user id.
+    security:
+      - BasicAuth: []
+        ProjectId: []
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: nick
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: "../ifunny-api.yaml#/components/parameters/Limit30"
+      - name: next
+        in: query
+        schema:
+          type: string
+      - name: prev
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        description: User timeline page
+        content:
+          application/json:
+            schema:
+              $ref: "../ifunny-api.yaml#/components/schemas/FeedResponse"
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"

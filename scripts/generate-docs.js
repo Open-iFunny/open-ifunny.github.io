@@ -10,16 +10,37 @@
 // directly and renders exactly the layout we want: one column, grouped by
 // tag, each operation showing METHOD /path with a JSON / TypeScript / Go
 // schema-format switcher instead of a live example payload.
+//
+// Each request/response schema block is self-contained: any named types it
+// transitively references (including recursive ones, e.g. Comment <-> Reply)
+// are generated once and inlined into that same codeblock, rather than
+// linking out to a shared appendix.
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const yaml = require('js-yaml');
+const hljs = require('highlight.js/lib/core');
+hljs.registerLanguage('typescript', require('highlight.js/lib/languages/typescript'));
+hljs.registerLanguage('go', require('highlight.js/lib/languages/go'));
 
 const SPEC_PATH = path.join(__dirname, '..', 'gitbook', 'openapi', 'ifunny-api.yaml');
 const OUT_DIR = path.join(__dirname, '..', '_site');
 const OUT_FILE = path.join(OUT_DIR, 'index.html');
+const HLJS_THEME_PATH = path.join(__dirname, '..', 'node_modules', 'highlight.js', 'styles', 'github-dark.css');
+const REDOCLY_BIN = path.join(__dirname, '..', 'node_modules', '.bin', 'redocly');
 
-const spec = yaml.load(fs.readFileSync(SPEC_PATH, 'utf8'));
+// The spec is authored as multiple files (gitbook/openapi/ifunny-api.yaml plus
+// ./paths/*.yaml and ./schemas/*.yaml, cross-referenced with relative $refs).
+// Bundle it into a single document with `redocly bundle` first, so the rest
+// of this script can resolve every $ref as a plain in-document JSON pointer
+// (e.g. `#/components/schemas/Foo`) without needing to track, per node, which
+// file it was loaded from.
+const bundledYaml = execFileSync(REDOCLY_BIN, ['bundle', SPEC_PATH, '--ext', 'yaml'], {
+  encoding: 'utf8',
+  maxBuffer: 64 * 1024 * 1024,
+});
+const spec = yaml.load(bundledYaml);
 
 // ---------------------------------------------------------------------------
 // $ref resolution
@@ -46,20 +67,21 @@ function pascalCase(s) {
 }
 
 // ---------------------------------------------------------------------------
-// Named-type registry: every schema we render gets a name (either its
-// component name, or a synthesized name for an anonymous nested object) and
-// is generated exactly once. This is what lets TypeScript/Go output use
-// real named types/structs instead of infinitely inlining recursive schemas
-// (e.g. Comment <-> Reply).
+// Named-type resolution, scoped per schema block.
+//
+// Every request/response schema gets its own fresh `ctx` (registry + queue).
+// Within that ctx, $refs and anonymous nested objects become named
+// types, generated once and inlined into the same codeblock as the type
+// that referenced them. Reusing the same ctx across a whole codeblock
+// (rather than one shared, page-wide registry) is what makes each dropdown
+// self-contained, and a per-ctx `registry` dedup is what stops recursive
+// schemas like Comment <-> Reply from looping forever.
 // ---------------------------------------------------------------------------
 
-const registry = new Map(); // name -> raw schema
-const queue = [];
-
-function registerNamed(name, schema) {
-  if (!registry.has(name)) {
-    registry.set(name, schema);
-    queue.push(name);
+function registerNamed(ctx, name, schema) {
+  if (!ctx.registry.has(name)) {
+    ctx.registry.set(name, schema);
+    ctx.queue.push(name);
   }
   return name;
 }
@@ -79,85 +101,101 @@ function flattenAllOf(schema) {
 // Resolve a property/array-item schema to an IR node. $refs and anonymous
 // objects become named refs (registered for later generation); everything
 // else is rendered inline.
-function resolveNode(schema, namePath) {
+function resolveNode(ctx, schema, namePath) {
   if (!schema) return { kind: 'any' };
   if (schema.$ref) {
     const name = refName(schema.$ref);
-    registerNamed(name, resolveRef(schema.$ref));
+    registerNamed(ctx, name, resolveRef(schema.$ref));
     return { kind: 'ref', name };
   }
-  if (schema.allOf) return resolveNode(flattenAllOf(schema), namePath);
+  if (schema.allOf) return resolveNode(ctx, flattenAllOf(schema), namePath);
   if (schema.oneOf) {
-    return {
-      kind: 'oneOf',
-      variants: schema.oneOf.map((v, i) => resolveVariant(v, namePath, i)),
-    };
+    return { kind: 'oneOf', variants: schema.oneOf.map((v, i) => resolveVariant(ctx, v, namePath, i)) };
   }
   const type = schema.type || (schema.properties ? 'object' : undefined);
   if (type === 'array') {
-    return { kind: 'array', items: resolveNode(schema.items || {}, `${namePath}Item`) };
+    return { kind: 'array', items: resolveNode(ctx, schema.items || {}, `${namePath}Item`) };
   }
   if (type === 'object' || schema.properties) {
     if (!schema.properties || Object.keys(schema.properties).length === 0) return { kind: 'any' };
-    registerNamed(namePath, schema);
+    registerNamed(ctx, namePath, schema);
     return { kind: 'ref', name: namePath };
   }
   return { kind: type || 'any', enum: schema.enum, const: schema.const };
 }
 
-function resolveVariant(v, namePath, i) {
+function resolveVariant(ctx, v, namePath, i) {
   if (v.$ref) {
     const name = refName(v.$ref);
-    registerNamed(name, resolveRef(v.$ref));
+    registerNamed(ctx, name, resolveRef(v.$ref));
     return { kind: 'ref', name };
   }
   const name = v.title ? pascalCase(v.title) : `${namePath}Variant${i + 1}`;
-  registerNamed(name, v);
+  registerNamed(ctx, name, v);
   return { kind: 'ref', name };
 }
 
 // Build the IR body for a schema that already has a name (component schema
 // or a synthesized nested-object name). Handles object/array/primitive/enum.
-function buildNamedTypeIR(schema, selfName) {
+function buildNamedTypeIR(ctx, schema, selfName) {
   const flat = schema.allOf ? flattenAllOf(schema) : schema;
   const type = flat.type || (flat.properties ? 'object' : undefined);
   if (type === 'object' || flat.properties) {
     const props = Object.entries(flat.properties || {}).map(([propName, propSchema]) => ({
       name: propName,
       required: (flat.required || []).includes(propName),
-      node: resolveNode(propSchema, selfName + pascalCase(propName)),
+      node: resolveNode(ctx, propSchema, selfName + pascalCase(propName)),
       description: propSchema.description,
     }));
     return { kind: 'object', properties: props, description: flat.description };
   }
   if (type === 'array') {
-    return { kind: 'array', items: resolveNode(flat.items || {}, `${selfName}Item`), description: flat.description };
+    return { kind: 'array', items: resolveNode(ctx, flat.items || {}, `${selfName}Item`), description: flat.description };
   }
   return { kind: type || 'string', enum: flat.enum, const: flat.const, description: flat.description };
 }
 
 // Top-level entry point for a request body / response schema. Behaves like
 // resolveNode, except a bare object at the root is rendered inline (it's
-// only used once, so it doesn't need its own name/appendix entry).
-function renderTopLevelIR(schema, baseName) {
+// only used once here, so it doesn't need its own synthesized name).
+function renderTopLevelIR(ctx, schema, baseName) {
   if (!schema) return { kind: 'any' };
   if (schema.$ref) {
     const name = refName(schema.$ref);
-    registerNamed(name, resolveRef(schema.$ref));
+    registerNamed(ctx, name, resolveRef(schema.$ref));
     return { kind: 'ref', name };
   }
-  if (schema.allOf) return renderTopLevelIR(flattenAllOf(schema), baseName);
+  if (schema.allOf) return renderTopLevelIR(ctx, flattenAllOf(schema), baseName);
   if (schema.oneOf) {
-    return { kind: 'oneOf', variants: schema.oneOf.map((v, i) => resolveVariant(v, baseName, i)) };
+    return { kind: 'oneOf', variants: schema.oneOf.map((v, i) => resolveVariant(ctx, v, baseName, i)) };
   }
   const type = schema.type || (schema.properties ? 'object' : undefined);
   if (type === 'array') {
-    return { kind: 'array', items: renderTopLevelIR(schema.items || {}, `${baseName}Item`) };
+    return { kind: 'array', items: renderTopLevelIR(ctx, schema.items || {}, `${baseName}Item`) };
   }
   if (type === 'object' || schema.properties) {
-    return buildNamedTypeIR(schema, baseName);
+    return buildNamedTypeIR(ctx, schema, baseName);
   }
   return { kind: type || 'any', enum: schema.enum, const: schema.const };
+}
+
+// Renders a top-level schema plus the full closure of named types it
+// transitively references, all scoped to one fresh ctx. This is what makes
+// a single request/response codeblock self-contained: if the same type is
+// referenced multiple times within it, it's still only defined once.
+function renderSchemaWithDeps(schema, baseName) {
+  const ctx = { registry: new Map(), queue: [] };
+  const topIR = renderTopLevelIR(ctx, schema, baseName);
+  const seen = new Set();
+  const nested = [];
+  while (ctx.queue.length) {
+    const name = ctx.queue.shift();
+    if (seen.has(name)) continue;
+    seen.add(name);
+    const nestedSchema = ctx.registry.get(name);
+    nested.push({ name, ir: buildNamedTypeIR(ctx, nestedSchema, name) });
+  }
+  return { topIR, nested };
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +204,10 @@ function renderTopLevelIR(schema, baseName) {
 
 function esc(s) {
   return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+
+function highlight(code, language) {
+  return hljs.highlight(code, { language }).value;
 }
 
 function jsonType(node) {
@@ -196,8 +238,7 @@ function renderJSON(name, ir) {
   if (ir.kind !== 'object') {
     return `// ${name}\n"${name}": "${jsonType(ir)}"`;
   }
-  const body = renderJSONBody(ir, 0);
-  return `// ${name}\n${body}`;
+  return `// ${name}\n${renderJSONBody(ir, 0)}`;
 }
 
 function renderJSONBody(ir, level) {
@@ -284,6 +325,20 @@ function renderGo(name, ir) {
   return `type ${name} struct {\n${lines.join('\n')}\n}`;
 }
 
+// Renders a schema block's full contents (top type + all its transitive
+// named types) in all three formats, each self-contained.
+function renderSchemaBlock(schemaData, name) {
+  const { topIR, nested } = schemaData;
+  const jsonText = [renderJSON(name, topIR), ...nested.map((n) => renderJSON(n.name, n.ir))].join('\n\n');
+  const tsText = [renderTS(name, topIR), ...nested.map((n) => renderTS(n.name, n.ir))].join('\n\n');
+  const goText = [renderGo(name, topIR), ...nested.map((n) => renderGo(n.name, n.ir))].join('\n\n');
+  return {
+    json: esc(jsonText),
+    ts: highlight(tsText, 'typescript'),
+    go: highlight(goText, 'go'),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Operation extraction
 // ---------------------------------------------------------------------------
@@ -291,7 +346,6 @@ function renderGo(name, ir) {
 const METHODS = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
 
 function collectOperationsByTag() {
-  const tagOrder = (spec.tags || []).map((t) => t.name);
   const tagMap = new Map();
   for (const t of spec.tags || []) tagMap.set(t.name, { name: t.name, description: t.description || '', operations: [] });
 
@@ -328,11 +382,10 @@ function buildOperationData(entry) {
     const contentTypes = Object.keys(op.requestBody.content || {});
     const ct = contentTypes[0];
     if (ct) {
-      const schema = op.requestBody.content[ct].schema;
       requestBody = {
         contentType: ct,
         required: !!op.requestBody.required,
-        ir: renderTopLevelIR(schema, `${baseName}Request`),
+        schemaData: renderSchemaWithDeps(op.requestBody.content[ct].schema, `${baseName}Request`),
       };
     }
   }
@@ -342,15 +395,17 @@ function buildOperationData(entry) {
   const otherResponses = [];
   for (const [code, respRaw] of responseEntries) {
     const resp = respRaw.$ref ? resolveRef(respRaw.$ref) : respRaw;
+    const isSuccess = /^2\d\d$/.test(code);
     const contentTypes = Object.keys(resp.content || {});
     const ct = contentTypes[0];
-    const isSuccess = /^2\d\d$/.test(code);
-    if (ct) {
-      const ir = renderTopLevelIR(resp.content[ct].schema, `${baseName}${code}`);
-      if (isSuccess && !primaryResponse) {
-        primaryResponse = { code, description: resp.description, contentType: ct, ir };
-        continue;
-      }
+    if (isSuccess && ct && !primaryResponse) {
+      primaryResponse = {
+        code,
+        description: resp.description,
+        contentType: ct,
+        schemaData: renderSchemaWithDeps(resp.content[ct].schema, `${baseName}${code}`),
+      };
+      continue;
     }
     otherResponses.push({ code, description: resp.description });
   }
@@ -379,19 +434,6 @@ const operationsByTagRendered = tags.map((tag) => ({
   operations: tag.operations.map(buildOperationData),
 }));
 
-// Drain the queue to generate every named type reachable from the above.
-const generatedTypes = [];
-const seen = new Set();
-while (queue.length) {
-  const name = queue.shift();
-  if (seen.has(name)) continue;
-  seen.add(name);
-  const schema = registry.get(name);
-  const ir = buildNamedTypeIR(schema, name);
-  generatedTypes.push({ name, ir, description: schema.description });
-}
-generatedTypes.sort((a, b) => a.name.localeCompare(b.name));
-
 // ---------------------------------------------------------------------------
 // HTML rendering
 // ---------------------------------------------------------------------------
@@ -400,7 +442,7 @@ function methodBadge(method) {
   return `<span class="method method-${method}">${method.toUpperCase()}</span>`;
 }
 
-function formatTabs(idPrefix) {
+function formatTabs() {
   return `
     <div class="format-tabs">
       <button type="button" class="format-btn active" data-format-btn="json">JSON</button>
@@ -409,12 +451,13 @@ function formatTabs(idPrefix) {
     </div>`;
 }
 
-function schemaBlock(label, name, ir) {
+function schemaBlock(label, name, schemaData) {
+  const rendered = renderSchemaBlock(schemaData, name);
   return `
     <h4>${esc(label)}</h4>
-    <pre data-format-panel="json">${esc(renderJSON(name, ir))}</pre>
-    <pre data-format-panel="ts" hidden>${esc(renderTS(name, ir))}</pre>
-    <pre data-format-panel="go" hidden>${esc(renderGo(name, ir))}</pre>`;
+    <pre data-format-panel="json">${rendered.json}</pre>
+    <pre data-format-panel="ts" hidden><code class="hljs">${rendered.ts}</code></pre>
+    <pre data-format-panel="go" hidden><code class="hljs">${rendered.go}</code></pre>`;
 }
 
 function paramsTable(parameters) {
@@ -457,8 +500,8 @@ function renderOperation(o) {
         ${o.description ? `<p class="op-description">${esc(o.description)}</p>` : ''}
         <p class="op-security"><strong>Auth:</strong> ${esc(o.security)}</p>
         ${paramsTable(o.parameters)}
-        ${o.requestBody ? schemaBlock(`Request Body (${o.requestBody.contentType})`, `${pascalCase(o.operationId)}Request`, o.requestBody.ir) : ''}
-        ${o.primaryResponse ? schemaBlock(`Response ${o.primaryResponse.code} — ${o.primaryResponse.description || ''}`, `${pascalCase(o.operationId)}Response`, o.primaryResponse.ir) : ''}
+        ${o.requestBody ? schemaBlock(`Request Body (${o.requestBody.contentType})`, `${pascalCase(o.operationId)}Request`, o.requestBody.schemaData) : ''}
+        ${o.primaryResponse ? schemaBlock(`Response ${o.primaryResponse.code} — ${o.primaryResponse.description || ''}`, `${pascalCase(o.operationId)}Response`, o.primaryResponse.schemaData) : ''}
         ${otherResponsesList(o.otherResponses)}
       </div>
     </details>`;
@@ -473,26 +516,7 @@ function renderTag(tag) {
     </section>`;
 }
 
-function renderAppendix() {
-  const entries = generatedTypes
-    .map(
-      (t) => `
-      <div class="type-def" id="type-${esc(t.name)}">
-        <h3>${esc(t.name)}</h3>
-        ${t.description ? `<p>${esc(t.description)}</p>` : ''}
-        <pre data-format-panel="json">${esc(renderJSON(t.name, t.ir))}</pre>
-        <pre data-format-panel="ts" hidden>${esc(renderTS(t.name, t.ir))}</pre>
-        <pre data-format-panel="go" hidden>${esc(renderGo(t.name, t.ir))}</pre>
-      </div>`
-    )
-    .join('\n');
-  return `
-    <section class="scope schema-appendix">
-      <h2>Schema Reference</h2>
-      <p class="scope-description">Every named schema referenced above, in full.</p>
-      ${entries}
-    </section>`;
-}
+const hljsTheme = fs.readFileSync(HLJS_THEME_PATH, 'utf8');
 
 const CSS = `
   :root {
@@ -534,7 +558,6 @@ const CSS = `
     padding-bottom: 0.5rem;
     margin-top: 3rem;
   }
-  h3 { color: var(--accent); }
   h4 { color: var(--text-secondary); margin-bottom: 0.25rem; }
   p.scope-description, p.op-description { color: var(--text-secondary); }
   a { color: var(--accent); }
@@ -599,8 +622,9 @@ const CSS = `
     overflow-x: auto;
     font-size: 0.85rem;
   }
+  pre code.hljs { padding: 0; background: transparent; }
   .other-responses, .other-responses-list { font-size: 0.85rem; color: var(--text-secondary); }
-  .schema-appendix .type-def { margin: 1.5rem 0; }
+  ${hljsTheme}
 `;
 
 const JS = `
@@ -630,7 +654,6 @@ const html = `<!doctype html>
   </header>
   <main>
     ${operationsByTagRendered.map(renderTag).join('\n')}
-    ${renderAppendix()}
   </main>
   <script>${JS}</script>
 </body>
@@ -639,4 +662,4 @@ const html = `<!doctype html>
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(OUT_FILE, html);
-process.stdout.write(`Generated ${OUT_FILE} (${(Buffer.byteLength(html) / 1024).toFixed(1)} KiB), ${generatedTypes.length} named types.\n`);
+process.stdout.write(`Generated ${OUT_FILE} (${(Buffer.byteLength(html) / 1024).toFixed(1)} KiB).\n`);

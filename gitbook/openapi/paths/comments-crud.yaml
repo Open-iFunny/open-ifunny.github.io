@@ -1,0 +1,128 @@
+# Comment CRUD and reply/report actions on a specific comment.
+# Adding a top-level comment (POST /content/{id}/comments) is defined inline
+# in the root spec alongside the existing GET on that path.
+
+"/content/{content_id}/comments/{comment_id}":
+  delete:
+    operationId: deleteComment
+    tags: [Comments]
+    summary: Delete Comment
+    description: |
+      Delete a comment. Client must be the comment author or the post owner.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: content_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Comment deleted
+      "403":
+        description: Forbidden (not comment author or post owner)
+        content:
+          application/json:
+            schema:
+              $ref: "../ifunny-api.yaml#/components/schemas/Error"
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"
+
+"/content/{content_id}/comments/{comment_id}/replies":
+  post:
+    operationId: addCommentReply
+    tags: [Comments]
+    summary: Reply to Comment
+    description: |
+      Post a reply to a comment. Body supports plain text, an optional
+      attached post (`content`), and user mentions.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: content_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            required: [text]
+            properties:
+              text:
+                type: string
+                description: Reply text.
+              content:
+                type: string
+                description: Optional attached post's content ID.
+              mentions:
+                type: array
+                description: User mentions embedded in the reply.
+                items:
+                  $ref: "../ifunny-api.yaml#/components/schemas/UserMention"
+    responses:
+      "200":
+        description: Reply created
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    comment:
+                      $ref: "../ifunny-api.yaml#/components/schemas/Reply"
+                status:
+                  type: integer
+                  const: 200
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"
+
+"/content/{content_id}/comments/{comment_id}/abuses":
+  put:
+    operationId: reportComment
+    tags: [Comments]
+    summary: Report Comment
+    description: Report a comment for abuse. `type` categorizes the report.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: content_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: true
+        schema:
+          type: string
+          enum: [hate, nude, spam, harm, target]
+    responses:
+      "200":
+        description: Report accepted
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"

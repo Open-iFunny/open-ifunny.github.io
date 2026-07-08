@@ -1,0 +1,49 @@
+# Weekly-digest schemas used by /digest_groups and /digests/*.
+# Shapes derived from ifunny-python's PaginatedProto digest_groups response
+# and the DigestProto reads endpoint.
+
+DigestGroup:
+  type: object
+  description: A weekly digest group (a set of digests for a given period).
+  properties:
+    id:
+      type: string
+    title:
+      type: string
+    date:
+      type: integer
+      description: Unix seconds for the digest period.
+    digests:
+      type: array
+      items:
+        $ref: "#/Digest"
+
+Digest:
+  type: object
+  description: A single digest within a group.
+  properties:
+    id:
+      type: string
+    title:
+      type: string
+    subtitle:
+      type: string
+    smile_count:
+      type: integer
+    comment_count:
+      type: integer
+    read_count:
+      type: integer
+      description: Posts already marked read (see /digests/{id}/reads/{count}).
+    item_count:
+      type: integer
+    contents:
+      type: array
+      description: Present when the request set `contents=1`.
+      items:
+        $ref: "../ifunny-api.yaml#/components/schemas/Content"
+    comments:
+      type: array
+      description: Present when the request set `comments=1`.
+      items:
+        $ref: "../ifunny-api.yaml#/components/schemas/Comment"

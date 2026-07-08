@@ -1,0 +1,178 @@
+# Chat channel discovery (REST). Non-WAMP endpoints used to look up / browse
+# chats before joining. Real-time chat messaging itself is WAMP over
+# chat.ifunny.co and is documented in Markdown, not OpenAPI.
+#
+# Each entry is a Path Item Object. Root spec $refs by JSON pointer using the
+# escaped path (`/` -> `~1`).
+
+"/chats/channels/by_link/{link}":
+  get:
+    operationId: getChatByLink
+    tags: [Chat]
+    summary: Get Chat Channel by Link
+    description: |
+      Resolve a `/c/`-style chat share link to a chat channel record. Returns
+      the channel data (name, type, member counts, cover, description) needed
+      to then join over WAMP.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: link
+        in: path
+        required: true
+        description: The `/c/` link identifier (last path segment of the share URL).
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Channel data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    channel:
+                      $ref: "../ifunny-api.yaml#/components/schemas/Chat"
+                status:
+                  type: integer
+                  const: 200
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"
+
+"/chats/trending":
+  get:
+    operationId: getTrendingChats
+    tags: [Chat]
+    summary: Get Trending Chat Channels
+    description: |
+      Paginated list of trending public channels the user may want to join.
+      Cursor-based pagination via `next`/`prev`.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - $ref: "../ifunny-api.yaml#/components/parameters/Limit30"
+      - name: next
+        in: query
+        schema:
+          type: string
+      - name: prev
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Trending channels page
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    channels:
+                      allOf:
+                        - $ref: "../ifunny-api.yaml#/components/schemas/PagedResult"
+                        - properties:
+                            items:
+                              type: array
+                              items:
+                                $ref: "../ifunny-api.yaml#/components/schemas/Chat"
+                status:
+                  type: integer
+                  const: 200
+
+"/chats/open_channels":
+  get:
+    operationId: searchOpenChats
+    tags: [Chat]
+    summary: Search / List Open Chat Channels
+    description: |
+      Search public (open) channels by name, or list them with cursor
+      pagination. Used by the "join a public chat" browser.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: q
+        in: query
+        description: Search query. Omit to list without filtering.
+        schema:
+          type: string
+      - $ref: "../ifunny-api.yaml#/components/parameters/Limit30"
+      - name: next
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Open channels page
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    channels:
+                      allOf:
+                        - $ref: "../ifunny-api.yaml#/components/schemas/PagedResult"
+                        - properties:
+                            items:
+                              type: array
+                              items:
+                                $ref: "../ifunny-api.yaml#/components/schemas/Chat"
+                status:
+                  type: integer
+                  const: 200
+
+"/search/chats/channels":
+  get:
+    operationId: searchChatChannels
+    tags: [Chat]
+    summary: Search Chat Channels
+    description: |
+      Global chat-channel search. Cursor-paginated.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: q
+        in: query
+        required: true
+        description: Search query string
+        schema:
+          type: string
+      - $ref: "../ifunny-api.yaml#/components/parameters/Limit30"
+      - name: next
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Channel search results
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    channels:
+                      allOf:
+                        - $ref: "../ifunny-api.yaml#/components/schemas/PagedResult"
+                        - properties:
+                            items:
+                              type: array
+                              items:
+                                $ref: "../ifunny-api.yaml#/components/schemas/Chat"
+                status:
+                  type: integer
+                  const: 200

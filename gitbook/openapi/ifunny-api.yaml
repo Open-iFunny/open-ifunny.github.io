@@ -53,6 +53,15 @@ tags:
     description: Methods for interacting with content (posts)
   - name: Comments
     description: Methods for interacting with comments
+  - name: Chat
+    description: |
+      REST endpoints for discovering and looking up chat channels. Real-time
+      chat messaging itself is WAMP over WebSocket to `chat.ifunny.co` and is
+      documented in Markdown (see externalDocs).
+  - name: Discovery
+    description: Explore compilations, weekly digests, and other content-discovery feeds.
+  - name: Tasks
+    description: Polling endpoints for asynchronous server-side jobs (e.g. content upload).
 
 security:
   - BasicAuth: []
@@ -1157,6 +1166,84 @@ paths:
                 error: not_found
                 error_description: Content not found
                 status: 404
+    delete:
+      operationId: deleteContent
+      tags: [Content]
+      summary: Delete Content
+      description: |
+        Delete a post. Only the author may call this. Returns a task-style
+        envelope; poll `GET /tasks/{id}` for terminal state.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deletion accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "./schemas/task.yaml#/Task"
+                  status:
+                    type: integer
+                    const: 200
+        "403":
+          description: Forbidden (not content owner)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: modifyContent
+      tags: [Content]
+      summary: Modify Content
+      description: |
+        Update a delayed/scheduled post's publish time or visibility.
+        Send exactly one of `publish_at` or `visibility`.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                publish_at:
+                  type: integer
+                  description: New scheduled publish time (Unix seconds).
+                visibility:
+                  type: string
+                  enum: [public, subscribers]
+                  description: New visibility for a still-delayed post.
+      responses:
+        "200":
+          description: Updated
+        "403":
+          description: Forbidden (not content owner, or already published)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /content:
     post:
@@ -1485,6 +1572,57 @@ paths:
                 error: not_found
                 error_description: Content not found
                 status: 404
+    post:
+      operationId: addContentComment
+      tags: [Comments]
+      summary: Add Comment
+      description: |
+        Post a top-level comment on content. Body supports plain text,
+        an optional attached post (`content`), and user mentions.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                content:
+                  type: string
+                  description: Optional attached post's content ID.
+                mentions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/UserMention"
+      responses:
+        "200":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      comment:
+                        $ref: "#/components/schemas/Comment"
+                  status:
+                    type: integer
+                    const: 200
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /channels:
     get:
@@ -1858,6 +1996,62 @@ paths:
                 $ref: "#/components/schemas/CommentSmileCountsResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+
+  # ----- Split-file path entries -----
+  # Path items maintained in ./paths/*.yaml. Grouped by app feature to mirror
+  # the layout of the upstream client libraries (Chat, Content actions,
+  # Comments CRUD, User moderation, Discovery/digests, Tasks, availability).
+
+  # User moderation
+  /users/my/blocked/{user_id}:
+    $ref: "./paths/user-moderation.yaml#/~1users~1my~1blocked~1{user_id}"
+  /users/{user_id}/abuses:
+    $ref: "./paths/user-moderation.yaml#/~1users~1{user_id}~1abuses"
+
+  # Content moderation & mutation (DELETE/PATCH on /content/{id} and POST on
+  # /content/{id}/comments are defined inline above)
+  /content/{id}/tags:
+    $ref: "./paths/content-actions.yaml#/~1content~1{id}~1tags"
+  /content/{id}/pinned:
+    $ref: "./paths/content-actions.yaml#/~1content~1{id}~1pinned"
+  /content/{id}/abuses:
+    $ref: "./paths/content-actions.yaml#/~1content~1{id}~1abuses"
+
+  # Comment CRUD / moderation
+  /content/{content_id}/comments/{comment_id}:
+    $ref: "./paths/comments-crud.yaml#/~1content~1{content_id}~1comments~1{comment_id}"
+  /content/{content_id}/comments/{comment_id}/replies:
+    $ref: "./paths/comments-crud.yaml#/~1content~1{content_id}~1comments~1{comment_id}~1replies"
+  /content/{content_id}/comments/{comment_id}/abuses:
+    $ref: "./paths/comments-crud.yaml#/~1content~1{content_id}~1comments~1{comment_id}~1abuses"
+
+  # Chat channel discovery (REST). See externalDocs for WAMP messaging.
+  /chats/channels/by_link/{link}:
+    $ref: "./paths/chat-discovery.yaml#/~1chats~1channels~1by_link~1{link}"
+  /chats/trending:
+    $ref: "./paths/chat-discovery.yaml#/~1chats~1trending"
+  /chats/open_channels:
+    $ref: "./paths/chat-discovery.yaml#/~1chats~1open_channels"
+  /search/chats/channels:
+    $ref: "./paths/chat-discovery.yaml#/~1search~1chats~1channels"
+
+  # Discovery: explore compilations, digests, by-nick timeline
+  /explore/compilation/{id}:
+    $ref: "./paths/discovery.yaml#/~1explore~1compilation~1{id}"
+  /digest_groups:
+    $ref: "./paths/discovery.yaml#/~1digest_groups"
+  /digests/{digest_id}/reads/{count}:
+    $ref: "./paths/discovery.yaml#/~1digests~1{digest_id}~1reads~1{count}"
+  /timelines/users/by_nick/{nick}:
+    $ref: "./paths/discovery.yaml#/~1timelines~1users~1by_nick~1{nick}"
+
+  # Tasks & pre-signup availability
+  /tasks/{task_id}:
+    $ref: "./paths/tasks-and-availability.yaml#/~1tasks~1{task_id}"
+  /nicks/available:
+    $ref: "./paths/tasks-and-availability.yaml#/~1nicks~1available"
+  /emails/available:
+    $ref: "./paths/tasks-and-availability.yaml#/~1emails~1available"
 
 components:
   securitySchemes:

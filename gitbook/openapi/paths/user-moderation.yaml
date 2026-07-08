@@ -1,0 +1,84 @@
+# User-directed moderation actions: blocking and reporting.
+# The root spec already documents `GET /users/my/blocked` (the client's
+# blocked list). These endpoints add block/unblock a specific user
+# and the abuse-report path.
+
+"/users/my/blocked/{user_id}":
+  put:
+    operationId: blockUser
+    tags: [Users]
+    summary: Block User
+    description: |
+      Block a user. `type=user` blocks only the target account; `type=installation`
+      blocks every account associated with that user's install (device).
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: true
+        schema:
+          type: string
+          enum: [user, installation]
+    responses:
+      "200":
+        description: User blocked
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"
+  delete:
+    operationId: unblockUser
+    tags: [Users]
+    summary: Unblock User
+    description: Remove a user from the client's block list.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        schema:
+          type: string
+          enum: [user, installation]
+    responses:
+      "200":
+        description: User unblocked
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"
+
+"/users/{user_id}/abuses":
+  put:
+    operationId: reportUser
+    tags: [Users]
+    summary: Report User
+    description: Report a user for abuse. `type` categorizes the report.
+    security:
+      - BearerAuth: []
+        ProjectId: []
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: true
+        schema:
+          type: string
+          enum: [hate, nude, spam, harm, target]
+    responses:
+      "200":
+        description: Report accepted
+      "404":
+        $ref: "../ifunny-api.yaml#/components/responses/NotFound"
