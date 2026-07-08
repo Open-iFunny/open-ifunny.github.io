@@ -5,10 +5,22 @@ on:
     branches: [main]
     paths:
       - "gitbook/openapi/**"
+      - "scripts/**"
+      - "package.json"
+      - "yarn.lock"
+      - "flake.nix"
+      - "flake.lock"
+      - "default.nix"
       - ".github/workflows/openapi.yml"
   pull_request:
     paths:
       - "gitbook/openapi/**"
+      - "scripts/**"
+      - "package.json"
+      - "yarn.lock"
+      - "flake.nix"
+      - "flake.lock"
+      - "default.nix"
       - ".github/workflows/openapi.yml"
 
 permissions:
@@ -30,11 +42,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build static Redoc site
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: Build docs via Nix (custom single-column generator)
         run: |
+          nix build .#docs --print-build-logs
           mkdir -p _site
-          npx --yes @redocly/cli@1.25.5 build-docs gitbook/openapi/ifunny-api.yaml -o _site/index.html
-          cp gitbook/openapi/ifunny-api.yaml _site/ifunny-api.yaml
+          # -L dereferences the `result` symlink into the read-only nix store,
+          # copying the actual index.html + ifunny-api.yaml into _site/.
+          cp -rL result/. _site/
+          chmod -R u+w _site
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
