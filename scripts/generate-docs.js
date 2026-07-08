@@ -82,6 +82,15 @@ function labelToSnakeUpper(s) {
     .toUpperCase();
 }
 
+// Go's net/http canonicalizes header names to e.g. "X-User-Id"; mirrored
+// here so generated `header:"..."` struct tags look like real Go code.
+function canonicalHeaderName(name) {
+  return name
+    .split('-')
+    .map((seg) => seg.charAt(0).toUpperCase() + seg.slice(1).toLowerCase())
+    .join('-');
+}
+
 // ---------------------------------------------------------------------------
 // Named-type resolution, scoped per schema block.
 //
@@ -195,13 +204,11 @@ function renderTopLevelIR(ctx, schema, baseName) {
   return { kind: type || 'any', enum: schema.enum, const: schema.const };
 }
 
-// Renders a top-level schema plus the full closure of named types it
-// transitively references, all scoped to one fresh ctx. This is what makes
-// a single request/response codeblock self-contained: if the same type is
-// referenced multiple times within it, it's still only defined once.
-function renderSchemaWithDeps(schema, baseName) {
-  const ctx = { registry: new Map(), queue: [] };
-  const topIR = renderTopLevelIR(ctx, schema, baseName);
+// Drains a ctx's queue of registered-but-not-yet-built named types into the
+// `nested` list, in the same way for any top-level IR (request/response body
+// or a synthesized parameters object) - shared by both renderSchemaWithDeps
+// and renderParamsSchemaWithDeps below.
+function drainQueue(ctx) {
   const seen = new Set();
   const nested = [];
   while (ctx.queue.length) {
@@ -211,7 +218,35 @@ function renderSchemaWithDeps(schema, baseName) {
     const nestedSchema = ctx.registry.get(name);
     nested.push({ name, ir: buildNamedTypeIR(ctx, nestedSchema, name) });
   }
-  return { topIR, nested };
+  return nested;
+}
+
+// Renders a top-level schema plus the full closure of named types it
+// transitively references, all scoped to one fresh ctx. This is what makes
+// a single request/response codeblock self-contained: if the same type is
+// referenced multiple times within it, it's still only defined once.
+function renderSchemaWithDeps(schema, baseName) {
+  const ctx = { registry: new Map(), queue: [] };
+  const topIR = renderTopLevelIR(ctx, schema, baseName);
+  return { topIR, nested: drainQueue(ctx) };
+}
+
+// Synthesizes a top-level "object" IR out of a flat list of OpenAPI
+// parameter objects (i.e. everything with the same `in:`, such as all query
+// params or all header params on one operation), so a group of parameters
+// can be rendered with exactly the same JSON/TS/Go machinery used for
+// request/response bodies - each parameter becomes a property, named after
+// the parameter's `name`, typed from its `schema`.
+function renderParamsSchemaWithDeps(params, baseName) {
+  const ctx = { registry: new Map(), queue: [] };
+  const properties = params.map((p) => ({
+    name: p.name,
+    required: !!p.required,
+    node: resolveNode(ctx, p.schema || {}, `${baseName}${pascalCase(p.name)}`),
+    description: p.description,
+  }));
+  const topIR = { kind: 'object', properties };
+  return { topIR, nested: drainQueue(ctx) };
 }
 
 // ---------------------------------------------------------------------------
@@ -397,20 +432,30 @@ function goFieldType(p, ownerName, goCtx) {
   return !p.required && scalar ? `*${base}` : base;
 }
 
-function renderGo(name, ir, goCtx) {
+// Default Go struct-tag convention: `json:"name[,omitempty]"`, used for
+// request/response bodies. Query/header parameter blocks pass a different
+// tagKey (`query`/`header`) and tagName mapping (e.g. HTTP header
+// canonicalization) instead - see canonicalHeaderName() and the
+// schemaBlock() call sites in renderOperation().
+const JSON_GO_TAG = { tagKey: 'json', tagName: (n) => n };
+
+function renderGo(name, ir, goCtx, goTag) {
   if (ir.kind !== 'object') {
     return `type ${name} ${goType(ir, goCtx)}`;
   }
   const lines = ir.properties.map((p) => {
-    const tag = `\`json:"${p.name}${p.required ? '' : ',omitempty'}"\``;
+    const tag = `\`${goTag.tagKey}:"${goTag.tagName(p.name)}${p.required ? '' : ',omitempty'}"\``;
     return `\t${pascalCase(p.name) || 'Field'} ${goFieldType(p, name, goCtx)} ${tag}`;
   });
   return `type ${name} struct {\n${lines.join('\n')}\n}`;
 }
 
 // Renders a schema block's full contents (top type + all its transitive
-// named types) in all three formats, each self-contained.
-function renderSchemaBlock(schemaData, name) {
+// named types) in all three formats, each self-contained. `goTag` controls
+// the Go struct-tag convention (defaults to `json:"..."` for bodies; pass
+// { tagKey: 'query' | 'header', tagName } for parameter blocks).
+function renderSchemaBlock(schemaData, name, goTag) {
+  goTag = goTag || JSON_GO_TAG;
   const { topIR, nested } = schemaData;
   const jsonText = [renderJSON(name, topIR), ...nested.map((n) => renderJSON(n.name, n.ir))].join('\n\n');
   const tsText = [renderTS(name, topIR), ...nested.map((n) => renderTS(n.name, n.ir))].join('\n\n');
@@ -435,7 +480,7 @@ function renderSchemaBlock(schemaData, name) {
   // Second pass: render everything else, then append the Kind/const blocks
   // (including any synthesized from anonymous inline enum properties,
   // collected into goCtx.enumBlocks as a side effect of goFieldType above).
-  const goParts = allEntries.filter((e) => !enumNames.has(e.name)).map((e) => renderGo(e.name, e.ir, goCtx));
+  const goParts = allEntries.filter((e) => !enumNames.has(e.name)).map((e) => renderGo(e.name, e.ir, goCtx, goTag));
   goParts.push(...goCtx.enumBlocks.values());
   const goText = goParts.join('\n\n');
 
@@ -483,6 +528,10 @@ function buildOperationData(entry) {
   const baseName = pascalCase(op.operationId || `${method}${routePath}`);
 
   const parameters = (op.parameters || []).map(resolveParam);
+  const queryParams = parameters.filter((p) => p.in === 'query');
+  const headerParams = parameters.filter((p) => p.in === 'header');
+  const querySchemaData = queryParams.length ? renderParamsSchemaWithDeps(queryParams, `${baseName}Query`) : null;
+  const headerSchemaData = headerParams.length ? renderParamsSchemaWithDeps(headerParams, `${baseName}Header`) : null;
 
   let requestBody = null;
   if (op.requestBody) {
@@ -525,6 +574,8 @@ function buildOperationData(entry) {
     description: op.description || '',
     security: describeSecurity(op),
     parameters,
+    querySchemaData,
+    headerSchemaData,
     requestBody,
     primaryResponse,
     otherResponses,
@@ -558,14 +609,21 @@ function formatTabs() {
     </div>`;
 }
 
-function schemaBlock(label, name, schemaData) {
-  const rendered = renderSchemaBlock(schemaData, name);
+function schemaBlock(label, name, schemaData, goTag) {
+  const rendered = renderSchemaBlock(schemaData, name, goTag);
   return `
     <h4>${esc(label)}</h4>
     <pre data-format-panel="json">${rendered.json}</pre>
     <pre data-format-panel="ts" hidden><code class="hljs">${rendered.ts}</code></pre>
     <pre data-format-panel="go" hidden><code class="hljs">${rendered.go}</code></pre>`;
 }
+
+// Struct-tag conventions for the two parameter groups that get their own
+// schema block (see buildOperationData/renderOperation) - mirrors how a
+// hand-written Go client would bind query strings vs. HTTP headers, as
+// opposed to the `json:"..."` tags used for request/response bodies.
+const QUERY_GO_TAG = { tagKey: 'query', tagName: (n) => n };
+const HEADER_GO_TAG = { tagKey: 'header', tagName: canonicalHeaderName };
 
 function paramsTable(parameters) {
   if (!parameters.length) return '';
@@ -607,6 +665,8 @@ function renderOperation(o) {
         ${o.description ? `<p class="op-description">${esc(o.description)}</p>` : ''}
         <p class="op-security"><strong>Auth:</strong> ${esc(o.security)}</p>
         ${paramsTable(o.parameters)}
+        ${o.querySchemaData ? schemaBlock('Query Parameters', `${pascalCase(o.operationId)}QueryParams`, o.querySchemaData, QUERY_GO_TAG) : ''}
+        ${o.headerSchemaData ? schemaBlock('Headers', `${pascalCase(o.operationId)}Headers`, o.headerSchemaData, HEADER_GO_TAG) : ''}
         ${o.requestBody ? schemaBlock(`Request Body (${o.requestBody.contentType})`, `${pascalCase(o.operationId)}Request`, o.requestBody.schemaData) : ''}
         ${o.primaryResponse ? schemaBlock(`Response ${o.primaryResponse.code} — ${o.primaryResponse.description || ''}`, `${pascalCase(o.operationId)}Response`, o.primaryResponse.schemaData) : ''}
         ${otherResponsesList(o.otherResponses)}
