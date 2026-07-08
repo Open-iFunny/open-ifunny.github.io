@@ -1,0 +1,2970 @@
+openapi: 3.1.0
+info:
+  title: iFunny API (Unofficial)
+  version: "4.0.0"
+  description: |
+    Unofficial, reverse-engineered documentation for the iFunny REST API (v4).
+
+    This is a community-maintained specification and is **not affiliated with iFunny or FunCorp**.
+    Provided solely for educational and research purposes. Please review iFunny's
+    [Terms of Service](https://ifunny.co/app/terms) before using this documentation.
+
+    ## Authentication
+
+    Most endpoints require either a **Basic** token or a **Bearer** token in the
+    `Authorization` header, plus the `ifunny-project-id: iFunny` header on every request.
+    See the "Basic Token Generation" guide (ported separately) for how to derive a Basic token,
+    and the `oauth2` operations below for exchanging it for a Bearer token.
+
+    Endpoints marked `Basic | Bearer` accept either credential type; behavior may differ
+    subtly between the two (noted per-operation where known).
+
+    ## Known documentation quirks (carried over / corrected from the source Markdown)
+
+    - The source docs listed both "Login" and "Refresh Bearer Token" on `POST /oauth2/login`.
+      This is preserved here as a single operation accepting either a password grant or a
+      refresh grant via `oneOf` request bodies.
+    - "Upload Content" was documented as `GET /content` despite taking a `multipart/form-data`
+      body; it has been corrected to `POST /content` here.
+    - A couple of base URLs in the source docs were typo'd as `https://api.ifunny/mobi/v4`;
+      normalized to `https://api.ifunny.mobi/v4` throughout.
+    - Path `/users/:id/updates_subcribers` (PUT) vs `/users/:id/updates_subscribers` (DELETE)
+      is a genuine spelling inconsistency in the live API, not a transcription error, and is
+      preserved as two distinct paths.
+  license:
+    name: GPL-3.0
+    url: https://github.com/Open-iFunny/api-docs/blob/main/LICENSE
+externalDocs:
+  description: iFunny Chats (WAMP over WebSocket) protocol docs — not representable in OpenAPI, kept as Markdown
+  url: https://github.com/Open-iFunny/api-docs/tree/main/gitbook/reference/chats
+
+servers:
+  - url: https://api.ifunny.mobi/v4
+    description: Production API
+
+tags:
+  - name: OAuth2
+    description: Authentication and authorization
+  - name: Client
+    description: Methods for the authenticated client's own account
+  - name: Users
+    description: Methods for interacting with other users
+  - name: Content
+    description: Methods for interacting with content (posts)
+  - name: Comments
+    description: Methods for interacting with comments
+
+security:
+  - BasicAuth: []
+    ProjectId: []
+  - BearerAuth: []
+    ProjectId: []
+
+paths:
+  /users:
+    post:
+      operationId: registerAccount
+      tags: [OAuth2]
+      summary: Register Account
+      description: Create a new account on iFunny.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [reg_type, nick, email, password, accepted_mailing]
+              properties:
+                reg_type:
+                  type: string
+                  const: pwd
+                nick:
+                  type: string
+                  description: Username for the account
+                email:
+                  type: string
+                  description: Email for the account
+                password:
+                  type: string
+                  description: Password for the account
+                accepted_mailing:
+                  type: integer
+                  enum: [0, 1]
+                  description: 0 for no, 1 for yes
+      responses:
+        "200":
+          description: Account Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Your new user id
+                  status:
+                    type: integer
+                    const: 200
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: bad_request
+                error_description: string
+                status: 400
+        "403":
+          description: Invalid Email or Email Already Exists
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Error"
+                examples:
+                  invalid_email:
+                    value:
+                      error: invalid_email
+                      error_description: Domain of email was found in disposable domains list
+                      status: 403
+                  email_exists:
+                    value:
+                      error: email_exists
+                      error_description: There is a user with this email
+                      status: 403
+
+  /oauth2/login:
+    post:
+      operationId: loginOrRefresh
+      tags: [OAuth2]
+      summary: Login / Refresh Bearer Token
+      description: |
+        This single path serves two grant types in the source documentation:
+
+        - `grant_type=password` — log in with username/password using a Basic token
+          (see Basic Token Generation guide).
+        - Refresh — exchange an existing Bearer token for a new one via the `token` field.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+                - title: PasswordGrant
+                  type: object
+                  required: [username, password, grant_type]
+                  properties:
+                    username:
+                      type: string
+                      description: Your iFunny email address
+                    password:
+                      type: string
+                      description: Your iFunny password
+                    grant_type:
+                      type: string
+                      const: password
+                - title: RefreshGrant
+                  type: object
+                  required: [token]
+                  properties:
+                    token:
+                      type: string
+                      description: Existing Bearer token to refresh
+      responses:
+        "200":
+          description: Successfully logged in / refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: Your Bearer Token
+                  token_type:
+                    type: string
+                    const: bearer
+                  expires_in:
+                    type: integer
+                    description: In seconds (10 years)
+                    example: 315360000
+        "400":
+          description: Invalid Credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: invalid_grant
+                error_description: Wrong user credentials
+                status: 400
+        "403":
+          description: Captcha Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptchaError"
+        "429":
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: too_many_user_auths
+                error_description: User auths rate exceed, please try again later.
+                status: 429
+
+  /oauth2/revoke:
+    post:
+      operationId: revokeAccessToken
+      tags: [OAuth2]
+      summary: Revoke Access Token
+      description: Revokes a created access token. This will log out every device using this token.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  description: Bearer Token to revoke
+      responses:
+        "200":
+          description: Token successfully revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+
+  /account:
+    get:
+      operationId: getClientAccount
+      tags: [Client]
+      summary: Fetch Profile
+      description: Fetch account information for the client.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      responses:
+        "200":
+          description: Account Information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ClientProfile"
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: editClientAccount
+      tags: [Client]
+      summary: Edit Profile
+      description: Edit profile information for the client.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                nick:
+                  type: string
+                about:
+                  type: string
+                sex:
+                  type: string
+                  enum: [male, female, other]
+                birth_date:
+                  type: string
+                  description: "YYYY-MM-DD"
+                hometown:
+                  type: string
+                  description: Empty if none
+                location:
+                  type: string
+                  description: Empty if none
+                messaging_privacy_status:
+                  type: string
+                  enum: [public, subscribers, closed]
+                is_private:
+                  type: integer
+                  enum: [0, 1]
+                  description: "1: True - 0: False"
+      responses:
+        "200":
+          description: Successfully edited
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /account/email:
+    put:
+      operationId: updateClientEmail
+      tags: [Client]
+      summary: Update Email
+      description: Update the email address associated with the client's account.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  description: URL encoded email address
+      responses:
+        "200":
+          description: Successfully Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /account/password_change_request:
+    post:
+      operationId: requestPasswordChange
+      tags: [Client]
+      summary: Request Password Change
+      description: Request an email to be sent to change a password.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  description: URL encoded email address
+      responses:
+        "200":
+          description: Request sent
+
+  /users/my/comments:
+    get:
+      operationId: getClientComments
+      tags: [Client]
+      summary: Client Comments
+      description: Paginate through comments made by the Client.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - $ref: "#/components/parameters/Limit30"
+      responses:
+        "200":
+          description: Client Comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      comments:
+                        allOf:
+                          - $ref: "#/components/schemas/PagedResult"
+                          - properties:
+                              items:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/Comment"
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/my/blocked:
+    get:
+      operationId: getBlockedUsers
+      tags: [Client]
+      summary: Blocked Users
+      description: Scroll through the Client's Blocked Users.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      responses:
+        "200":
+          description: Blocked Users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    allOf:
+                      - $ref: "#/components/schemas/PagedResult"
+                      - properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/BlockedUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/my/unread_chat_messages:
+    get:
+      operationId: getUnreadMessageCount
+      tags: [Client]
+      summary: Unread Messages
+      description: Fetch the amount of unread messages the user has.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      responses:
+        "200":
+          description: Unread message count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      unread_messages:
+                        type: integer
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/my/appeals:
+    get:
+      operationId: getClientAppeals
+      tags: [Client]
+      summary: Client Appeals
+      description: Fetch the client ban/strike appeals.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      responses:
+        "200":
+          description: Appeal Array
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      appeals:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Appeal"
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/my/chat_invitations:
+    get:
+      operationId: getChatInvitations
+      tags: [Client]
+      summary: Chat Invitations
+      description: Fetch the client's current pending chat invites.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      responses:
+        "200":
+          description: Chat Invites
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      chats:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Chat"
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/my/content_smiles:
+    get:
+      operationId: getClientSmiledContent
+      tags: [Client]
+      summary: Client Smiled Content
+      description: Paginate through content that is smiled by the client.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - $ref: "#/components/parameters/Limit30"
+      responses:
+        "200":
+          description: Smiled Content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        allOf:
+                          - $ref: "#/components/schemas/PagedResult"
+                          - properties:
+                              items:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/Content"
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /feeds/reads:
+    get:
+      operationId: getClientReads
+      tags: [Client]
+      summary: Client Reads
+      description: Paginate through content that the client has marked as viewed.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Content Pagination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+    delete:
+      operationId: clearClientReads
+      tags: [Client]
+      summary: Clear Read History
+      description: This clears all content from the Client's "reads".
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      responses:
+        "200":
+          description: Cleared Read History
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+
+  /reads/{ids}:
+    get:
+      operationId: markContentRead
+      tags: [Client]
+      summary: Mark Content as Read
+      description: Add content to the Client's "reads".
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: ids
+          in: path
+          required: true
+          schema:
+            type: string
+          description: List of Content IDs separated by a comma
+      responses:
+        "200":
+          description: Marked as Read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+
+  /users/my/guests:
+    get:
+      operationId: getClientGuests
+      tags: [Client]
+      summary: Client Guests
+      description: Paginate through users that have viewed the Client's profile.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Guest Pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guest:
+                    $ref: "#/components/schemas/User"
+                  visit_timestamp:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/my/bans:
+    get:
+      operationId: getClientBans
+      tags: [Client]
+      summary: Client Bans
+      description: Paginate through the Client's bans.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Client Bans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      bans:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ClientBan"
+
+  /counters:
+    get:
+      operationId: getNotificationCounters
+      tags: [Client]
+      summary: Notification Counters
+      description: Fetch the notification counters for the client.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: is_new
+          in: query
+          schema:
+            type: boolean
+          description: Doesn't seem to affect responses
+      responses:
+        "200":
+          description: Client Counters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/NotificationCounters"
+                  status:
+                    type: integer
+                    const: 200
+        "401":
+          description: Invalid Grant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /search/users:
+    get:
+      operationId: searchUsers
+      tags: [Users]
+      summary: Search Users
+      description: Search users by nick.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Nick to search for
+        - $ref: "#/components/parameters/Limit30"
+      responses:
+        "200":
+          description: Possible Users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      num:
+                        type: array
+                        items: {}
+                        description: Haven't observed
+                      users:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/User"
+                  status:
+                    type: integer
+                    const: 200
+        "400":
+          description: Empty Query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: empty_query
+                error_description: Empty query
+                status: 400
+
+  /users/{id}:
+    get:
+      operationId: getUserById
+      tags: [Users]
+      summary: User by ID
+      description: Fetch user profile by their unique ID.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the user
+      responses:
+        "200":
+          description: User Data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UserProfile"
+                  status:
+                    type: integer
+                    const: 200
+        "400":
+          description: Invalid User Id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: bad_request
+                error_description: Invalid user id
+                status: 400
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/by_nick/{nick}:
+    get:
+      operationId: getUserByNick
+      tags: [Users]
+      summary: User By Nick
+      description: Fetch a user profile by their nick.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: nick
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The nick of the user
+      responses:
+        "200":
+          description: User Profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UserProfile"
+                  status:
+                    type: integer
+                    const: 200
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{id}/subscribers:
+    put:
+      operationId: subscribeToUser
+      tags: [Users]
+      summary: Subscribe to User
+      description: Add user to the Client's subscriptions.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+    delete:
+      operationId: unsubscribeFromUser
+      tags: [Users]
+      summary: Unsubscribe to User
+      description: Removes the user from the Client's subscriptions.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unsubscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{id}/updates_subcribers:
+    put:
+      operationId: subscribeToUserUpdates
+      tags: [Users]
+      summary: Subscribe to User Updates
+      description: |
+        Add the user to the Client's "updates" subscriptions.
+        This will notify the client when the user uploads new content.
+
+        Note: path spelling ("subcribers") matches the live API and is preserved as-is.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Subscribed to Updates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{id}/updates_subscribers:
+    delete:
+      operationId: unsubscribeFromUserUpdates
+      tags: [Users]
+      summary: Unsubscribe to User Updates
+      description: |
+        Remove the user from the Client's "updates" subscriptions.
+        This will stop iFunny notifying the Client when the user uploads new content.
+
+        Note: this path is spelled "subscribers" (unlike the PUT variant's "subcribers"),
+        matching the live API's inconsistency.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unsubscribed to Updates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /timelines/user/{id}:
+    get:
+      operationId: getUserTimeline
+      tags: [Users]
+      summary: Scroll Timeline
+      description: |
+        Paginate through content on the user's timeline.
+
+        If a Basic token is used, it will only show original content, not republished content.
+        If a Bearer token is used, it will include republished content.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Limit30"
+      responses:
+        "200":
+          description: User Timeline
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        allOf:
+                          - $ref: "#/components/schemas/PagedResult"
+                          - properties:
+                              items:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/Content"
+                  status:
+                    type: integer
+                    const: 200
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /feeds/featured:
+    get:
+      operationId: getFeaturedFeed
+      tags: [Content]
+      summary: Scroll Featured
+      description: Paginate through content in featured.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - $ref: "#/components/parameters/Limit30"
+        - name: is_new
+          in: query
+          schema:
+            type: boolean
+          description: Seems to have no effect on responses
+      responses:
+        "200":
+          description: Featured Content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+
+  /feeds/collective:
+    post:
+      operationId: getCollectiveFeed
+      tags: [Content]
+      summary: Scroll Collective
+      description: |
+        Paginate through content in collective. Unclear why iFunny made this a POST
+        instead of GET.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - $ref: "#/components/parameters/Limit30"
+      responses:
+        "200":
+          description: Collective Content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+
+  /timelines/home:
+    get:
+      operationId: getSubscriptionTimeline
+      tags: [Content]
+      summary: Scroll Subscription Timeline
+      description: Paginate through content in the Client's subscription Feed.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - $ref: "#/components/parameters/Limit30"
+      responses:
+        "200":
+          description: Subscription Feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+
+  /content/{id}:
+    get:
+      operationId: getContentById
+      tags: [Content]
+      summary: Get Content by ID
+      description: Fetch content by its ID.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Content"
+                  status:
+                    type: integer
+                    const: 200
+        "404":
+          description: Content Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: not_found
+                error_description: Content not found
+                status: 404
+
+  /content:
+    post:
+      operationId: uploadContent
+      tags: [Content]
+      summary: Upload Content
+      description: |
+        Uploads new content.
+
+        Note: the source documentation listed this as `GET /content`; corrected to
+        `POST` here since the request body is `multipart/form-data`.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [type, tags]
+              properties:
+                type:
+                  type: string
+                  description: Content type (see ContentType schema)
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of tags to apply to the post
+                video:
+                  type: string
+                  contentEncoding: base64
+                  description: Bytes for the video
+      responses:
+        "202":
+          description: Content Upload Pending
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: UUID v1
+                      type:
+                        type: string
+                        const: content_uploading
+                      state:
+                        type: string
+                        enum: [pending, failure, success]
+                      retry_after:
+                        type: integer
+                        description: Seconds; only present on "pending"
+                      result:
+                        type: object
+                        description: Only present on "success"
+                        properties:
+                          cid:
+                            type: string
+                            description: Content ID of the uploaded post
+                      error:
+                        type: string
+                        description: Only present on "failure"
+                      error_description:
+                        type: string
+                        description: Only present on "failure"
+                  status:
+                    type: integer
+                    const: 202
+
+  /content/{id}/republished:
+    post:
+      operationId: republishContent
+      tags: [Content]
+      summary: Republish Content
+      description: Republish the content to your account.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Republished
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: ID of republished post
+                      num_republished:
+                        type: integer
+                        description: What republish number it is
+                  status:
+                    type: integer
+                    const: 200
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteRepublish
+      tags: [Content]
+      summary: Delete Republish
+      description: If the client has republished the content, this will remove it.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Un-republished
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      num_republished:
+                        type: integer
+
+  /content/{id}/smiles:
+    put:
+      operationId: smileContent
+      tags: [Content]
+      summary: Smile Content
+      description: |
+        Smiles (likes) the content.
+
+        - Using a Bearer will increase `smiles` in Content Nums.
+        - Using a Basic will increase `guest_smiles` in Content Nums.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Content Smiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmileCountsResponse"
+    delete:
+      operationId: removeContentSmile
+      tags: [Content]
+      summary: Remove Content Smile
+      description: |
+        Remove the Client's smile on the content.
+        **NOT** the same as unsmiling the content.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+          description: A "Seen" From Tag
+      responses:
+        "200":
+          description: Content Smiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmileCountsResponse"
+
+  /content/{id}/unsmiles:
+    put:
+      operationId: unsmileContent
+      tags: [Content]
+      summary: Unsmile Content
+      description: Unsmiles (dislikes) a content.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+          description: A "Seen" From Tag
+      responses:
+        "200":
+          description: Content Smiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmileCountsResponse"
+    delete:
+      operationId: removeContentUnsmile
+      tags: [Content]
+      summary: Remove Content Unsmile
+      description: |
+        Removes the Client's Unsmile from the Content.
+        **NOT** the same as smiling the Content.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Content Smiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmileCountsResponse"
+
+  /content/{id}/categories:
+    put:
+      operationId: addContentCategories
+      tags: [Content]
+      summary: Add Content Categories
+      description: Add categories to the content.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: ["categories[]"]
+              properties:
+                categories[]:
+                  type: array
+                  items:
+                    type: string
+                  description: Category IDs you want to apply to the content
+      responses:
+        "200":
+          description: Categories Added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    const: 200
+
+  /content/{id}/comments:
+    get:
+      operationId: getContentComments
+      tags: [Comments]
+      summary: Get Content Comments
+      description: Paginate through comments on some content by its ID.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Limit30"
+      responses:
+        "200":
+          description: Comment Pagination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentPageResponse"
+        "404":
+          description: Content Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: not_found
+                error_description: Content not found
+                status: 404
+
+  /channels:
+    get:
+      operationId: getChannels
+      tags: [Content]
+      summary: Get Channels
+      description: Fetch all available channels.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      responses:
+        "200":
+          description: Channels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      channels:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/Channel"
+                  status:
+                    type: integer
+                    const: 200
+
+  /channels/{id}/items:
+    get:
+      operationId: getChannelItems
+      tags: [Content]
+      summary: Get Channel Items
+      description: Paginate through content in a channel.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the channel
+      responses:
+        "200":
+          description: Channel Content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        allOf:
+                          - $ref: "#/components/schemas/PagedResult"
+                          - properties:
+                              items:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/Content"
+                  status:
+                    type: integer
+                    const: 200
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: not_found
+                error_description: Channel not found
+                status: 404
+
+  /tags/suggested:
+    get:
+      operationId: searchTags
+      tags: [Content]
+      summary: Search Tags
+      description: Search tags suggested by iFunny.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Query
+      responses:
+        "200":
+          description: Suggested Tags
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      tags:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/Tag"
+                  status:
+                    type: integer
+                    const: 200
+
+  /search/content:
+    get:
+      operationId: searchContent
+      tags: [Content]
+      summary: Search Content
+      description: Search content by tag.
+      security:
+        - BasicAuth: []
+          ProjectId: []
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: tag
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Tag to search for
+      responses:
+        "200":
+          description: Content Pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        allOf:
+                          - $ref: "#/components/schemas/PagedResult"
+                          - properties:
+                              items:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/Content"
+                      num:
+                        type: array
+                        items: {}
+                        description: Unknown data type
+                  status:
+                    type: integer
+                    const: 200
+
+  /content/{content_id}/comments/{comment_id}/smiles:
+    get:
+      operationId: getCommentSmiles
+      tags: [Comments]
+      summary: Get Comment Smiles
+      description: Paginate through users that smiled the comment.
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment Smilers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      smiles_count:
+                        type: integer
+                      users:
+                        allOf:
+                          - $ref: "#/components/schemas/PagedResult"
+                          - properties:
+                              items:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: smileComment
+      tags: [Comments]
+      summary: Smile Comment
+      description: |
+        Smile a comment by its ID.
+        If the comment was unsmiled by the client, this will remove that unsmile.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment Smiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentSmileCountsResponse"
+        "403":
+          description: Authorization Required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: forbidden
+                error_description: Authorization required.
+                status: 403
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "423":
+          description: Comment already smiled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: content_already_exists
+                error_description: Comment is already smiled
+                status: 423
+    delete:
+      operationId: removeCommentSmile
+      tags: [Comments]
+      summary: Remove Comment Smile
+      description: |
+        Removes the smile on a comment. **NOT** the same as unsmiling the Comment.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment Smiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentSmileCountsResponse"
+        "403":
+          description: Authorization Required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /content/{content_id}/comments/{comment_id}/unsmiles:
+    put:
+      operationId: unsmileComment
+      tags: [Comments]
+      summary: Unsmile Comment
+      description: |
+        Add an Unsmile to a comment.
+        If the client has already smiled the Comment, this will remove that smile.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment Smile Nums
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentSmileCountsResponse"
+        "403":
+          description: Authorization Required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "423":
+          description: Already Unsmiled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: content_already_exists
+                error_description: Comment is already unsmiled
+                status: 423
+    delete:
+      operationId: removeCommentUnsmile
+      tags: [Comments]
+      summary: Remove Comment Unsmile
+      description: |
+        This will remove a comment's Unsmile. **NOT** the same as smiling the Content.
+      security:
+        - BearerAuth: []
+          ProjectId: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment Smile Nums
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentSmileCountsResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: |
+        A "Basic" token derived from client id/secret + a generated UUID, not a
+        username/password pair. See the "Basic Token Generation" guide.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token obtained via `POST /oauth2/login` (password grant).
+    ProjectId:
+      type: apiKey
+      in: header
+      name: ifunny-project-id
+      description: Always required; value is the literal string "iFunny".
+
+  parameters:
+    Limit30:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 30
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: 401
+            error: unauthorized
+            error_description: string
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: not_found
+            error_description: string
+            status: 404
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+        status:
+          type: integer
+
+    CaptchaError:
+      type: object
+      properties:
+        error:
+          type: string
+          const: captcha_required
+        error_description:
+          type: string
+          const: Human verification is required
+        data:
+          type: object
+          properties:
+            captcha_url:
+              type: string
+              description: "https://ifunny.co/captcha/{captcha_id}"
+            type:
+              type: string
+              enum: [fun_captcha, recaptcha]
+              description: Recaptcha is used when no user-agent is provided
+        status:
+          type: integer
+          const: 403
+
+    PagingCursors:
+      type: object
+      description: |
+        Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+        `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+        both are accepted here.
+      properties:
+        cursors:
+          type: object
+          properties:
+            next:
+              type: string
+            prev:
+              type: string
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+
+    PagedResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items: {}
+        paging:
+          $ref: "#/components/schemas/PagingCursors"
+
+    FeedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            content:
+              allOf:
+                - $ref: "#/components/schemas/PagedResult"
+                - properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Content"
+        notifications:
+          type: object
+          properties:
+            counters:
+              $ref: "#/components/schemas/NotificationCounters"
+        status:
+          type: integer
+          const: 200
+
+    NotificationCounters:
+      type: object
+      properties:
+        featured:
+          type: integer
+        subscriptions:
+          type: integer
+        collective:
+          type: integer
+        news:
+          type: integer
+        map:
+          type: integer
+
+    SmileCountsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            num_smiles:
+              type: integer
+            num_unsmiles:
+              type: integer
+            num_guest_smiles:
+              type: integer
+              description: Increases with Basic Token smiles
+        status:
+          type: integer
+          const: 200
+
+    CommentSmileCountsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            num_smiles:
+              type: integer
+            num_unsmiles:
+              type: integer
+        status:
+          type: integer
+          const: 200
+
+    CommentPageResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            comments:
+              allOf:
+                - $ref: "#/components/schemas/PagedResult"
+                - properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Comment"
+            content:
+              type: object
+              properties:
+                comments_count:
+                  type: integer
+                replies_count:
+                  type: integer
+        status:
+          type: integer
+          const: 200
+
+    SmallBan:
+      type: object
+      properties:
+        date_until:
+          type: integer
+          description: Seconds since unix epoch
+        id:
+          type: string
+        type:
+          type: string
+
+    MemeExperience:
+      type: object
+      properties:
+        badge_size:
+          type: object
+          properties:
+            h:
+              type: integer
+            w:
+              type: integer
+        badge_url:
+          type: string
+        days:
+          type: integer
+        next_milestone:
+          type: integer
+        rank:
+          type: integer
+          description: |
+            1=Meme explorer, 2=Meme bro, 3=Meme daddy, 4=Dank memer,
+            5=Meme master baker, 6=Deep fried memer, 7=Saucy memer,
+            8=Original Meme Gangster, 9=Meme demon, 10=Steal beams of memes,
+            11=Meme dealer, 12=iFunny Veteran, 13=Chef's meme agent
+
+    ProfilePhoto:
+      type: object
+      properties:
+        bg_color:
+          type: string
+        thumb:
+          type: object
+          properties:
+            large_url:
+              type: string
+            medium_url:
+              type: string
+            small_url:
+              type: string
+        url:
+          type: string
+
+    UserRatingLevel:
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          type: integer
+        points:
+          type: integer
+
+    UserRating:
+      type: object
+      properties:
+        points:
+          type: integer
+        current_level:
+          $ref: "#/components/schemas/UserRatingLevel"
+        next_level:
+          $ref: "#/components/schemas/UserRatingLevel"
+        max_level:
+          $ref: "#/components/schemas/UserRatingLevel"
+        is_show_level:
+          type: boolean
+
+    UserSocial:
+      type: object
+      properties:
+        id:
+          type: string
+        is_hidden:
+          type: boolean
+        link:
+          type: string
+        nick:
+          type: string
+
+    UserSocials:
+      type: object
+      properties:
+        apple:
+          $ref: "#/components/schemas/UserSocial"
+        fb:
+          $ref: "#/components/schemas/UserSocial"
+        ggl:
+          $ref: "#/components/schemas/UserSocial"
+        ok:
+          $ref: "#/components/schemas/UserSocial"
+        tw:
+          $ref: "#/components/schemas/UserSocial"
+        vk:
+          $ref: "#/components/schemas/UserSocial"
+
+    User:
+      type: object
+      description: Minimal user representation used in lists (comments, timelines, etc).
+      properties:
+        block_type:
+          type: string
+          enum: [installation, user]
+        id:
+          type: string
+        is_banned:
+          type: boolean
+        is_blocked:
+          type: boolean
+        is_deleted:
+          type: boolean
+        is_in_subscribers:
+          type: boolean
+        is_in_subscriptions:
+          type: boolean
+        is_verified:
+          type: boolean
+        nick:
+          type: string
+        nick_color:
+          type: string
+        num:
+          type: object
+          properties:
+            subscribers:
+              type: integer
+            subscriptions:
+              type: integer
+        original_nick:
+          type: string
+        photo:
+          $ref: "#/components/schemas/ProfilePhoto"
+        total_posts:
+          type: integer
+
+    BlockedUser:
+      description: Functionally the same as User, with the addition of the blocked users field.
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            indirectly_blocked_users_count:
+              type: integer
+
+    UserProfile:
+      type: object
+      properties:
+        about:
+          type: string
+        are_you_blocked:
+          type: boolean
+        bans:
+          type: array
+          items:
+            $ref: "#/components/schemas/SmallBan"
+        block_type:
+          type: string
+          enum: [installation, user]
+          description: Only displays when is_blocked is true
+        cover_bg_color:
+          type: string
+        cover_url:
+          type: string
+        id:
+          type: string
+        is_available_for_chat:
+          type: boolean
+        is_banned:
+          type: boolean
+        is_blocked:
+          type: boolean
+        is_deleted:
+          type: boolean
+        is_in_subscribers:
+          type: boolean
+        is_in_subscriptions:
+          type: boolean
+        is_private:
+          type: boolean
+        is_subscribed_to_updates:
+          type: boolean
+        is_verified:
+          type: boolean
+        meme_experience:
+          $ref: "#/components/schemas/MemeExperience"
+        messaging_privacy_status:
+          type: string
+          enum: [closed, public, subscribers]
+          description: This is only checked client side
+        messenger_active:
+          type: boolean
+        messenger_token:
+          type: string
+        nick_color:
+          type: string
+        nick:
+          type: string
+        num:
+          $ref: "#/components/schemas/UserProfileNums"
+        original_nick:
+          type: string
+          description: Different if the user's name is against content policy
+        photo:
+          $ref: "#/components/schemas/ProfilePhoto"
+        rating:
+          $ref: "#/components/schemas/UserRating"
+        social:
+          $ref: "#/components/schemas/UserSocials"
+        web_url:
+          type: string
+
+    UserProfileNums:
+      type: object
+      properties:
+        achievements:
+          type: integer
+        created:
+          type: integer
+        featured:
+          type: integer
+        subscribers:
+          type: integer
+        subscriptions:
+          type: integer
+        total_posts:
+          type: integer
+        total_smiles:
+          type: integer
+
+    ClientPhoneData:
+      type: object
+      properties:
+        code:
+          type: string
+        number:
+          type: string
+
+    ClientBan:
+      type: object
+      properties:
+        date_until:
+          type: integer
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - chat_access
+            - comment_creation
+            - content_creation
+            - profile_access
+            - repubing
+            - smiling
+            - subscribing
+            - other
+            - collective_shadow
+        ban_reason:
+          type: string
+          enum:
+            - abuse_harassment
+            - child_pornography
+            - hardcore
+            - hate_speech
+            - bot_spam
+            - threats_of_harm
+            - death_gore
+            - other
+        created_at:
+          type: integer
+        pid:
+          type: integer
+        is_appealed:
+          type: boolean
+        can_be_appealed:
+          type: boolean
+        was_shown:
+          type: boolean
+        is_active:
+          type: boolean
+        is_shortable:
+          type: boolean
+        related_content:
+          $ref: "#/components/schemas/Content"
+        related_comment:
+          $ref: "#/components/schemas/Comment"
+        date_until_minimum:
+          type: integer
+          description: Not observed
+        type_message:
+          type: string
+        ban_reason_message:
+          type: string
+
+    Appeal:
+      type: object
+      properties:
+        ban_id:
+          type: string
+        ban_reason:
+          type: string
+          description: Reason for strikes as well
+        created_at:
+          type: integer
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending, denied]
+        strike_id:
+          type: string
+        type:
+          type: string
+          enum: [ban, strike]
+
+    ClientProfile:
+      type: object
+      description: Account Information for the authenticated client.
+      properties:
+        about:
+          type: string
+        id:
+          type: string
+        bans:
+          type: array
+          items:
+            $ref: "#/components/schemas/SmallBan"
+        birth_date:
+          type: string
+          description: "YYYY-MM-DD"
+        email:
+          type: string
+        meme_experience:
+          $ref: "#/components/schemas/MemeExperience"
+        nick:
+          type: string
+        nick_color:
+          type: string
+        num:
+          $ref: "#/components/schemas/UserProfileNums"
+        original_nick:
+          type: string
+        sex:
+          type: string
+          enum: [male, female, other]
+        web_url:
+          type: string
+        is_available_for_chat:
+          type: boolean
+        is_banned:
+          type: boolean
+        is_blocked_in_messenger:
+          type: boolean
+        is_deleted:
+          type: boolean
+        is_ifunny_team_member:
+          type: boolean
+        is_moderator:
+          type: boolean
+        is_private:
+          type: boolean
+        is_verified:
+          type: boolean
+        have_unnotified_achievements:
+          type: boolean
+        have_unnotified_bans:
+          type: boolean
+        have_unnotified_levels:
+          type: boolean
+        have_unnotified_strikes:
+          type: boolean
+        messaging_privacy_status:
+          type: string
+          enum: [public, subscribers, closed]
+        messenger_active:
+          type: boolean
+        messenger_token:
+          type: string
+        need_account_setup:
+          type: boolean
+        safe_mode:
+          type: boolean
+        cover_bg_color:
+          type: string
+        cover_url:
+          type: string
+        photo:
+          $ref: "#/components/schemas/ProfilePhoto"
+        phone_data:
+          $ref: "#/components/schemas/ClientPhoneData"
+        phone:
+          type: string
+        unconfirmed_phone_data:
+          $ref: "#/components/schemas/ClientPhoneData"
+        unconfirmed_phone:
+          type: string
+        location:
+          type: string
+        hometown:
+          type: string
+
+    ContentType:
+      type: string
+      description: |
+        Images: pic, mem, comics, caption.
+        Videos: video_clip, video, vine, coub.
+        Gif: gif, gif_caption.
+        Unknown/likely deprecated: app, old, dem, special.
+      enum:
+        - pic
+        - mem
+        - comics
+        - caption
+        - video_clip
+        - video
+        - vine
+        - coub
+        - gif
+        - gif_caption
+        - app
+        - old
+        - dem
+        - special
+
+    ContentThumbnail:
+      type: object
+      properties:
+        small_url:
+          type: string
+        url:
+          type: string
+          description: URL without the watermark
+        large_url:
+          type: string
+        x640_url:
+          type: string
+        webp_url:
+          type: string
+        large_webp_url:
+          type: string
+        x640_webp_url:
+          type: string
+        proportional_url:
+          type: string
+        proportional_webp_url:
+          type: string
+        proportional_size:
+          type: object
+          properties:
+            w:
+              type: integer
+            h:
+              type: integer
+
+    ContentNums:
+      type: object
+      properties:
+        smiles:
+          type: integer
+        unsmiles:
+          type: integer
+        guest_smiles:
+          type: integer
+          description: Smiled with Basic Token
+        comments:
+          type: integer
+        views:
+          type: integer
+        republished:
+          type: integer
+        shares:
+          type: integer
+
+    ContentSource:
+      type: object
+      properties:
+        id:
+          type: string
+        date_create:
+          type: integer
+          description: UNIX in seconds
+        creator:
+          $ref: "#/components/schemas/User"
+
+    Content:
+      type: object
+      properties:
+        pic:
+          type: object
+          properties:
+            webp_url:
+              type: string
+        caption:
+          type: object
+          properties:
+            caption_text:
+              type: string
+        comics:
+          type: object
+          properties:
+            webp_url:
+              type: string
+        mem:
+          type: object
+          properties:
+            webp_url:
+              type: string
+        video_clip:
+          type: object
+          properties:
+            screen_url:
+              type: string
+            bytes:
+              type: integer
+            source_type:
+              type: string
+              enum: [user, instagram]
+            logo_url:
+              type: string
+            duration:
+              type: integer
+              description: In seconds
+        video:
+          type: object
+          properties:
+            url:
+              type: string
+            duration:
+              type: integer
+            length:
+              type: integer
+              description: In seconds (source docs typo'd this as "lengh")
+        vine:
+          type: object
+          properties:
+            screen_url:
+              type: string
+            bytes:
+              type: integer
+        coub:
+          type: object
+          properties:
+            screen_url:
+              type: string
+            bytes:
+              type: integer
+            traceback_url:
+              type: string
+              description: Source on coub.com
+            duration:
+              type: integer
+        gif:
+          type: object
+          properties:
+            caption:
+              type: string
+              description: Only appears on gif_caption
+            screen_url:
+              type: string
+            bytes:
+              type: integer
+            mp4_url:
+              type: string
+            mp4_bytes:
+              type: integer
+            webm_url:
+              type: string
+        app:
+          type: object
+          properties:
+            url:
+              type: string
+            is_scroll_allowed:
+              type: boolean
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/ContentType"
+        url:
+          type: string
+        share_url:
+          type: string
+        old_watermark:
+          type: boolean
+        link:
+          type: string
+          description: Opens in app
+        title:
+          type: string
+        fixed_title:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        state:
+          type: string
+          enum: [delayed, deleted, draft, published]
+        date_create:
+          type: integer
+        publish_at:
+          type: integer
+        is_smiled:
+          type: boolean
+        is_unsmiled:
+          type: boolean
+        is_abused:
+          type: boolean
+        is_featured:
+          type: boolean
+        is_republished:
+          type: boolean
+        is_pinned:
+          type: boolean
+        bg_color:
+          type: string
+        thumb:
+          $ref: "#/components/schemas/ContentThumbnail"
+        copyright:
+          type: object
+          properties:
+            note:
+              type: string
+            url:
+              type: string
+        num:
+          $ref: "#/components/schemas/ContentNums"
+        creator:
+          $ref: "#/components/schemas/User"
+        size:
+          type: object
+          properties:
+            w:
+              type: integer
+            h:
+              type: integer
+        issue_at:
+          type: integer
+        traceback_url:
+          type: string
+          description: Only observed on coub types
+        engagement_rate:
+          type: string
+          description: Not observed
+        engagement_rate_explain:
+          type: string
+          description: Not observed
+        visibility:
+          type: string
+          enum: [public, subscribers, closed, chats]
+        shot_status:
+          type: string
+          enum: [approved, shot, hardShot]
+        fast_start:
+          type: boolean
+        subtitle:
+          type: object
+          properties:
+            lang:
+              type: string
+            url:
+              type: string
+              description: Ends in .srt or .vtt
+        risk:
+          type: integer
+        canonical_url:
+          type: string
+        ocr_text:
+          type: string
+        can_be_boosted:
+          type: boolean
+        lat:
+          type: number
+        lon:
+          type: number
+        has_header:
+          type: boolean
+          description: Only observed on videos and gifs
+        source:
+          $ref: "#/components/schemas/ContentSource"
+        ftag:
+          type: string
+          description: Only observed as "feat"
+
+    Channel:
+      type: object
+      description: Not fully documented in the source Markdown; fields inferred from usage.
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+
+    Tag:
+      type: object
+      description: Not fully documented in the source Markdown; fields inferred from usage.
+      properties:
+        title:
+          type: string
+
+    CommentState:
+      type: string
+      enum: [normal, top, abused, deleted, deleted_self]
+
+    CommentNums:
+      type: object
+      properties:
+        smiles:
+          type: integer
+        unsmiles:
+          type: integer
+        replies:
+          type: integer
+
+    UserMention:
+      type: object
+      properties:
+        id:
+          type: string
+        creator:
+          $ref: "#/components/schemas/User"
+        nick:
+          type: string
+        start_index:
+          type: integer
+          description: Where the username starts in the text
+        stop_index:
+          type: integer
+          description: Where the username ends in the text
+        user_id:
+          type: string
+        original_nick:
+          type: string
+
+    CommentAttachment:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Content"
+        content_from_links:
+          type: array
+          items:
+            $ref: "#/components/schemas/Content"
+        mention_user:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserMention"
+        giphy:
+          type: array
+          items:
+            $ref: "#/components/schemas/Content"
+
+    CommentDeletionReason:
+      type: string
+      enum:
+        - del_by_spam_filter
+        - del_content
+        - del_content_creator
+        - del_for_abuses
+        - del_root_comment
+        - del_via_portal
+
+    Comment:
+      type: object
+      properties:
+        is_reply:
+          type: boolean
+          const: false
+        id:
+          type: string
+          description: Id of the comment
+        cid:
+          type: string
+          description: Id of the content it belongs to
+        state:
+          $ref: "#/components/schemas/CommentState"
+        date:
+          type: integer
+          description: UNIX in seconds
+        text:
+          type: string
+          description: Can be an empty string
+        num:
+          $ref: "#/components/schemas/CommentNums"
+        is_smiled:
+          type: boolean
+        is_unsmiled:
+          type: boolean
+        is_edited:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+        deletion_reason:
+          $ref: "#/components/schemas/CommentDeletionReason"
+        content:
+          $ref: "#/components/schemas/Content"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommentAttachment"
+        content_thumbs:
+          $ref: "#/components/schemas/ContentThumbnail"
+        last_reply:
+          $ref: "#/components/schemas/Reply"
+
+    Reply:
+      description: Same shape as Comment, with additional thread-position fields.
+      allOf:
+        - $ref: "#/components/schemas/Comment"
+        - type: object
+          properties:
+            is_reply:
+              type: boolean
+              const: true
+            root_comm_id:
+              type: string
+              description: ID of the root comment in the thread
+            parent_comm_id:
+              type: string
+              description: ID of the comment this comment is replying to
+            depth:
+              type: integer
+              description: What index this is in the comment thread
+
+    ChatType:
+      type: integer
+      description: 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
+      enum: [1, 2, 3]
+
+    ChatMessage:
+      type: object
+      properties:
+        payload:
+          type: object
+          properties:
+            local_id:
+              type: string
+              description: Randomly generated string the client generates
+        user:
+          type: object
+          properties:
+            nick:
+              type: string
+            is_verified:
+              type: boolean
+            last_seen_at:
+              type: integer
+            id:
+              type: string
+        id:
+          type: string
+          description: Message id
+        type:
+          type: integer
+        pub_at:
+          type: integer
+        status:
+          type: integer
+        text:
+          type: string
+
+    Chat:
+      type: object
+      description: A DM or Group Chat, similar to a Discord channel.
+      properties:
+        touch_dt:
+          type: integer
+        name:
+          type: string
+          description: This is the unique identifier
+        role:
+          type: integer
+          description: "User role of the chat: 0=owner, 1=operator, 3=member"
+        cover:
+          type: string
+          description: URL of the chat's image
+        title:
+          type: string
+          description: Display name of the chat
+        last_msg:
+          $ref: "#/components/schemas/ChatMessage"
+        messages_unread:
+          type: integer
+        join_state:
+          type: integer
+        members_online:
+          type: integer
+        type:
+          $ref: "#/components/schemas/ChatType"
+        members_total:
+          type: integer
