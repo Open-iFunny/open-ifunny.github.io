@@ -23,3 +23,13 @@ The Nix flake and bun2nix tooling will then be able to build the project reprodu
 ## Current Status
 
 The flake.nix and all supporting Nix files are ready to use once `bun.lock` is committed.
+
+## Keeping `bun.nix` in sync
+
+Once `bun.lock` exists, don't hand-edit `bun.nix`. A pre-commit hook
+(`.githooks/pre-commit`, wired up automatically by `nix develop` -- see
+`flake.nix`) regenerates it from `bun.lock` via `bun2nix -o bun.nix`
+whenever `bun.lock` or `package.json` are part of a commit, and stages
+the result into that same commit. If `bun2nix` can't produce a valid
+`bun.nix` (e.g. `bun.lock` is missing or malformed), the commit is
+blocked rather than silently going through with a stale file.
