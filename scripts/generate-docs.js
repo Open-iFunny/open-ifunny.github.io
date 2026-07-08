@@ -497,6 +497,31 @@ function renderSchemaBlock(schemaData, name, goTag) {
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
 
+// Cute per-tag emoji for the table of contents, matching the style already
+// used in gitbook/SUMMARY.md (e.g. 🔑 OAuth2, 🫂 Users, 😂 Content).
+const TAG_EMOJI = {
+  OAuth2: '🔑',
+  Client: '🤖',
+  Users: '🫂',
+  Content: '😂',
+  Comments: '💭',
+  Chat: '💬',
+  Discovery: '🧭',
+  Tasks: '⏳',
+};
+const DEFAULT_TAG_EMOJI = '📁';
+
+function tagEmoji(name) {
+  return TAG_EMOJI[name] || DEFAULT_TAG_EMOJI;
+}
+
+function slugify(s) {
+  return String(s)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function collectOperationsByTag() {
   const tagMap = new Map();
   for (const t of spec.tags || []) tagMap.set(t.name, { name: t.name, description: t.description || '', operations: [] });
@@ -569,6 +594,7 @@ function buildOperationData(entry) {
   return {
     method,
     routePath,
+    slug: slugify(op.operationId || `${method}-${routePath}`),
     operationId: op.operationId,
     summary: op.summary || op.operationId,
     description: op.description || '',
@@ -654,7 +680,7 @@ function otherResponsesList(otherResponses) {
 
 function renderOperation(o) {
   return `
-    <details class="operation">
+    <details class="operation" id="${esc(o.slug)}">
       <summary>
         ${methodBadge(o.method)}
         <span class="route">${esc(o.routePath)}</span>
@@ -676,11 +702,38 @@ function renderOperation(o) {
 
 function renderTag(tag) {
   return `
-    <section class="scope">
-      <h2>${esc(tag.name)}</h2>
+    <section class="scope" id="${esc(slugify(tag.name))}">
+      <h2>${tagEmoji(tag.name)} ${esc(tag.name)}</h2>
       ${tag.description ? `<p class="scope-description">${esc(tag.description)}</p>` : ''}
       ${tag.operations.map(renderOperation).join('\n')}
     </section>`;
+}
+
+// Table of contents: one entry per tag (with its cute emoji) plus a nested
+// list of its operations, mirroring the grouped-sidebar structure already
+// used in gitbook/SUMMARY.md.
+function renderToc(tags) {
+  const items = tags
+    .map(
+      (tag) => `
+      <li>
+        <a href="#${esc(slugify(tag.name))}" class="toc-tag">${tagEmoji(tag.name)} ${esc(tag.name)}</a>
+        <ul class="toc-operations">
+          ${tag.operations
+            .map(
+              (o) => `
+            <li><a href="#${esc(o.slug)}">${methodBadge(o.method)} <span class="toc-op-summary">${esc(o.summary)}</span></a></li>`
+            )
+            .join('')}
+        </ul>
+      </li>`
+    )
+    .join('');
+  return `
+    <nav class="toc">
+      <div class="toc-title">📖 Contents</div>
+      <ul>${items}</ul>
+    </nav>`;
 }
 
 const hljsTheme = fs.readFileSync(HLJS_THEME_PATH, 'utf8');
@@ -708,15 +761,63 @@ const CSS = `
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.5;
   }
-  main {
-    max-width: 860px;
+  .layout {
+    max-width: 1180px;
     margin: 0 auto;
-    padding: 2rem 1.5rem 6rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 0 1.5rem;
+  }
+  main {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding: 2rem 0 6rem;
   }
   header.page-header {
-    max-width: 860px;
+    max-width: 1180px;
     margin: 0 auto;
     padding: 2rem 1.5rem 0;
+  }
+  .toc {
+    flex: 0 0 240px;
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    padding: 1.5rem 0.5rem;
+    font-size: 0.85rem;
+  }
+  .toc-title { color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem; }
+  .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc > ul { display: flex; flex-direction: column; gap: 0.6rem; }
+  .toc-tag {
+    display: block;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    padding: 0.15rem 0;
+  }
+  .toc-tag:hover { color: var(--accent); }
+  .toc-operations { margin-top: 0.2rem; padding-left: 0.9rem; border-left: 1px solid var(--border-dark); }
+  .toc-operations li { margin: 0.15rem 0; }
+  .toc-operations a {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.1rem 0;
+  }
+  .toc-operations a:hover { color: var(--accent); }
+  .toc-operations .method {
+    font-size: 0.65rem;
+    padding: 0.05rem 0.3rem;
+  }
+  .toc-op-summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    .toc { position: static; max-height: none; width: 100%; }
   }
   h1 { color: var(--text); }
   h2 {
@@ -819,9 +920,12 @@ const html = `<!doctype html>
     <p>${esc(spec.info.description || '').split('\n')[0]}</p>
     <p><code>${esc((spec.servers && spec.servers[0] && spec.servers[0].url) || '')}</code></p>
   </header>
-  <main>
-    ${operationsByTagRendered.map(renderTag).join('\n')}
-  </main>
+  <div class="layout">
+    ${renderToc(operationsByTagRendered)}
+    <main>
+      ${operationsByTagRendered.map(renderTag).join('\n')}
+    </main>
+  </div>
   <script>${JS}</script>
 </body>
 </html>
