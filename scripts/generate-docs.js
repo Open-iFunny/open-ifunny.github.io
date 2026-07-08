@@ -1,33 +1,32 @@
 #!/usr/bin/env node
 'use strict';
 
-// Custom static-site generator for the iFunny OpenAPI spec.
+// Generator that emits GitBook-native markdown straight into ./gitbook.
 //
-// Replaces Redoc entirely. Redoc's React bundle has no supported way to:
-//   - collapse its 3-pane layout (nav / content / sample) into a single column
-//   - render a schema as anything other than a JSON/YAML example
-// so rather than patching Redoc's compiled output, this script reads the spec
-// directly and renders exactly the layout we want: one column, grouped by
-// tag, each operation showing METHOD /path with a JSON / TypeScript / Go
-// schema-format switcher instead of a live example payload.
+// gitbook/openapi/ifunny-api.yaml is the single source of truth for the REST
+// API surface. This script reads it and writes one markdown file per tag into
+// gitbook/reference/api-reference/, using GitBook's own `{% swagger %}` /
+// `{% swagger-parameter %}` / `{% swagger-response %}` / `{% tabs %}` block
+// syntax (the same syntax already used by GitBook's own editor, so the
+// generated pages get GitBook's native colors/layout/sidebar for free), and
+// keeps gitbook/SUMMARY.md and reference/api-reference/README.md in sync.
 //
-// Each request/response schema block is self-contained: any named types it
-// transitively references (including recursive ones, e.g. Comment <-> Reply)
-// are generated once and inlined into that same codeblock, rather than
-// linking out to a shared appendix.
+// Each request/response/query/header schema is rendered self-contained in
+// JSON, TypeScript and Go: any named types it transitively references
+// (including recursive ones, e.g. Comment <-> Reply) are generated once and
+// inlined into that same tab set, rather than linking out to a shared
+// appendix. GitBook applies syntax highlighting itself from each fenced code
+// block's language tag, so no highlighter is bundled here.
 
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const yaml = require('js-yaml');
-const hljs = require('highlight.js/lib/core');
-hljs.registerLanguage('typescript', require('highlight.js/lib/languages/typescript'));
-hljs.registerLanguage('go', require('highlight.js/lib/languages/go'));
 
 const SPEC_PATH = path.join(__dirname, '..', 'gitbook', 'openapi', 'ifunny-api.yaml');
-const OUT_DIR = path.join(__dirname, '..', '_site');
-const OUT_FILE = path.join(OUT_DIR, 'index.html');
-const HLJS_THEME_PATH = path.join(__dirname, '..', 'node_modules', 'highlight.js', 'styles', 'github-dark.css');
+const GITBOOK_DIR = path.join(__dirname, '..', 'gitbook');
+const API_REFERENCE_DIR = path.join(GITBOOK_DIR, 'reference', 'api-reference');
+const SUMMARY_PATH = path.join(GITBOOK_DIR, 'SUMMARY.md');
 const REDOCLY_BIN = path.join(__dirname, '..', 'node_modules', '.bin', 'redocly');
 
 // The spec is authored as multiple files (gitbook/openapi/ifunny-api.yaml plus
@@ -253,14 +252,6 @@ function renderParamsSchemaWithDeps(params, baseName) {
 // Format renderers: JSON (pseudo-schema), TypeScript, Go
 // ---------------------------------------------------------------------------
 
-function esc(s) {
-  return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-}
-
-function highlight(code, language) {
-  return hljs.highlight(code, { language }).value;
-}
-
 function jsonType(node) {
   switch (node.kind) {
     case 'ref':
@@ -450,11 +441,13 @@ function renderGo(name, ir, goCtx, goTag) {
   return `type ${name} struct {\n${lines.join('\n')}\n}`;
 }
 
-// Renders a schema block's full contents (top type + all its transitive
-// named types) in all three formats, each self-contained. `goTag` controls
-// the Go struct-tag convention (defaults to `json:"..."` for bodies; pass
+// Builds a schema's full contents (top type + all its transitive named
+// types) in all three formats, each self-contained, as plain source text
+// (no HTML escaping/highlighting - GitBook highlights fenced code blocks
+// itself from the language tag). `goTag` controls the Go struct-tag
+// convention (defaults to `json:"..."` for bodies; pass
 // { tagKey: 'query' | 'header', tagName } for parameter blocks).
-function renderSchemaBlock(schemaData, name, goTag) {
+function buildSchemaTexts(schemaData, name, goTag) {
   goTag = goTag || JSON_GO_TAG;
   const { topIR, nested } = schemaData;
   const jsonText = [renderJSON(name, topIR), ...nested.map((n) => renderJSON(n.name, n.ir))].join('\n\n');
@@ -484,11 +477,7 @@ function renderSchemaBlock(schemaData, name, goTag) {
   goParts.push(...goCtx.enumBlocks.values());
   const goText = goParts.join('\n\n');
 
-  return {
-    json: esc(jsonText),
-    ts: highlight(tsText, 'typescript'),
-    go: highlight(goText, 'go'),
-  };
+  return { jsonText, tsText, goText };
 }
 
 // ---------------------------------------------------------------------------
@@ -497,15 +486,17 @@ function renderSchemaBlock(schemaData, name, goTag) {
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
 
-// Cute per-tag emoji for the table of contents, matching the style already
-// used in gitbook/SUMMARY.md (e.g. 🔑 OAuth2, 🫂 Users, 😂 Content).
+// Cute per-tag emoji for SUMMARY.md/README.md, matching the style already
+// used throughout gitbook/ (e.g. 🔑 OAuth2, 🫂 Users, 😂 Content). "Chat" gets
+// 📡 rather than 💬, since 💬 is already used by the hand-written WAMP
+// protocol pages at gitbook/reference/chats/.
 const TAG_EMOJI = {
   OAuth2: '🔑',
   Client: '🤖',
   Users: '🫂',
   Content: '😂',
   Comments: '💭',
-  Chat: '💬',
+  Chat: '📡',
   Discovery: '🧭',
   Tasks: '⏳',
 };
@@ -513,6 +504,22 @@ const DEFAULT_TAG_EMOJI = '📁';
 
 function tagEmoji(name) {
   return TAG_EMOJI[name] || DEFAULT_TAG_EMOJI;
+}
+
+// Output filename (without extension) per tag, under reference/api-reference/.
+const TAG_FILE = {
+  OAuth2: 'oauth2',
+  Client: 'client',
+  Users: 'users',
+  Content: 'content',
+  Comments: 'comments',
+  Chat: 'chat',
+  Discovery: 'discovery',
+  Tasks: 'tasks',
+};
+
+function tagFile(name) {
+  return TAG_FILE[name] || slugify(name);
 }
 
 function slugify(s) {
@@ -548,11 +555,29 @@ function describeSecurity(op) {
   return sec.map((alt) => Object.keys(alt).join(' + ')).join(' or ');
 }
 
+// Flattens a request-body schema's top-level properties into a plain list,
+// for one native {% swagger-parameter in="body" %} block per property -
+// mirrors the hand-written convention (e.g. gitbook/reference/api-reference/
+// oauth2.md's "Register Account" body params), rather than a single opaque
+// body schema.
+function flatBodyProps(schema) {
+  if (!schema) return [];
+  const flat = schema.allOf ? flattenAllOf(schema) : schema;
+  if (!flat.properties) return [];
+  return Object.entries(flat.properties).map(([name, propSchema]) => ({
+    name,
+    required: (flat.required || []).includes(name),
+    schema: propSchema,
+    description: propSchema.description,
+  }));
+}
+
 function buildOperationData(entry) {
   const { method, routePath, op } = entry;
   const baseName = pascalCase(op.operationId || `${method}${routePath}`);
 
   const parameters = (op.parameters || []).map(resolveParam);
+  const pathParams = parameters.filter((p) => p.in === 'path');
   const queryParams = parameters.filter((p) => p.in === 'query');
   const headerParams = parameters.filter((p) => p.in === 'header');
   const querySchemaData = queryParams.length ? renderParamsSchemaWithDeps(queryParams, `${baseName}Query`) : null;
@@ -563,48 +588,45 @@ function buildOperationData(entry) {
     const contentTypes = Object.keys(op.requestBody.content || {});
     const ct = contentTypes[0];
     if (ct) {
+      const bodySchema = op.requestBody.content[ct].schema;
       requestBody = {
         contentType: ct,
         required: !!op.requestBody.required,
-        schemaData: renderSchemaWithDeps(op.requestBody.content[ct].schema, `${baseName}Request`),
+        bodyProps: flatBodyProps(bodySchema),
+        schemaData: renderSchemaWithDeps(bodySchema, `${baseName}Request`),
       };
     }
   }
 
-  const responseEntries = Object.entries(op.responses || {});
-  let primaryResponse = null;
-  const otherResponses = [];
-  for (const [code, respRaw] of responseEntries) {
+  // Every declared response (success and error alike) gets its own
+  // {% swagger-response %} block further down, each self-contained.
+  const responses = Object.entries(op.responses || {}).map(([code, respRaw]) => {
     const resp = respRaw.$ref ? resolveRef(respRaw.$ref) : respRaw;
-    const isSuccess = /^2\d\d$/.test(code);
     const contentTypes = Object.keys(resp.content || {});
     const ct = contentTypes[0];
-    if (isSuccess && ct && !primaryResponse) {
-      primaryResponse = {
-        code,
-        description: resp.description,
-        contentType: ct,
-        schemaData: renderSchemaWithDeps(resp.content[ct].schema, `${baseName}${code}`),
-      };
-      continue;
-    }
-    otherResponses.push({ code, description: resp.description });
-  }
+    return {
+      code,
+      description: resp.description || '',
+      schemaData: ct ? renderSchemaWithDeps(resp.content[ct].schema, `${baseName}${code}`) : null,
+    };
+  });
 
   return {
     method,
     routePath,
+    gitbookPath: routePath.replace(/\{([^}]+)\}/g, ':$1'),
     slug: slugify(op.operationId || `${method}-${routePath}`),
     operationId: op.operationId,
     summary: op.summary || op.operationId,
     description: op.description || '',
     security: describeSecurity(op),
-    parameters,
+    pathParams,
+    queryParams,
+    headerParams,
     querySchemaData,
     headerSchemaData,
     requestBody,
-    primaryResponse,
-    otherResponses,
+    responses,
   };
 }
 
@@ -619,318 +641,241 @@ const operationsByTagRendered = tags.map((tag) => ({
 }));
 
 // ---------------------------------------------------------------------------
-// HTML rendering
+// GitBook markdown rendering
 // ---------------------------------------------------------------------------
 
-function methodBadge(method) {
-  return `<span class="method method-${method}">${method.toUpperCase()}</span>`;
-}
-
-function formatTabs() {
-  return `
-    <div class="format-tabs">
-      <button type="button" class="format-btn active" data-format-btn="json">JSON</button>
-      <button type="button" class="format-btn" data-format-btn="ts">TypeScript</button>
-      <button type="button" class="format-btn" data-format-btn="go">Go</button>
-    </div>`;
-}
-
-function schemaBlock(label, name, schemaData, goTag) {
-  const rendered = renderSchemaBlock(schemaData, name, goTag);
-  return `
-    <h4>${esc(label)}</h4>
-    <pre data-format-panel="json">${rendered.json}</pre>
-    <pre data-format-panel="ts" hidden><code class="hljs">${rendered.ts}</code></pre>
-    <pre data-format-panel="go" hidden><code class="hljs">${rendered.go}</code></pre>`;
-}
+const BASE_URL = (spec.servers && spec.servers[0] && spec.servers[0].url) || '';
 
 // Struct-tag conventions for the two parameter groups that get their own
-// schema block (see buildOperationData/renderOperation) - mirrors how a
-// hand-written Go client would bind query strings vs. HTTP headers, as
-// opposed to the `json:"..."` tags used for request/response bodies.
+// combined type view (see typeSection/renderOperationMarkdown below) -
+// mirrors how a hand-written Go client would bind query strings vs. HTTP
+// headers, as opposed to the `json:"..."` tags used for request/response
+// bodies.
 const QUERY_GO_TAG = { tagKey: 'query', tagName: (n) => n };
 const HEADER_GO_TAG = { tagKey: 'header', tagName: canonicalHeaderName };
 
-function paramsTable(parameters) {
-  if (!parameters.length) return '';
-  const rows = parameters
-    .map(
-      (p) => `
-      <tr>
-        <td><code>${esc(p.name)}</code></td>
-        <td>${esc(p.in)}</td>
-        <td>${p.required ? 'yes' : 'no'}</td>
-        <td>${esc((p.schema && p.schema.type) || 'any')}</td>
-        <td>${esc(p.description || '')}</td>
-      </tr>`
-    )
-    .join('');
-  return `
-    <table class="params">
-      <thead><tr><th>Name</th><th>In</th><th>Required</th><th>Type</th><th>Description</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+// Human-readable text for the status codes actually used across the spec,
+// for building `status="200: OK"`-style {% swagger-response %} attributes.
+const STATUS_TEXT = {
+  200: 'OK',
+  201: 'Created',
+  202: 'Accepted',
+  204: 'No Content',
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  403: 'Forbidden',
+  404: 'Not Found',
+  409: 'Conflict',
+  422: 'Unprocessable Entity',
+  423: 'Locked',
+  429: 'Too Many Requests',
+  500: 'Internal Server Error',
+};
+
+function statusLabel(code) {
+  const text = STATUS_TEXT[code];
+  return text ? `${code}: ${text}` : String(code);
 }
 
-function otherResponsesList(otherResponses) {
-  if (!otherResponses.length) return '';
-  const items = otherResponses.map((r) => `<li><code>${esc(r.code)}</code> — ${esc(r.description || '')}</li>`).join('');
-  return `<p class="other-responses"><strong>Other responses:</strong></p><ul class="other-responses-list">${items}</ul>`;
+// Escapes a value for embedding inside a GitBook block attribute (e.g.
+// `description="..."`), which GitBook parses as a single double-quoted
+// string - embedded quotes/newlines would otherwise break the block.
+function mdAttr(s) {
+  return String(s == null ? '' : s)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\r?\n/g, ' ');
 }
 
-function renderOperation(o) {
-  return `
-    <details class="operation" id="${esc(o.slug)}">
-      <summary>
-        ${methodBadge(o.method)}
-        <span class="route">${esc(o.routePath)}</span>
-        <span class="op-summary">${esc(o.summary)}</span>
-        ${formatTabs()}
-      </summary>
-      <div class="op-body">
-        ${o.description ? `<p class="op-description">${esc(o.description)}</p>` : ''}
-        <p class="op-security"><strong>Auth:</strong> ${esc(o.security)}</p>
-        ${paramsTable(o.parameters)}
-        ${o.querySchemaData ? schemaBlock('Query Parameters', `${pascalCase(o.operationId)}QueryParams`, o.querySchemaData, QUERY_GO_TAG) : ''}
-        ${o.headerSchemaData ? schemaBlock('Headers', `${pascalCase(o.operationId)}Headers`, o.headerSchemaData, HEADER_GO_TAG) : ''}
-        ${o.requestBody ? schemaBlock(`Request Body (${o.requestBody.contentType})`, `${pascalCase(o.operationId)}Request`, o.requestBody.schemaData) : ''}
-        ${o.primaryResponse ? schemaBlock(`Response ${o.primaryResponse.code} — ${o.primaryResponse.description || ''}`, `${pascalCase(o.operationId)}Response`, o.primaryResponse.schemaData) : ''}
-        ${otherResponsesList(o.otherResponses)}
-      </div>
-    </details>`;
+// Maps a JSON Schema node to the capitalized pseudo-type convention already
+// used by the hand-written {% swagger-parameter %} blocks (String / Number /
+// Boolean / String[] etc.), dereferencing $ref/allOf along the way.
+function paramType(schema) {
+  if (!schema) return 'String';
+  if (schema.$ref) return paramType(resolveRef(schema.$ref));
+  if (schema.allOf) return paramType(flattenAllOf(schema));
+  if (schema.type === 'array') return `${paramType(schema.items || {})}[]`;
+  switch (schema.type) {
+    case 'integer':
+    case 'number':
+      return 'Number';
+    case 'boolean':
+      return 'Boolean';
+    default:
+      return 'String';
+  }
 }
 
-function renderTag(tag) {
-  return `
-    <section class="scope" id="${esc(slugify(tag.name))}">
-      <h2>${tagEmoji(tag.name)} ${esc(tag.name)}</h2>
-      ${tag.description ? `<p class="scope-description">${esc(tag.description)}</p>` : ''}
-      ${tag.operations.map(renderOperation).join('\n')}
-    </section>`;
+// Appends enum values (if any) to a parameter's free-text description, so
+// e.g. an integer-enum query param still communicates its allowed values in
+// the native {% swagger-parameter %} block, which has no separate slot for
+// them.
+function paramDescription(schema, description) {
+  const resolved = schema && schema.$ref ? resolveRef(schema.$ref) : schema;
+  const flat = resolved && resolved.allOf ? flattenAllOf(resolved) : resolved;
+  const parts = [];
+  if (description) parts.push(description);
+  if (flat && Array.isArray(flat.enum) && flat.enum.length) parts.push(`One of: ${flat.enum.join(', ')}`);
+  return parts.join('\n\n');
 }
 
-// Table of contents: one entry per tag (with its cute emoji) plus a nested
-// list of its operations, mirroring the grouped-sidebar structure already
-// used in gitbook/SUMMARY.md.
-function renderToc(tags) {
-  const items = tags
-    .map(
-      (tag) => `
-      <li>
-        <a href="#${esc(slugify(tag.name))}" class="toc-tag">${tagEmoji(tag.name)} ${esc(tag.name)}</a>
-        <ul class="toc-operations">
-          ${tag.operations
-            .map(
-              (o) => `
-            <li><a href="#${esc(o.slug)}">${methodBadge(o.method)} <span class="toc-op-summary">${esc(o.summary)}</span></a></li>`
-            )
-            .join('')}
-        </ul>
-      </li>`
-    )
-    .join('');
-  return `
-    <nav class="toc">
-      <div class="toc-title">📖 Contents</div>
-      <ul>${items}</ul>
-    </nav>`;
+function swaggerParameterBlock({ in: paramIn, name, schema, required, description }) {
+  const attrs = [`in="${paramIn}"`, `name="${mdAttr(name)}"`, `type="${paramType(schema)}"`];
+  if (required) attrs.push('required="true"');
+  const body = paramDescription(schema, description);
+  return `{% swagger-parameter ${attrs.join(' ')} %}\n${body}\n{% endswagger-parameter %}`;
 }
 
-const hljsTheme = fs.readFileSync(HLJS_THEME_PATH, 'utf8');
+// Nested {% tabs %} wrapping our self-contained JSON/TypeScript/Go rendering
+// of one schema - GitBook syntax-highlights each fenced code block itself
+// from its language tag, so this is the "our style, GitBook-native
+// container" meshing point the whole refactor is built around.
+function formatTabsBlock(jsonText, tsText, goText) {
+  return [
+    '{% tabs %}',
+    '{% tab title="JSON" %}',
+    '```json',
+    jsonText,
+    '```',
+    '{% endtab %}',
+    '',
+    '{% tab title="TypeScript" %}',
+    '```typescript',
+    tsText,
+    '```',
+    '{% endtab %}',
+    '',
+    '{% tab title="Go" %}',
+    '```go',
+    goText,
+    '```',
+    '{% endtab %}',
+    '{% endtabs %}',
+  ].join('\n');
+}
 
-const CSS = `
-  :root {
-    --bg: #0d1117;
-    --bg-raised: #161b22;
-    --border: #30363d;
-    --border-dark: #21262d;
-    --text: #c9d1d9;
-    --text-secondary: #8b949e;
-    --accent: #58a6ff;
-    --get: #3fb950;
-    --post: #58a6ff;
-    --put: #d29922;
-    --delete: #f85149;
-    --patch: #bc8cff;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.5;
-  }
-  .layout {
-    max-width: 1180px;
-    margin: 0 auto;
-    display: flex;
-    align-items: flex-start;
-    gap: 2rem;
-    padding: 0 1.5rem;
-  }
-  main {
-    min-width: 0;
-    flex: 1 1 auto;
-    padding: 2rem 0 6rem;
-  }
-  header.page-header {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 0;
-  }
-  .toc {
-    flex: 0 0 240px;
-    position: sticky;
-    top: 1.5rem;
-    max-height: calc(100vh - 3rem);
-    overflow-y: auto;
-    padding: 1.5rem 0.5rem;
-    font-size: 0.85rem;
-  }
-  .toc-title { color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem; }
-  .toc ul { list-style: none; margin: 0; padding: 0; }
-  .toc > ul { display: flex; flex-direction: column; gap: 0.6rem; }
-  .toc-tag {
-    display: block;
-    font-weight: 600;
-    color: var(--text);
-    text-decoration: none;
-    padding: 0.15rem 0;
-  }
-  .toc-tag:hover { color: var(--accent); }
-  .toc-operations { margin-top: 0.2rem; padding-left: 0.9rem; border-left: 1px solid var(--border-dark); }
-  .toc-operations li { margin: 0.15rem 0; }
-  .toc-operations a {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    padding: 0.1rem 0;
-  }
-  .toc-operations a:hover { color: var(--accent); }
-  .toc-operations .method {
-    font-size: 0.65rem;
-    padding: 0.05rem 0.3rem;
-  }
-  .toc-op-summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  @media (max-width: 900px) {
-    .layout { flex-direction: column; }
-    .toc { position: static; max-height: none; width: 100%; }
-  }
-  h1 { color: var(--text); }
-  h2 {
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0.5rem;
-    margin-top: 3rem;
-  }
-  h4 { color: var(--text-secondary); margin-bottom: 0.25rem; }
-  p.scope-description, p.op-description { color: var(--text-secondary); }
-  a { color: var(--accent); }
-  code { background: var(--bg-raised); padding: 0.1rem 0.35rem; border-radius: 4px; }
-  details.operation {
-    background: var(--bg-raised);
-    border: 1px solid var(--border-dark);
-    border-radius: 6px;
-    margin: 0.75rem 0;
-    padding: 0.5rem 1rem;
-  }
-  details.operation summary {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    list-style: none;
-    padding: 0.5rem 0;
-  }
-  details.operation summary::-webkit-details-marker { display: none; }
-  .route { font-family: 'SFMono-Regular', Consolas, monospace; font-weight: 600; }
-  .op-summary { color: var(--text-secondary); font-size: 0.9rem; }
-  .method {
-    font-family: monospace;
-    font-weight: 700;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    color: #010409;
-  }
-  .method-get { background: var(--get); }
-  .method-post { background: var(--post); }
-  .method-put { background: var(--put); }
-  .method-delete { background: var(--delete); }
-  .method-patch { background: var(--patch); }
-  .op-body { margin-top: 0.5rem; border-top: 1px solid var(--border-dark); padding-top: 0.75rem; }
-  table.params { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.9rem; }
-  table.params th, table.params td {
-    text-align: left;
-    padding: 0.35rem 0.5rem;
-    border-bottom: 1px solid var(--border-dark);
-  }
-  table.params th { color: var(--text-secondary); font-weight: 600; }
-  .format-tabs { margin-left: auto; display: flex; gap: 0.25rem; }
-  .format-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    border-radius: 4px;
-    padding: 0.15rem 0.5rem;
-    font-size: 0.75rem;
-    cursor: pointer;
-  }
-  .format-btn.active { background: var(--accent); color: #010409; border-color: var(--accent); }
-  pre {
-    background: #010409;
-    color: var(--text);
-    border: 1px solid var(--border-dark);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    overflow-x: auto;
-    font-size: 0.85rem;
-  }
-  pre code.hljs { padding: 0; background: transparent; }
-  .other-responses, .other-responses-list { font-size: 0.85rem; color: var(--text-secondary); }
-  ${hljsTheme}
-`;
+// A bold heading plus a formatTabsBlock, for embedding a combined
+// Query/Header/Request-body type view inside {% swagger-description %},
+// alongside (not instead of) the native per-field {% swagger-parameter %}
+// blocks below it.
+function typeSection(heading, schemaData, name, goTag) {
+  const { jsonText, tsText, goText } = buildSchemaTexts(schemaData, name, goTag);
+  return `**${heading}**\n\n${formatTabsBlock(jsonText, tsText, goText)}`;
+}
 
-const JS = `
-  document.querySelectorAll('[data-format-btn]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const format = btn.dataset.formatBtn;
-      document.body.dataset.format = format;
-      document.querySelectorAll('[data-format-btn]').forEach(b => b.classList.toggle('active', b.dataset.formatBtn === format));
-      document.querySelectorAll('[data-format-panel]').forEach(p => { p.hidden = p.dataset.formatPanel !== format; });
-    });
-  });
-`;
+function swaggerResponseBlock(o, r) {
+  const attrs = `status="${mdAttr(statusLabel(r.code))}" description="${mdAttr(r.description)}"`;
+  if (!r.schemaData) {
+    return `{% swagger-response ${attrs} %}\nNo response body.\n{% endswagger-response %}`;
+  }
+  const { jsonText, tsText, goText } = buildSchemaTexts(r.schemaData, `${pascalCase(o.operationId)}${r.code}Response`);
+  return `{% swagger-response ${attrs} %}\n${formatTabsBlock(jsonText, tsText, goText)}\n{% endswagger-response %}`;
+}
 
-const html = `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${esc(spec.info.title)}</title>
-  <style>${CSS}</style>
-</head>
-<body data-format="json">
-  <header class="page-header">
-    <h1>${esc(spec.info.title)}</h1>
-    <p>${esc(spec.info.description || '').split('\n')[0]}</p>
-    <p><code>${esc((spec.servers && spec.servers[0] && spec.servers[0].url) || '')}</code></p>
-  </header>
-  <div class="layout">
-    ${renderToc(operationsByTagRendered)}
-    <main>
-      ${operationsByTagRendered.map(renderTag).join('\n')}
-    </main>
-  </div>
-  <script>${JS}</script>
-</body>
-</html>
-`;
+function renderOperationMarkdown(o) {
+  const parts = [];
+  parts.push(
+    `{% swagger method="${o.method}" path="${mdAttr(o.gitbookPath)}" baseUrl="${mdAttr(BASE_URL)}" summary="${mdAttr(o.summary)}" %}`
+  );
 
-fs.mkdirSync(OUT_DIR, { recursive: true });
-fs.writeFileSync(OUT_FILE, html);
-process.stdout.write(`Generated ${OUT_FILE} (${(Buffer.byteLength(html) / 1024).toFixed(1)} KiB).\n`);
+  const descParts = [];
+  if (o.description) descParts.push(o.description);
+  descParts.push(`**Auth:** ${o.security}`);
+  if (o.querySchemaData) {
+    descParts.push(typeSection('Query Parameters', o.querySchemaData, `${pascalCase(o.operationId)}Query`, QUERY_GO_TAG));
+  }
+  if (o.headerSchemaData) {
+    descParts.push(typeSection('Headers', o.headerSchemaData, `${pascalCase(o.operationId)}Header`, HEADER_GO_TAG));
+  }
+  if (o.requestBody) {
+    descParts.push(typeSection(`Request Body (${o.requestBody.contentType})`, o.requestBody.schemaData, `${pascalCase(o.operationId)}Request`));
+  }
+  parts.push(`{% swagger-description %}\n${descParts.join('\n\n')}\n{% endswagger-description %}`);
+
+  for (const p of o.pathParams) {
+    parts.push(swaggerParameterBlock({ in: 'path', name: p.name, schema: p.schema, required: true, description: p.description }));
+  }
+  for (const p of o.queryParams) {
+    parts.push(swaggerParameterBlock({ in: 'query', name: p.name, schema: p.schema, required: p.required, description: p.description }));
+  }
+  for (const p of o.headerParams) {
+    parts.push(swaggerParameterBlock({ in: 'header', name: p.name, schema: p.schema, required: p.required, description: p.description }));
+  }
+  if (o.requestBody) {
+    for (const bp of o.requestBody.bodyProps) {
+      parts.push(swaggerParameterBlock({ in: 'body', name: bp.name, schema: bp.schema, required: bp.required, description: bp.description }));
+    }
+  }
+  for (const r of o.responses) {
+    parts.push(swaggerResponseBlock(o, r));
+  }
+
+  parts.push('{% endswagger %}');
+  return parts.join('\n\n');
+}
+
+function renderTagMarkdown(tag) {
+  const lines = [];
+  const frontmatterDescription = (tag.description || `API methods in relation to ${tag.name}`).replace(/\s*\n\s*/g, ' ').trim();
+  lines.push('---');
+  lines.push(`description: ${frontmatterDescription}`);
+  lines.push('---');
+  lines.push('');
+  lines.push(`# ${tagEmoji(tag.name)} ${tag.name}`);
+  lines.push('');
+  if (tag.description) {
+    lines.push(tag.description);
+    lines.push('');
+  }
+  for (const o of tag.operations) {
+    lines.push(renderOperationMarkdown(o));
+    lines.push('');
+  }
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+}
+
+function renderApiReferenceReadme(tags) {
+  const lines = [];
+  lines.push('# 👾 API Reference');
+  lines.push('');
+  lines.push('Dive into the specifics of each API endpoint by checking out our complete documentation.');
+  lines.push('');
+  for (const tag of tags) {
+    lines.push(`## ${tagEmoji(tag.name)} ${tag.name}`);
+    lines.push('');
+    if (tag.description) {
+      lines.push(tag.description);
+      lines.push('');
+    }
+    const file = `${tagFile(tag.name)}.md`;
+    lines.push(`{% content-ref url="${file}" %}`);
+    lines.push(`[${file}](${file})`);
+    lines.push('{% endcontent-ref %}');
+    lines.push('');
+  }
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+}
+
+// Surgically replaces the API Reference sub-list in gitbook/SUMMARY.md with
+// one entry per tag, leaving the rest of the file (front matter, Data Types,
+// Chats, etc.) untouched. Idempotent across reruns.
+function updateSummary(tags) {
+  const content = fs.readFileSync(SUMMARY_PATH, 'utf8');
+  const lines = content.split('\n');
+  const headerIdx = lines.findIndex((l) => l.includes('reference/api-reference/README.md'));
+  if (headerIdx === -1) throw new Error('Could not find API Reference entry in gitbook/SUMMARY.md');
+  let endIdx = headerIdx + 1;
+  while (endIdx < lines.length && /^\s{2}\* \[/.test(lines[endIdx])) endIdx++;
+  const newSubItems = tags.map((tag) => `  * [${tagEmoji(tag.name)} ${tag.name}](reference/api-reference/${tagFile(tag.name)}.md)`);
+  newSubItems.push('  * [📄 OpenAPI Spec](reference/api-reference/openapi.md)');
+  lines.splice(headerIdx + 1, endIdx - (headerIdx + 1), ...newSubItems);
+  fs.writeFileSync(SUMMARY_PATH, lines.join('\n'));
+}
+
+fs.mkdirSync(API_REFERENCE_DIR, { recursive: true });
+for (const tag of operationsByTagRendered) {
+  fs.writeFileSync(path.join(API_REFERENCE_DIR, `${tagFile(tag.name)}.md`), renderTagMarkdown(tag));
+}
+fs.writeFileSync(path.join(API_REFERENCE_DIR, 'README.md'), renderApiReferenceReadme(operationsByTagRendered));
+updateSummary(operationsByTagRendered);
+process.stdout.write(`Generated ${operationsByTagRendered.length} tag pages in ${API_REFERENCE_DIR}.\n`);

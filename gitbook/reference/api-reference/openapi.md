@@ -4,7 +4,7 @@ description: Machine-readable OpenAPI 3.1 specification for the REST API
 
 # 📄 OpenAPI Spec
 
-In addition to the hand-written pages in this **API Reference** section, the REST endpoints documented here (OAuth2, Client, Users, Content, Comments) are also available as a single machine-readable [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) document:
+Every other page in this **API Reference** section (OAuth2, Client, Users, Content, Comments, Chat, Discovery, Tasks) is generated directly from a single machine-readable [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) document:
 
 {% code title="ifunny-api.yaml" %}
 ```
@@ -16,11 +16,11 @@ This file lives in the same repository as this GitBook space (in the synced `git
 
 ## Why a separate spec?
 
-The Markdown pages in this space are written for humans first. The OpenAPI file is written for tooling: import it into Postman/Insomnia, generate client SDKs, or feed it into a linter/mock server. It intentionally does **not** try to reproduce the Markdown pages 1:1 — it's a different artifact for a different purpose, kept in sync by hand as the API evolves.
+The spec is the single source of truth: `scripts/generate-docs.js` reads it and renders the other pages in this section straight into `gitbook/reference/api-reference/`, using GitBook's own block syntax. The spec is also useful directly for tooling: import it into Postman/Insomnia, generate client SDKs, or feed it into a linter/mock server.
 
-## Rendered documentation
+## How the pages are generated
 
-A rendered, browsable version of the spec (via [Redoc](https://redocly.com/redoc)) is published automatically from `main` using GitHub Actions + GitHub Pages. See `.github/workflows/openapi.yml` in the repository for the build/publish pipeline.
+A GitHub Actions workflow (`.github/workflows/openapi.yml`) runs `scripts/generate-docs.js` on every push, and commits the regenerated Markdown straight back into this repository — since GitBook syncs its content directly from here, the generated pages need to be tracked in git, not just built as an ephemeral artifact. Don't hand-edit the other pages in this section directly; edit `gitbook/openapi/ifunny-api.yaml` (or its `paths/`/`schemas/` includes) instead and let the workflow regenerate them.
 
 ## What's not covered
 

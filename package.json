@@ -1,14 +1,13 @@
 {
   "name": "ifunny-api-docs",
   "version": "1.0.0",
-  "description": "OpenAPI 3.1 specification for the iFunny API with a custom single-column static site generator",
+  "description": "OpenAPI 3.1 specification for the iFunny API, rendered into GitBook-native Markdown",
   "scripts": {
     "build": "node scripts/generate-docs.js",
     "lint": "redocly lint gitbook/openapi/ifunny-api.yaml"
   },
   "dependencies": {
     "@redocly/cli": "1.25.5",
-    "highlight.js": "^11.9.0",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {}

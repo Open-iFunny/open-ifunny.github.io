@@ -1,45 +1,69 @@
 ---
-description: API methods in relation to OAuth2
-layout:
-  title:
-    visible: true
-  description:
-    visible: true
-  tableOfContents:
-    visible: true
-  outline:
-    visible: true
-  pagination:
-    visible: true
+description: Authentication and authorization
 ---
 
 # 🔑 OAuth2
 
-
-
-{% hint style="info" %}
-These methods only include the headers **REQUIRED** to make the request successfully. This may be changed in the future but in order to save time I will not be including the miscellaneous headers
-{% endhint %}
+Authentication and authorization
 
 {% swagger method="post" path="/users" baseUrl="https://api.ifunny.mobi/v4" summary="Register Account" %}
+
 {% swagger-description %}
-Create a new account on iFunny
+Create a new account on iFunny.
+
+**Auth:** BasicAuth + ProjectId
+
+**Request Body (application/x-www-form-urlencoded)**
+
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// RegisterAccountRequest
+{
+  "reg_type": "pwd",
+  "nick": "string",
+  "email": "string",
+  "password": "string",
+  "accepted_mailing": "enum(0, 1)"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface RegisterAccountRequest {
+  reg_type: 'pwd';
+  nick: string;
+  email: string;
+  password: string;
+  accepted_mailing: 0 | 1;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type RegisterAccountRequest struct {
+	RegType string `json:"reg_type"`
+	Nick string `json:"nick"`
+	Email string `json:"email"`
+	Password string `json:"password"`
+	AcceptedMailing registerAccountRequestAcceptedMailingKind `json:"accepted_mailing"`
+}
+
+type registerAccountRequestAcceptedMailingKind int
+
+const (
+	REGISTER_ACCOUNT_REQUEST_ACCEPTED_MAILING_0 = registerAccountRequestAcceptedMailingKind(iota)
+	REGISTER_ACCOUNT_REQUEST_ACCEPTED_MAILING_1 = registerAccountRequestAcceptedMailingKind(iota)
+)
+```
+{% endtab %}
+{% endtabs %}
 {% endswagger-description %}
 
-{% swagger-parameter in="header" name="Authorization" type="String" required="true" %}
-Basic
-{% endswagger-parameter %}
-
-{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
-"iFunny"
-{% endswagger-parameter %}
-
-{% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
-"application/x-www-form-urlencoded"
-{% endswagger-parameter %}
-
 {% swagger-parameter in="body" name="reg_type" type="String" required="true" %}
-"pwd"
+
 {% endswagger-parameter %}
 
 {% swagger-parameter in="body" name="nick" type="String" required="true" %}
@@ -55,287 +79,637 @@ Password for the account
 {% endswagger-parameter %}
 
 {% swagger-parameter in="body" name="accepted_mailing" type="Number" required="true" %}
-0 for no | 1 for yes
+0 for no, 1 for yes
+
+One of: 0, 1
 {% endswagger-parameter %}
 
 {% swagger-response status="200: OK" description="Account Created" %}
-```typescript
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// RegisterAccount200Response
 {
-    data: {
-        id: string; // Your new user id
-    };
-    status: 200;
+  "data"?: "RegisterAccount200Data",
+  "status"?: "200"
+}
+
+// RegisterAccount200Data
+{
+  "id"?: "string"
 }
 ```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface RegisterAccount200Response {
+  data?: RegisterAccount200Data;
+  status?: 200;
+}
+
+interface RegisterAccount200Data {
+  id?: string;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type RegisterAccount200Response struct {
+	Data RegisterAccount200Data `json:"data,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+
+type RegisterAccount200Data struct {
+	Id *string `json:"id,omitempty"`
+}
+```
+{% endtab %}
+{% endtabs %}
 {% endswagger-response %}
 
 {% swagger-response status="400: Bad Request" description="Bad Request" %}
-```typescript
-{
-    error: "bad_request" | "invalid_request";
-    error_description: string;
-    status: 400;
-};
-```
-{% endswagger-response %}
-
-{% swagger-response status="403: Forbidden" description="Invalid Email" %}
-```typescript
-{
-    error: "invalid_email";
-    error_description: "Domain of email was found in disposable domains list";
-    status: 403;
-}
-```
-{% endswagger-response %}
-
-{% swagger-response status="403: Forbidden" description="Email Already Exists" %}
-```typescript
-{
-    error: "email_exists";
-    error_description: "There is a user with this email";
-    status: 403;
-}
-```
-{% endswagger-response %}
-{% endswagger %}
-
-{% swagger method="post" baseUrl="https://api.ifunny.mobi/v4" path="/oauth2/login" summary="Login to iFunny" %}
-{% swagger-description %}
-This will log you in with a username and password. This requires a Primed Basic Token which can be found here #[basic-token-generation.md](../basic-token-generation.md "mention")
-{% endswagger-description %}
-
-{% swagger-parameter in="header" name="authorization" required="true" type="String" %}
-Basic Token
-{% endswagger-parameter %}
-
-{% swagger-parameter in="body" name="username" type="String" required="true" %}
-Your iFunny email address
-{% endswagger-parameter %}
-
-{% swagger-parameter in="body" name="password" type="String" required="true" %}
-Your iFunny password
-{% endswagger-parameter %}
-
-{% swagger-parameter in="body" name="grant_type" type="String" required="true" %}
-"password"
-{% endswagger-parameter %}
-
-{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
-"iFunny"
-{% endswagger-parameter %}
-
-{% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
-"application/x-www-form-urlencoded"
-{% endswagger-parameter %}
-
-{% swagger-response status="200: OK" description="Successfully logged in" %}
 {% tabs %}
-{% tab title="Schema" %}
-```typescript
+{% tab title="JSON" %}
+```json
+// RegisterAccount400Response
+"RegisterAccount400Response": "Error"
+
+// Error
 {
-    access_token:  string, // Your Bearer Token
-    token_type: "bearer",
-    expires_in: 315360000 // In seconds (10 Years)
+  "error"?: "string",
+  "error_description"?: "string",
+  "status"?: "integer"
 }
 ```
 {% endtab %}
 
-{% tab title="Description" %}
-The `expires_in` field is represented in seconds, which is equivalent to 10 years.
+{% tab title="TypeScript" %}
+```typescript
+type RegisterAccount400Response = Error;
 
-{% hint style="info" %}
-Remember to format your bearer token in the Authorization header like so\
-`"Bearer {bearer}"`
-{% endhint %}
+interface Error {
+  error?: string;
+  error_description?: string;
+  status?: number;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type RegisterAccount400Response Error
+
+type Error struct {
+	Error *string `json:"error,omitempty"`
+	ErrorDescription *string `json:"error_description,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-response %}
+
+{% swagger-response status="403: Forbidden" description="Invalid Email or Email Already Exists" %}
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// RegisterAccount403Response
+"RegisterAccount403Response": "Error"
+
+// Error
+{
+  "error"?: "string",
+  "error_description"?: "string",
+  "status"?: "integer"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+type RegisterAccount403Response = Error;
+
+interface Error {
+  error?: string;
+  error_description?: string;
+  status?: number;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type RegisterAccount403Response Error
+
+type Error struct {
+	Error *string `json:"error,omitempty"`
+	ErrorDescription *string `json:"error_description,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-response %}
+
+{% endswagger %}
+
+{% swagger method="post" path="/oauth2/login" baseUrl="https://api.ifunny.mobi/v4" summary="Login / Refresh Bearer Token" %}
+
+{% swagger-description %}
+This single path serves two grant types in the source documentation:
+
+- `grant_type=password` — log in with username/password using a Basic token
+  (see Basic Token Generation guide).
+- Refresh — exchange an existing Bearer token for a new one via the `token` field.
+
+**Auth:** BasicAuth + ProjectId
+
+**Request Body (application/x-www-form-urlencoded)**
+
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// LoginOrRefreshRequest
+"LoginOrRefreshRequest": "PasswordGrant | RefreshGrant"
+
+// PasswordGrant
+{
+  "username": "string",
+  "password": "string",
+  "grant_type": "password"
+}
+
+// RefreshGrant
+{
+  "token": "string"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+type LoginOrRefreshRequest = PasswordGrant | RefreshGrant;
+
+interface PasswordGrant {
+  username: string;
+  password: string;
+  grant_type: 'password';
+}
+
+interface RefreshGrant {
+  token: string;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type LoginOrRefreshRequest PasswordGrant /* or */ RefreshGrant
+
+type PasswordGrant struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	GrantType string `json:"grant_type"`
+}
+
+type RefreshGrant struct {
+	Token string `json:"token"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-description %}
+
+{% swagger-response status="200: OK" description="Successfully logged in / refreshed" %}
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// LoginOrRefresh200Response
+{
+  "access_token"?: "string",
+  "token_type"?: "bearer",
+  "expires_in"?: "integer"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface LoginOrRefresh200Response {
+  access_token?: string;
+  token_type?: 'bearer';
+  expires_in?: number;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type LoginOrRefresh200Response struct {
+	AccessToken *string `json:"access_token,omitempty"`
+	TokenType *string `json:"token_type,omitempty"`
+	ExpiresIn *int `json:"expires_in,omitempty"`
+}
+```
 {% endtab %}
 {% endtabs %}
 {% endswagger-response %}
 
 {% swagger-response status="400: Bad Request" description="Invalid Credentials" %}
 {% tabs %}
-{% tab title="Schema" %}
+{% tab title="JSON" %}
 ```json
+// LoginOrRefresh400Response
+"LoginOrRefresh400Response": "Error"
+
+// Error
 {
-    error: "invalid_grant",
-    error_description: "Wrong user credentials",
-    status: 400
+  "error"?: "string",
+  "error_description"?: "string",
+  "status"?: "integer"
 }
 ```
 {% endtab %}
 
-{% tab title="Description" %}
-Typically returned when the username and password is incorrect
+{% tab title="TypeScript" %}
+```typescript
+type LoginOrRefresh400Response = Error;
+
+interface Error {
+  error?: string;
+  error_description?: string;
+  status?: number;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type LoginOrRefresh400Response Error
+
+type Error struct {
+	Error *string `json:"error,omitempty"`
+	ErrorDescription *string `json:"error_description,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+```
 {% endtab %}
 {% endtabs %}
 {% endswagger-response %}
 
 {% swagger-response status="403: Forbidden" description="Captcha Error" %}
 {% tabs %}
-{% tab title="Schema" %}
+{% tab title="JSON" %}
+```json
+// LoginOrRefresh403Response
+"LoginOrRefresh403Response": "CaptchaError"
+
+// CaptchaError
+{
+  "error"?: "captcha_required",
+  "error_description"?: "Human verification is required",
+  "data"?: "CaptchaErrorData",
+  "status"?: "403"
+}
+
+// CaptchaErrorData
+{
+  "captcha_url"?: "string",
+  "type"?: "enum(fun_captcha, recaptcha)"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
 ```typescript
-{
-  error: "captcha_required",
-  error_description: "Human verification is required",
-  data: {
-    captcha_url: "https://ifunny.co/captcha/{captcha_id}",
-    // Recaptcha is used when no user-agent is provided
-    type: "fun_captcha" | "recaptcha"
-  },
-  status: 403
+type LoginOrRefresh403Response = CaptchaError;
+
+interface CaptchaError {
+  error?: 'captcha_required';
+  error_description?: 'Human verification is required';
+  data?: CaptchaErrorData;
+  status?: 403;
+}
+
+interface CaptchaErrorData {
+  captcha_url?: string;
+  type?: 'fun_captcha' | 'recaptcha';
 }
 ```
 {% endtab %}
 
-{% tab title="Description" %}
-If you've received a Captcha Error, you need to open `data.captcha_url` in a browser, solve the captcha and then attempt the exact same request again within 10 seconds
+{% tab title="Go" %}
+```go
+type LoginOrRefresh403Response CaptchaError
+
+type CaptchaError struct {
+	Error *string `json:"error,omitempty"`
+	ErrorDescription *string `json:"error_description,omitempty"`
+	Data CaptchaErrorData `json:"data,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+
+type CaptchaErrorData struct {
+	CaptchaUrl *string `json:"captcha_url,omitempty"`
+	Type *string `json:"type,omitempty"`
+}
+```
 {% endtab %}
 {% endtabs %}
 {% endswagger-response %}
 
-{% swagger-response status="429: Too Many Requests" description="Too many user auths" %}
+{% swagger-response status="429: Too Many Requests" description="Too Many Requests" %}
 {% tabs %}
-{% tab title="Schema" %}
+{% tab title="JSON" %}
+```json
+// LoginOrRefresh429Response
+"LoginOrRefresh429Response": "Error"
+
+// Error
+{
+  "error"?: "string",
+  "error_description"?: "string",
+  "status"?: "integer"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
 ```typescript
-{
-    error: "too_many_user_auths",
-    error_description: "User auths rate exceed, please try again later.",
-    status: 429
+type LoginOrRefresh429Response = Error;
+
+interface Error {
+  error?: string;
+  error_description?: string;
+  status?: number;
 }
 ```
 {% endtab %}
 
-{% tab title="Description" %}
-Usually returned when the basic token has created too many bearer tokens too quickly. This can be circumvented by generating a new basic token
-{% endtab %}
-{% endtabs %}
-{% endswagger-response %}
-{% endswagger %}
+{% tab title="Go" %}
+```go
+type LoginOrRefresh429Response Error
 
-{% swagger method="post" path="/oauth2/login" baseUrl="https://api.ifunny.mobi/v4" summary="Refresh Bearer Token" %}
-{% swagger-description %}
-
-{% endswagger-description %}
-
-{% swagger-parameter in="body" name="token" type="String" required="true" %}
-Bearer Token
-{% endswagger-parameter %}
-
-{% swagger-parameter in="header" name="authorization" type="String" required="true" %}
-Basic Token
-{% endswagger-parameter %}
-
-{% swagger-parameter in="header" name="ifunny-project-id" type="String" required="true" %}
-"iFunny"
-{% endswagger-parameter %}
-
-{% swagger-parameter in="header" name="Content-Type" type="String" required="true" %}
-"application/x-www-form-urlencoded"
-{% endswagger-parameter %}
-
-{% swagger-response status="200: OK" description="Successfully refreshed Bearer" %}
-{% tabs %}
-{% tab title="Schema" %}
-```json
-{
-    access_token: "{bearer_token}",
-    token_type: "bearer",
-    expires_in: 315360000 // In seconds (10 Years)
+type Error struct {
+	Error *string `json:"error,omitempty"`
+	ErrorDescription *string `json:"error_description,omitempty"`
+	Status *int `json:"status,omitempty"`
 }
 ```
 {% endtab %}
 {% endtabs %}
 {% endswagger-response %}
 
-{% swagger-response status="400: Bad Request" description="Invalid Credentials" %}
-{% tabs %}
-{% tab title="Schema" %}
-```json
-{
-    error: "invalid_grant",
-    error_description: "Wrong user credentials",
-    status: 400
-}
-```
-{% endtab %}
-
-{% tab title="Description" %}
-Typically returned when the username and password is incorrect
-{% endtab %}
-{% endtabs %}
-{% endswagger-response %}
-
-{% swagger-response status="403: Forbidden" description="Captcha Error" %}
-{% tabs %}
-{% tab title="Schema" %}
-```json
-{
-  error: "captcha_required",
-  error_description: "Human verification is required",
-  data: {
-    captcha_url: "https://ifunny.co/captcha/{captcha_id}",
-    type: "fun_captcha" | "recaptcha"
-  },
-  status: 403
-}
-```
-{% endtab %}
-
-{% tab title="Description" %}
-If you've received a Captcha Error, you need to open `data.captcha_url` in a browser, solve the captcha and then attempt the exact same request again within 10 seconds
-{% endtab %}
-{% endtabs %}
-{% endswagger-response %}
-
-{% swagger-response status="429: Too Many Requests" description="" %}
-{% tabs %}
-{% tab title="Schema" %}
-```json
-{
-    error: "too_many_user_auths",
-    error_description: "User auths rate exceed, please try again later.",
-    status: 429
-}
-```
-{% endtab %}
-
-{% tab title="Description" %}
-Usually returned when the basic token has created too many bearer tokens too quickly. This can be circumvented by generating a new basic token
-{% endtab %}
-{% endtabs %}
-{% endswagger-response %}
 {% endswagger %}
 
 {% swagger method="post" path="/oauth2/revoke" baseUrl="https://api.ifunny.mobi/v4" summary="Revoke Access Token" %}
+
 {% swagger-description %}
 Revokes a created access token. This will log out every device using this token.
-{% endswagger-description %}
 
-{% swagger-parameter in="header" name="authorization" type="String" required="true" %}
-Basic Token
-{% endswagger-parameter %}
+**Auth:** BasicAuth + ProjectId
 
-{% swagger-parameter in="header" name="ifunny-project-id" required="true" type="String" %}
-"iFunny"
-{% endswagger-parameter %}
+**Request Body (application/x-www-form-urlencoded)**
 
-{% swagger-parameter in="body" name="token" type="String" required="true" %}
-Bearer Token
-{% endswagger-parameter %}
-
-{% swagger-response status="200: OK" description="Success" %}
 {% tabs %}
-{% tab title="Schema" %}
+{% tab title="JSON" %}
 ```json
+// RevokeAccessTokenRequest
 {
-    status: 200
+  "token": "string"
 }
 ```
 {% endtab %}
 
-{% tab title="Description" %}
-The token was successfully revoked and is no longer valid
+{% tab title="TypeScript" %}
+```typescript
+interface RevokeAccessTokenRequest {
+  token: string;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type RevokeAccessTokenRequest struct {
+	Token string `json:"token"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-description %}
+
+{% swagger-parameter in="body" name="token" type="String" required="true" %}
+Bearer Token to revoke
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Token successfully revoked" %}
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// RevokeAccessToken200Response
+{
+  "status"?: "200"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface RevokeAccessToken200Response {
+  status?: 200;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type RevokeAccessToken200Response struct {
+	Status *int `json:"status,omitempty"`
+}
+```
 {% endtab %}
 {% endtabs %}
 {% endswagger-response %}
+
+{% endswagger %}
+
+{% swagger method="get" path="/nicks/available" baseUrl="https://api.ifunny.mobi/v4" summary="Check Nick Availability" %}
+
+{% swagger-description %}
+Check whether a nickname is available for signup or account rename.
+Returns `{available: boolean}`.
+
+**Auth:** BasicAuth + ProjectId or BearerAuth + ProjectId
+
+**Query Parameters**
+
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// CheckNickAvailabilityQuery
+{
+  "nick": "string"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface CheckNickAvailabilityQuery {
+  nick: string;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type CheckNickAvailabilityQuery struct {
+	Nick string `query:"nick"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-description %}
+
+{% swagger-parameter in="query" name="nick" type="String" required="true" %}
+
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Availability result" %}
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// CheckNickAvailability200Response
+{
+  "data"?: "CheckNickAvailability200Data",
+  "status"?: "200"
+}
+
+// CheckNickAvailability200Data
+{
+  "available"?: "boolean"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface CheckNickAvailability200Response {
+  data?: CheckNickAvailability200Data;
+  status?: 200;
+}
+
+interface CheckNickAvailability200Data {
+  available?: boolean;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type CheckNickAvailability200Response struct {
+	Data CheckNickAvailability200Data `json:"data,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+
+type CheckNickAvailability200Data struct {
+	Available *bool `json:"available,omitempty"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-response %}
+
+{% endswagger %}
+
+{% swagger method="get" path="/emails/available" baseUrl="https://api.ifunny.mobi/v4" summary="Check Email Availability" %}
+
+{% swagger-description %}
+Check whether an email address is available for signup or account
+rebinding. Returns `{available: boolean}`.
+
+**Auth:** BasicAuth + ProjectId or BearerAuth + ProjectId
+
+**Query Parameters**
+
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// CheckEmailAvailabilityQuery
+{
+  "email": "string"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface CheckEmailAvailabilityQuery {
+  email: string;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type CheckEmailAvailabilityQuery struct {
+	Email string `query:"email"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-description %}
+
+{% swagger-parameter in="query" name="email" type="String" required="true" %}
+
+{% endswagger-parameter %}
+
+{% swagger-response status="200: OK" description="Availability result" %}
+{% tabs %}
+{% tab title="JSON" %}
+```json
+// CheckEmailAvailability200Response
+{
+  "data"?: "CheckEmailAvailability200Data",
+  "status"?: "200"
+}
+
+// CheckEmailAvailability200Data
+{
+  "available"?: "boolean"
+}
+```
+{% endtab %}
+
+{% tab title="TypeScript" %}
+```typescript
+interface CheckEmailAvailability200Response {
+  data?: CheckEmailAvailability200Data;
+  status?: 200;
+}
+
+interface CheckEmailAvailability200Data {
+  available?: boolean;
+}
+```
+{% endtab %}
+
+{% tab title="Go" %}
+```go
+type CheckEmailAvailability200Response struct {
+	Data CheckEmailAvailability200Data `json:"data,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+
+type CheckEmailAvailability200Data struct {
+	Available *bool `json:"available,omitempty"`
+}
+```
+{% endtab %}
+{% endtabs %}
+{% endswagger-response %}
+
 {% endswagger %}

@@ -2,7 +2,7 @@ name: OpenAPI
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
     paths:
       - "gitbook/openapi/**"
       - "scripts/**"
@@ -25,8 +25,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   lint:
@@ -36,39 +34,43 @@ jobs:
       - name: Lint OpenAPI spec
         run: npx --yes @redocly/cli@1.25.5 lint gitbook/openapi/ifunny-api.yaml
 
-  build:
+  render:
     needs: lint
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
       - name: Install Nix
         uses: cachix/install-nix-action@v27
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
             experimental-features = nix-command flakes
-      - name: Build docs via Nix (custom single-column generator)
+      # scripts/generate-docs.js is the single source of the Markdown under
+      # gitbook/reference/api-reference/ (plus gitbook/SUMMARY.md) - GitBook
+      # syncs its content straight from this repo, so the rendered output
+      # has to be committed, not just built as an ephemeral artifact.
+      - name: Render GitBook markdown from the OpenAPI spec (via Nix, reproducibly)
         run: |
           nix build .#docs --print-build-logs
-          mkdir -p _site
-          # -L dereferences the `result` symlink into the read-only nix store,
-          # copying the actual index.html + ifunny-api.yaml into _site/.
-          cp -rL result/. _site/
-          chmod -R u+w _site
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          # -L dereferences the `result` symlink into the read-only nix
+          # store, copying the freshly rendered files over the checked-out
+          # working tree so git sees real, writable files to diff/commit.
+          cp -rL result/reference/api-reference/. gitbook/reference/api-reference/
+          cp -L result/SUMMARY.md gitbook/SUMMARY.md
+          chmod -R u+w gitbook/reference/api-reference gitbook/SUMMARY.md
+      - name: Commit and push regenerated docs
+        run: |
+          if git diff --quiet -- gitbook/; then
+            echo "Generated docs are already up to date, nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gitbook/
+          git commit -m "Regenerate API reference docs from OpenAPI spec"
+          git push origin "HEAD:${{ github.ref_name }}"

@@ -1,7 +1,13 @@
 { pkgs ? import <nixpkgs> { } }:
 
 # This file is called by flake.nix via pkgs.callPackage.
-# It defines the reproducible build for the Redoc static documentation site.
+# It defines a reproducible build of scripts/generate-docs.js, which reads
+# gitbook/openapi/ifunny-api.yaml and renders GitBook-native Markdown into
+# gitbook/reference/api-reference/. `nix build .#docs` exists as a
+# hermetic reproducibility check for the generator (the actual generated
+# Markdown that GitBook syncs from is committed to git directly by the
+# `render` job in .github/workflows/openapi.yml, not produced by this
+# build).
 #
 # Uses nixpkgs' built-in fetchYarnDeps/yarnConfigHook/yarnBuildHook (Yarn
 # Classic v1 offline-mirror support), NOT bun2nix or yarn2nix-moretea:
@@ -42,7 +48,7 @@ let
 
   offlineCache = pkgs.fetchYarnDeps {
     yarnLock = ./yarn.lock;
-    hash = "sha256-ky7lKXlHXqpS6mgxIOKVMgnlopD+tQnYXhdlYAq5+Z8=";
+    hash = "sha256-/mv7ioEId2JL1xNuhq01pqF4gJl3W9hSpDMsNS7szWU=";
   };
 in
 pkgs.stdenv.mkDerivation {
@@ -59,13 +65,12 @@ pkgs.stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out
-    cp -r _site/* $out/
-    cp gitbook/openapi/ifunny-api.yaml $out/
+    cp -r gitbook/. $out/
     runHook postInstall
   '';
 
   meta = with pkgs.lib; {
-    description = "iFunny API documentation - OpenAPI 3.1 spec with Redoc";
+    description = "iFunny API documentation - OpenAPI 3.1 spec rendered into GitBook-native Markdown";
     homepage = "https://github.com/Open-iFunny/api-docs";
     license = licenses.gpl3;
     maintainers = [];
