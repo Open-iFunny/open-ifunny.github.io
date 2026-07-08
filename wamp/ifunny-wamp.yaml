@@ -45,9 +45,18 @@ tags:
     emoji: 📬
     description: Topic subscriptions and event patterns.
 
+categories:
+  - name: chats-dms
+    description: Channel management and messaging procedures/topics
+  - name: subscriptions-events
+    description: Event stream subscriptions and real-time updates
+  - name: wamp
+    description: Invites, moderation, and protocol reference
+
 procedures:
   - uri: co.fun.chat.hide_chat
     tag: channels
+    category: chats-dms
     summary: Hide a channel from your channel list
     description: |
       Hides the channel from the caller's chats without leaving it.
@@ -63,6 +72,7 @@ procedures:
 
   - uri: co.fun.chat.create_channel
     tag: channels
+    category: chats-dms
     summary: Create a new channel
     kwargs:
       type: object
@@ -82,6 +92,7 @@ procedures:
 
   - uri: co.fun.chat.get_or_create_chat
     tag: channels
+    category: chats-dms
     summary: Get or create a direct-message channel
     description: |
       Idempotently resolves a DM channel between the caller and one
@@ -102,6 +113,7 @@ procedures:
 
   - uri: co.fun.chat.new_chat
     tag: channels
+    category: chats-dms
     summary: Create a new named channel
     description: |
       Creates a public or private group channel. Private channels do
@@ -120,6 +132,7 @@ procedures:
 
   - uri: co.fun.chat.get_chat
     tag: channels
+    category: chats-dms
     summary: Fetch channel details by name
     kwargs:
       type: object
@@ -129,6 +142,7 @@ procedures:
 
   - uri: co.fun.chat.join_chat
     tag: channels
+    category: chats-dms
     summary: Join a channel by name
     kwargs:
       type: object
@@ -138,6 +152,7 @@ procedures:
 
   - uri: co.fun.chat.leave_chat
     tag: channels
+    category: chats-dms
     summary: Leave a channel by name
     kwargs:
       type: object
@@ -147,6 +162,7 @@ procedures:
 
   - uri: co.fun.chat.list_messages
     tag: messages
+    category: chats-dms
     summary: List messages in a channel
     description: |
       Paginated message history. `next`/`prev` cursors are integer
@@ -162,6 +178,7 @@ procedures:
 
   - uri: co.fun.chat.invite.invite
     tag: invites
+    category: wamp
     summary: Invite users to a channel
     kwargs:
       type: object
@@ -174,6 +191,7 @@ procedures:
 
   - uri: co.fun.chat.invite.accept
     tag: invites
+    category: wamp
     summary: Accept a channel invitation
     kwargs:
       type: object
@@ -183,6 +201,7 @@ procedures:
 
   - uri: co.fun.chat.invite.decline
     tag: invites
+    category: wamp
     summary: Decline a channel invitation
     kwargs:
       type: object
@@ -192,6 +211,7 @@ procedures:
 
   - uri: co.fun.chat.kick_member
     tag: moderation
+    category: wamp
     summary: Remove a user from a channel
     kwargs:
       type: object
@@ -203,6 +223,7 @@ procedures:
 topics:
   - uri: co.fun.chat.user.{id}.chats
     tag: subscriptions
+    category: subscriptions-events
     summary: Subscribe to updates about your joined channels
     uri_parameters:
       - name: id
@@ -214,6 +235,7 @@ topics:
 
   - uri: co.fun.chat.user.{id}.invites
     tag: subscriptions
+    category: subscriptions-events
     summary: Subscribe to incoming channel invitations
     uri_parameters:
       - name: id
@@ -229,6 +251,7 @@ topics:
 
   - uri: co.fun.chat.chat.{channel_name}
     tag: subscriptions
+    category: subscriptions-events
     summary: Subscribe to events in a channel
     description: |
       Every join, exit, message, and invite dispatched to a channel
