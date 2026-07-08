@@ -4,16 +4,19 @@
 // scripts/wamp/render.js
 //
 // Emits MkDocs Material markdown for the iFunny WAMP realm into
-// docs/reference/wamp/, using the same schema-IR + JSON/TypeScript/Go
+// docs/reference/chat-types/, using the same schema-IR + JSON/TypeScript/Go
 // renderers that generate-docs.js uses for the REST reference. The
 // source of truth is wamp/ifunny-wamp.yaml; see scripts/wamp/schema.json
 // for the meta-schema.
 //
-// Layout of the generated output mirrors the REST layout:
-//   - docs/reference/wamp/index.md          - tag index
-//   - docs/reference/wamp/<tag>.md          - one page per tag,
-//                                             containing all procedures
-//                                             and topics with that tag.
+// Layout of the generated output:
+//   - docs/reference/chat-types/index.md             - master index
+//   - docs/reference/chat-types/<category>.md        - one page per category,
+//                                                      containing all procedures
+//                                                      and topics with that category.
+//
+// Routing is determined by the 'category' field in wamp/ifunny-wamp.yaml.
+// Each procedure and topic MUST have a category field, or render.js will error.
 
 const fs = require('fs');
 const path = require('path');
@@ -32,21 +35,12 @@ const {
 const WAMP_SPEC_PATH = path.join(__dirname, '..', '..', 'wamp', 'ifunny-wamp.yaml');
 const OUT_DIR = path.join(__dirname, '..', '..', 'docs', 'reference', 'chat-types');
 
-// Map tags to output file names (allows consolidation)
-const TAG_ROUTING = {
-  'channels': 'chats-dms',     // procedures: 7; topics: 1
-  'messages': 'chats-dms',     // procedures: 1; topics: 1 → same file as channels
-  'subscriptions': 'subscriptions-events',  // topics only: 3 topics
-  'invites': 'wamp',           // procedures: 3; topics: 0 (topic moved to subscriptions)
-  'moderation': 'wamp',        // procedures: 1; topics: 0 → same file as invites
-};
-
 const spec = parse(WAMP_SPEC_PATH);
 const ir = createSchemaIR(spec);
 const { renderSchemaWithDeps, parameterTable, resolveRef } = ir;
 
 // ---------------------------------------------------------------------
-// Tag bookkeeping
+// Category bookkeeping
 // ---------------------------------------------------------------------
 
 const DEFAULT_TAG_EMOJI = '📁';
@@ -54,37 +48,55 @@ function tagEmoji(tag) {
   return (tag && tag.emoji) || DEFAULT_TAG_EMOJI;
 }
 
-function collectByTag() {
-  // Group procedures and topics by their routed filename
-  const byFile = new Map();  // filename → { file, tags: Set, procedures: [], topics: [] }
-
-  // Initialize map with tags and their filenames
-  for (const t of spec.tags || []) {
-    const filename = TAG_ROUTING[t.name] || slugify(t.name);
-    if (!byFile.has(filename)) {
-      byFile.set(filename, { file: filename, tags: new Set(), procedures: [], topics: [] });
-    }
-    byFile.get(filename).tags.add(t);
+function collectByCategory() {
+  // Build category→metadata map from spec.categories
+  const categories = spec.categories || [];
+  const categoryMap = new Map();  // category name → category object
+  for (const cat of categories) {
+    categoryMap.set(cat.name, cat);
   }
 
-  // Collect procedures by routed filename
+  // Group procedures and topics by their category field
+  const byFile = new Map();  // category name → { file, tags: Set, procedures: [], topics: [] }
+
+  // Collect procedures by category
   for (const p of spec.procedures || []) {
-    const tag = p.tag || 'other';
-    const filename = TAG_ROUTING[tag] || slugify(tag);
-    if (!byFile.has(filename)) {
-      byFile.set(filename, { file: filename, tags: new Set(), procedures: [], topics: [] });
+    const category = p.category;
+    if (!category) {
+      throw new Error(`Procedure ${p.uri} is missing required 'category' field. Valid categories: ${Array.from(categoryMap.keys()).join(', ')}`);
     }
-    byFile.get(filename).procedures.push(p);
+    if (!categoryMap.has(category)) {
+      throw new Error(`Procedure ${p.uri} has invalid category '${category}'. Valid categories: ${Array.from(categoryMap.keys()).join(', ')}`);
+    }
+
+    if (!byFile.has(category)) {
+      byFile.set(category, { file: category, tags: new Set(), procedures: [], topics: [] });
+    }
+    byFile.get(category).procedures.push(p);
+
+    // Also collect tag for metadata
+    const tag = p.tag ? spec.tags?.find(t => t.name === p.tag) : null;
+    if (tag) byFile.get(category).tags.add(tag);
   }
 
-  // Collect topics by routed filename
+  // Collect topics by category
   for (const t of spec.topics || []) {
-    const tag = t.tag || 'other';
-    const filename = TAG_ROUTING[tag] || slugify(tag);
-    if (!byFile.has(filename)) {
-      byFile.set(filename, { file: filename, tags: new Set(), procedures: [], topics: [] });
+    const category = t.category;
+    if (!category) {
+      throw new Error(`Topic ${t.uri} is missing required 'category' field. Valid categories: ${Array.from(categoryMap.keys()).join(', ')}`);
     }
-    byFile.get(filename).topics.push(t);
+    if (!categoryMap.has(category)) {
+      throw new Error(`Topic ${t.uri} has invalid category '${category}'. Valid categories: ${Array.from(categoryMap.keys()).join(', ')}`);
+    }
+
+    if (!byFile.has(category)) {
+      byFile.set(category, { file: category, tags: new Set(), procedures: [], topics: [] });
+    }
+    byFile.get(category).topics.push(t);
+
+    // Also collect tag for metadata
+    const tag = t.tag ? spec.tags?.find(tag => tag.name === t.tag) : null;
+    if (tag) byFile.get(category).tags.add(tag);
   }
 
   // Convert tags Set to array and filter out empty files
@@ -145,7 +157,7 @@ function describeServerAuth(server) {
   const authId = ref.split('/').pop();
   const bits = [`\`${authId}\` (${auth.type})`];
   if (auth.credential_ref) {
-    // Tag pages live at docs/reference/wamp/<file>.md, so credential_ref
+    // Tag pages live at docs/reference/chat-types/<file>.md, so credential_ref
     // (authored relative to docs/) needs `../../` to climb back to docs/.
     bits.push(`credential: [${auth.credential_ref}](../../${auth.credential_ref})`);
   }
@@ -307,10 +319,10 @@ function renderTopic(t) {
 }
 
 // ---------------------------------------------------------------------
-// Tag page + index
+// Category page + index
 // ---------------------------------------------------------------------
 
-function renderTagPage(group) {
+function renderCategoryPage(group) {
   const { file, tags, procedures, topics } = group;
   const lines = [];
 
@@ -355,7 +367,7 @@ function renderIndex(groups) {
   const lines = [];
   lines.push('---');
   lines.push('title: WAMP Reference');
-  lines.push('description: WAMP procedures and topics, grouped by tag.');
+  lines.push('description: WAMP procedures and topics, grouped by category.');
   lines.push('---');
   lines.push('');
   lines.push('# 📡 WAMP Reference');
@@ -412,10 +424,10 @@ function renderIndex(groups) {
 // Emit
 // ---------------------------------------------------------------------
 
-const groups = collectByTag();
+const groups = collectByCategory();
 fs.mkdirSync(OUT_DIR, { recursive: true });
 for (const g of groups) {
-  fs.writeFileSync(path.join(OUT_DIR, `${g.file}.md`), renderTagPage(g));
+  fs.writeFileSync(path.join(OUT_DIR, `${g.file}.md`), renderCategoryPage(g));
 }
 fs.writeFileSync(path.join(OUT_DIR, 'index.md'), renderIndex(groups));
 process.stdout.write(`Generated ${groups.length} WAMP files in ${OUT_DIR}.\n`);
