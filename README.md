@@ -14,8 +14,22 @@ We're a passionate community of developers committed to demystifying the iFunny 
 
 # Table of Contents
 
+- [Documentation](#📚-documentation)
 - [Disclaimer](#⚠️-disclaimer)
 - [License](#⚖️-license)
+
+## 📚 Documentation
+
+The full docs live in [`gitbook/`](gitbook/README.md) and are synced to our [GitBook space](https://www.gitbook.com/). The [API Reference](gitbook/reference/api-reference/README.md) is generated straight from our [OpenAPI spec](gitbook/openapi/ifunny-api.yaml) and covers:
+
+- [🔑 OAuth2](gitbook/reference/api-reference/oauth2.md)
+- [🤖 Client](gitbook/reference/api-reference/client.md)
+- [🫂 Users](gitbook/reference/api-reference/users.md)
+- [😂 Content](gitbook/reference/api-reference/content.md)
+- [💭 Comments](gitbook/reference/api-reference/comments.md)
+- [📡 Chat](gitbook/reference/api-reference/chat.md)
+- [🧭 Discovery](gitbook/reference/api-reference/discovery.md)
+- [⏳ Tasks](gitbook/reference/api-reference/tasks.md)
 
 ## ⚠️ Disclaimer
 
