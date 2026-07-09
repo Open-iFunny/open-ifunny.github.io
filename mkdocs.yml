@@ -1,8 +1,8 @@
 site_name: iFunny API (Unofficial)
 site_description: Unofficial, reverse-engineered documentation for the iFunny API.
-site_url: https://open-ifunny.github.io/api-docs/
-repo_url: https://github.com/Open-iFunny/api-docs
-repo_name: Open-iFunny/api-docs
+site_url: https://open-ifunny.github.io/
+repo_url: https://github.com/Open-iFunny/open-ifunny.github.io
+repo_name: Open-iFunny/open-ifunny.github.io
 edit_uri: edit/main/docs/
 copyright: >
   Community-maintained, not affiliated with iFunny or FunCorp.
