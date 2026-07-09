@@ -1,15 +1,17 @@
 ---
-title: channels
-description: "Create, discover, join, leave, and hide chat channels."
+title: Chats + DMs
+description: "Channel management and messaging procedures/topics"
 ---
 
-# 💬 channels
+# 💬 Chats + DMs
 
-Create, discover, join, leave, and hide chat channels.
+Channel management and messaging procedures/topics
 
 ## Procedures
 
-### CALL `co.fun.chat.hide_chat` — Hide a channel from your channel list  {: #proc-co-fun-chat-hide-chat }
+### Hide a channel from your channel list  {: #proc-co-fun-chat-hide-chat }
+
+**`CALL co.fun.chat.hide_chat`**
 
 Hides the channel from the caller's chats without leaving it.
 The channel remains joined server-side; other participants see
@@ -17,7 +19,7 @@ no change.
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -27,13 +29,16 @@ no change.
     | ---- | ---- | -------- | ----------- |
     | `chat_name` | `String` | yes | Canonical channel name. |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // HideChatKwargs
-    {
-      "chat_name": "string"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.hide_chat",
+      [
+      ],
+      {
+          "chat_name": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -52,11 +57,13 @@ no change.
     }
     ```
 
-### CALL `co.fun.chat.create_channel` — Create a new channel  {: #proc-co-fun-chat-create-channel }
+### Create a new channel  {: #proc-co-fun-chat-create-channel }
+
+**`CALL co.fun.chat.create_channel`**
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -71,18 +78,21 @@ no change.
     | `coverURL` | `String` | no |  |
     | `inviteMembersIDs` | `String[]` | no | User IDs to invite at creation time. |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // CreateChannelKwargs
-    {
-      "type": "enum(1, 2, 3)",
-      "id": "string",
-      "title": "string",
-      "description"?: "string",
-      "coverURL"?: "string",
-      "inviteMembersIDs"?: "string[]"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.create_channel",
+      [
+      ],
+      {
+          "type": …,
+          "id": …,
+          "title": …,
+          "description": …,
+          "coverURL": …,
+          "inviteMembersIDs": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -119,7 +129,9 @@ no change.
     )
     ```
 
-### CALL `co.fun.chat.get_or_create_chat` — Get or create a direct-message channel  {: #proc-co-fun-chat-get-or-create-chat }
+### Get or create a direct-message channel  {: #proc-co-fun-chat-get-or-create-chat }
+
+**`CALL co.fun.chat.get_or_create_chat`**
 
 Idempotently resolves a DM channel between the caller and one
 or more other users. The canonical `name` for a DM channel is
@@ -128,7 +140,7 @@ the sorted user IDs joined with `_` in reverse order (see the
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -140,15 +152,18 @@ the sorted user IDs joined with `_` in reverse order (see the
     | `users` | `String[]` | yes |  |
     | `name` | `String` | yes | Canonical DM channel name. |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // GetOrCreateChatKwargs
-    {
-      "type": "enum(1, 2, 3)",
-      "users": "string[]",
-      "name": "string"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.get_or_create_chat",
+      [
+      ],
+      {
+          "type": …,
+          "users": …,
+          "name": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -179,14 +194,16 @@ the sorted user IDs joined with `_` in reverse order (see the
     )
     ```
 
-### CALL `co.fun.chat.new_chat` — Create a new named channel  {: #proc-co-fun-chat-new-chat }
+### Create a new named channel  {: #proc-co-fun-chat-new-chat }
+
+**`CALL co.fun.chat.new_chat`**
 
 Creates a public or private group channel. Private channels do
 not accept a `description`.
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -200,17 +217,20 @@ not accept a `description`.
     | `description` | `String` | no |  |
     | `users` | `String[]` | yes |  |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // NewChatKwargs
-    {
-      "type": "enum(1, 2, 3)",
-      "name": "string",
-      "title": "string",
-      "description"?: "string",
-      "users": "string[]"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.new_chat",
+      [
+      ],
+      {
+          "type": …,
+          "name": …,
+          "title": …,
+          "description": …,
+          "users": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -245,11 +265,13 @@ not accept a `description`.
     )
     ```
 
-### CALL `co.fun.chat.get_chat` — Fetch channel details by name  {: #proc-co-fun-chat-get-chat }
+### Fetch channel details by name  {: #proc-co-fun-chat-get-chat }
+
+**`CALL co.fun.chat.get_chat`**
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -259,13 +281,16 @@ not accept a `description`.
     | ---- | ---- | -------- | ----------- |
     | `chat_name` | `String` | yes |  |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // GetChatKwargs
-    {
-      "chat_name": "string"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.get_chat",
+      [
+      ],
+      {
+          "chat_name": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -284,11 +309,13 @@ not accept a `description`.
     }
     ```
 
-### CALL `co.fun.chat.join_chat` — Join a channel by name  {: #proc-co-fun-chat-join-chat }
+### Join a channel by name  {: #proc-co-fun-chat-join-chat }
+
+**`CALL co.fun.chat.join_chat`**
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -298,13 +325,16 @@ not accept a `description`.
     | ---- | ---- | -------- | ----------- |
     | `chat_name` | `String` | yes |  |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // JoinChatKwargs
-    {
-      "chat_name": "string"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.join_chat",
+      [
+      ],
+      {
+          "chat_name": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -323,11 +353,13 @@ not accept a `description`.
     }
     ```
 
-### CALL `co.fun.chat.leave_chat` — Leave a channel by name  {: #proc-co-fun-chat-leave-chat }
+### Leave a channel by name  {: #proc-co-fun-chat-leave-chat }
+
+**`CALL co.fun.chat.leave_chat`**
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -337,13 +369,16 @@ not accept a `description`.
     | ---- | ---- | -------- | ----------- |
     | `chat_name` | `String` | yes |  |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // LeaveChatKwargs
-    {
-      "chat_name": "string"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.leave_chat",
+      [
+      ],
+      {
+          "chat_name": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -362,14 +397,16 @@ not accept a `description`.
     }
     ```
 
-### CALL `co.fun.chat.list_messages` — List messages in a channel  {: #proc-co-fun-chat-list-messages }
+### List messages in a channel  {: #proc-co-fun-chat-list-messages }
+
+**`CALL co.fun.chat.list_messages`**
 
 Paginated message history. `next`/`prev` cursors are integer
 message IDs; omit both to fetch the newest page.
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### Kwargs
 
@@ -382,16 +419,19 @@ message IDs; omit both to fetch the newest page.
     | `next` | `Number` | no | Fetch messages older than this cursor. |
     | `prev` | `Number` | no | Fetch messages newer than this cursor. |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // ListMessagesKwargs
-    {
-      "chat_name": "string",
-      "limit": "integer",
-      "next"?: "integer",
-      "prev"?: "integer"
-    }
+    ```text
+    [CALL, <request_id>, {}, "co.fun.chat.list_messages",
+      [
+      ],
+      {
+          "chat_name": …,
+          "limit": …,
+          "next": …,
+          "prev": …
+        }
+    ]
     ```
 
 === "TypeScript"

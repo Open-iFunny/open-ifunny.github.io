@@ -9,7 +9,9 @@ REST endpoints for discovering and looking up chat channels. Real-time
 chat messaging itself is WAMP over WebSocket to `chat.ifunny.co` and is
 documented in Markdown (see externalDocs).
 
-### `GET /chats/channels/by_link/{link}` — Get Chat Channel by Link  {: #op-getchatbylink }
+### Get Chat Channel by Link  {: #op-getchatbylink }
+
+**`GET /chats/channels/by_link/{link}`**
 
 Resolve a `/c/`-style chat share link to a chat channel record. Returns
 the channel data (name, type, member counts, cover, description) needed
@@ -20,9 +22,36 @@ to then join over WAMP.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `link` | `String` | yes | The `/c/` link identifier (last path segment of the share URL). |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `link` | `String` | yes | The `/c/` link identifier (last path segment of the share URL). |
+
+=== "JSON"
+
+    ```json
+    // GetChatByLinkPath
+    {
+      "link": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetChatByLinkPath {
+      link: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetChatByLinkPath struct {
+    	Link string `path:"link"`
+    }
+    ```
 
 #### Responses
 
@@ -42,6 +71,7 @@ to then join over WAMP.
       "channel"?: "Chat"
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     // Chat
     {
       "touch_dt"?: "integer",
@@ -68,6 +98,7 @@ to then join over WAMP.
       "text"?: "string"
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     // ChatType
     "ChatType": "enum(1, 2, 3)"
 
@@ -97,6 +128,7 @@ to then join over WAMP.
       channel?: Chat;
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     interface Chat {
       touch_dt?: number;
       name?: string;
@@ -121,6 +153,7 @@ to then join over WAMP.
       text?: string;
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     type ChatType = 1 | 2 | 3;
 
     interface ChatMessagePayload {
@@ -147,6 +180,7 @@ to then join over WAMP.
     	Channel Chat `json:"channel,omitempty"`
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     type Chat struct {
     	TouchDt *int `json:"touch_dt,omitempty"`
     	Name *string `json:"name,omitempty"`
@@ -231,7 +265,9 @@ to then join over WAMP.
     }
     ```
 
-### `GET /chats/trending` — Get Trending Chat Channels  {: #op-gettrendingchats }
+### Get Trending Chat Channels  {: #op-gettrendingchats }
+
+**`GET /chats/trending`**
 
 Paginated list of trending public channels the user may want to join.
 Cursor-based pagination via `next`/`prev`.
@@ -304,6 +340,7 @@ Cursor-based pagination via `next`/`prev`.
       "paging"?: "PagingCursors"
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     // Chat
     {
       "touch_dt"?: "integer",
@@ -319,6 +356,9 @@ Cursor-based pagination via `next`/`prev`.
       "members_total"?: "integer"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -339,6 +379,7 @@ Cursor-based pagination via `next`/`prev`.
       "text"?: "string"
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     // ChatType
     "ChatType": "enum(1, 2, 3)"
 
@@ -379,6 +420,7 @@ Cursor-based pagination via `next`/`prev`.
       paging?: PagingCursors;
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     interface Chat {
       touch_dt?: number;
       name?: string;
@@ -393,6 +435,9 @@ Cursor-based pagination via `next`/`prev`.
       members_total?: number;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
@@ -411,6 +456,7 @@ Cursor-based pagination via `next`/`prev`.
       text?: string;
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     type ChatType = 1 | 2 | 3;
 
     interface PagingCursorsCursors {
@@ -447,6 +493,7 @@ Cursor-based pagination via `next`/`prev`.
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     type Chat struct {
     	TouchDt *int `json:"touch_dt,omitempty"`
     	Name *string `json:"name,omitempty"`
@@ -461,6 +508,9 @@ Cursor-based pagination via `next`/`prev`.
     	MembersTotal *int `json:"members_total,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
@@ -504,7 +554,9 @@ Cursor-based pagination via `next`/`prev`.
     )
     ```
 
-### `GET /chats/open_channels` — Search / List Open Chat Channels  {: #op-searchopenchats }
+### Search / List Open Chat Channels  {: #op-searchopenchats }
+
+**`GET /chats/open_channels`**
 
 Search public (open) channels by name, or list them with cursor
 pagination. Used by the "join a public chat" browser.
@@ -577,6 +629,7 @@ pagination. Used by the "join a public chat" browser.
       "paging"?: "PagingCursors"
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     // Chat
     {
       "touch_dt"?: "integer",
@@ -592,6 +645,9 @@ pagination. Used by the "join a public chat" browser.
       "members_total"?: "integer"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -612,6 +668,7 @@ pagination. Used by the "join a public chat" browser.
       "text"?: "string"
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     // ChatType
     "ChatType": "enum(1, 2, 3)"
 
@@ -652,6 +709,7 @@ pagination. Used by the "join a public chat" browser.
       paging?: PagingCursors;
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     interface Chat {
       touch_dt?: number;
       name?: string;
@@ -666,6 +724,9 @@ pagination. Used by the "join a public chat" browser.
       members_total?: number;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
@@ -684,6 +745,7 @@ pagination. Used by the "join a public chat" browser.
       text?: string;
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     type ChatType = 1 | 2 | 3;
 
     interface PagingCursorsCursors {
@@ -720,6 +782,7 @@ pagination. Used by the "join a public chat" browser.
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     type Chat struct {
     	TouchDt *int `json:"touch_dt,omitempty"`
     	Name *string `json:"name,omitempty"`
@@ -734,6 +797,9 @@ pagination. Used by the "join a public chat" browser.
     	MembersTotal *int `json:"members_total,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
@@ -777,7 +843,9 @@ pagination. Used by the "join a public chat" browser.
     )
     ```
 
-### `GET /search/chats/channels` — Search Chat Channels  {: #op-searchchatchannels }
+### Search Chat Channels  {: #op-searchchatchannels }
+
+**`GET /search/chats/channels`**
 
 Global chat-channel search. Cursor-paginated.
 
@@ -849,6 +917,7 @@ Global chat-channel search. Cursor-paginated.
       "paging"?: "PagingCursors"
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     // Chat
     {
       "touch_dt"?: "integer",
@@ -864,6 +933,9 @@ Global chat-channel search. Cursor-paginated.
       "members_total"?: "integer"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -884,6 +956,7 @@ Global chat-channel search. Cursor-paginated.
       "text"?: "string"
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     // ChatType
     "ChatType": "enum(1, 2, 3)"
 
@@ -924,6 +997,7 @@ Global chat-channel search. Cursor-paginated.
       paging?: PagingCursors;
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     interface Chat {
       touch_dt?: number;
       name?: string;
@@ -938,6 +1012,9 @@ Global chat-channel search. Cursor-paginated.
       members_total?: number;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
@@ -956,6 +1033,7 @@ Global chat-channel search. Cursor-paginated.
       text?: string;
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     type ChatType = 1 | 2 | 3;
 
     interface PagingCursorsCursors {
@@ -992,6 +1070,7 @@ Global chat-channel search. Cursor-paginated.
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     type Chat struct {
     	TouchDt *int `json:"touch_dt,omitempty"`
     	Name *string `json:"name,omitempty"`
@@ -1006,6 +1085,9 @@ Global chat-channel search. Cursor-paginated.
     	MembersTotal *int `json:"members_total,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`

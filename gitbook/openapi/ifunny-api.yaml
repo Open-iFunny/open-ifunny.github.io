@@ -47,6 +47,8 @@ tags:
     description: Authentication and authorization
   - name: Client
     description: Methods for the authenticated client's own account
+  - name: Bans & Appeals
+    description: Ban and appeal records for the authenticated client
   - name: Users
     description: Methods for interacting with other users
   - name: Content
@@ -60,8 +62,6 @@ tags:
       documented in Markdown (see externalDocs).
   - name: Discovery
     description: Explore compilations, weekly digests, and other content-discovery feeds.
-  - name: Tasks
-    description: Polling endpoints for asynchronous server-side jobs (e.g. content upload).
 
 security:
   - BasicAuth: []
@@ -494,7 +494,7 @@ paths:
   /users/my/appeals:
     get:
       operationId: getClientAppeals
-      tags: [Client]
+      tags: [Bans & Appeals]
       summary: Client Appeals
       description: Fetch the client ban/strike appeals.
       security:
@@ -693,7 +693,7 @@ paths:
   /users/my/bans:
     get:
       operationId: getClientBans
-      tags: [Client]
+      tags: [Bans & Appeals]
       summary: Client Bans
       description: Paginate through the Client's bans.
       security:
@@ -2753,27 +2753,136 @@ components:
 
     Content:
       type: object
+      description: |
+        A single piece of iFunny content. The `type` field discriminates the
+        variant, and exactly one of the media-variant fields (`pic`, `caption`,
+        `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+        will be present per item — they are mutually exclusive.
+      # Properties are ordered basics → niche, and annotated with x-group so
+      # the JSON/TS/Go renderers emit a blank line between chunks. The group
+      # name itself is not printed; it only signals boundaries.
       properties:
+        id:
+          type: string
+          x-group: basics
+        type:
+          $ref: "#/components/schemas/ContentType"
+          x-group: basics
+        state:
+          type: string
+          enum: [delayed, deleted, draft, published]
+          x-group: basics
+        title:
+          type: string
+          x-group: basics
+        url:
+          type: string
+          x-group: basics
+        fixed_title:
+          type: string
+          x-group: metadata
+        description:
+          type: string
+          x-group: metadata
+        tags:
+          type: array
+          items:
+            type: string
+          x-group: metadata
+        share_url:
+          type: string
+          x-group: metadata
+        canonical_url:
+          type: string
+          x-group: metadata
+        link:
+          type: string
+          description: Opens in app
+          x-group: metadata
+        date_create:
+          type: integer
+          x-group: metadata
+        publish_at:
+          type: integer
+          x-group: metadata
+        issue_at:
+          type: integer
+          x-group: metadata
+        creator:
+          $ref: "#/components/schemas/User"
+          x-group: author
+        num:
+          $ref: "#/components/schemas/ContentNums"
+          x-group: author
+        is_smiled:
+          type: boolean
+          x-group: interaction
+        is_unsmiled:
+          type: boolean
+          x-group: interaction
+        is_abused:
+          type: boolean
+          x-group: interaction
+        is_featured:
+          type: boolean
+          x-group: interaction
+        is_republished:
+          type: boolean
+          x-group: interaction
+        is_pinned:
+          type: boolean
+          x-group: interaction
+        thumb:
+          $ref: "#/components/schemas/ContentThumbnail"
+          x-group: presentation
+        bg_color:
+          type: string
+          x-group: presentation
+        size:
+          type: object
+          properties:
+            w:
+              type: integer
+            h:
+              type: integer
+          x-group: presentation
+        has_header:
+          type: boolean
+          description: Only observed on videos and gifs
+          x-group: presentation
+        subtitle:
+          type: object
+          properties:
+            lang:
+              type: string
+            url:
+              type: string
+              description: Ends in .srt or .vtt
+          x-group: presentation
         pic:
           type: object
           properties:
             webp_url:
               type: string
+          x-group: media
         caption:
           type: object
           properties:
             caption_text:
               type: string
+          x-group: media
         comics:
           type: object
           properties:
             webp_url:
               type: string
+          x-group: media
         mem:
           type: object
           properties:
             webp_url:
               type: string
+          x-group: media
         video_clip:
           type: object
           properties:
@@ -2789,6 +2898,7 @@ components:
             duration:
               type: integer
               description: In seconds
+          x-group: media
         video:
           type: object
           properties:
@@ -2799,6 +2909,7 @@ components:
             length:
               type: integer
               description: In seconds (source docs typo'd this as "lengh")
+          x-group: media
         vine:
           type: object
           properties:
@@ -2806,6 +2917,7 @@ components:
               type: string
             bytes:
               type: integer
+          x-group: media
         coub:
           type: object
           properties:
@@ -2818,6 +2930,7 @@ components:
               description: Source on coub.com
             duration:
               type: integer
+          x-group: media
         gif:
           type: object
           properties:
@@ -2834,6 +2947,7 @@ components:
               type: integer
             webm_url:
               type: string
+          x-group: media
         app:
           type: object
           properties:
@@ -2841,52 +2955,27 @@ components:
               type: string
             is_scroll_allowed:
               type: boolean
-        id:
+          x-group: media
+        visibility:
           type: string
-        type:
-          $ref: "#/components/schemas/ContentType"
-        url:
+          enum: [public, subscribers, closed, chats]
+          x-group: publishing
+        shot_status:
           type: string
-        share_url:
-          type: string
+          enum: [approved, shot, hardShot]
+          x-group: publishing
+        fast_start:
+          type: boolean
+          x-group: publishing
+        risk:
+          type: integer
+          x-group: publishing
+        can_be_boosted:
+          type: boolean
+          x-group: publishing
         old_watermark:
           type: boolean
-        link:
-          type: string
-          description: Opens in app
-        title:
-          type: string
-        fixed_title:
-          type: string
-        description:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
-        state:
-          type: string
-          enum: [delayed, deleted, draft, published]
-        date_create:
-          type: integer
-        publish_at:
-          type: integer
-        is_smiled:
-          type: boolean
-        is_unsmiled:
-          type: boolean
-        is_abused:
-          type: boolean
-        is_featured:
-          type: boolean
-        is_republished:
-          type: boolean
-        is_pinned:
-          type: boolean
-        bg_color:
-          type: string
-        thumb:
-          $ref: "#/components/schemas/ContentThumbnail"
+          x-group: publishing
         copyright:
           type: object
           properties:
@@ -2894,64 +2983,35 @@ components:
               type: string
             url:
               type: string
-        num:
-          $ref: "#/components/schemas/ContentNums"
-        creator:
-          $ref: "#/components/schemas/User"
-        size:
-          type: object
-          properties:
-            w:
-              type: integer
-            h:
-              type: integer
-        issue_at:
-          type: integer
+          x-group: attribution
+        source:
+          $ref: "#/components/schemas/ContentSource"
+          x-group: attribution
         traceback_url:
           type: string
           description: Only observed on coub types
-        engagement_rate:
-          type: string
-          description: Not observed
-        engagement_rate_explain:
-          type: string
-          description: Not observed
-        visibility:
-          type: string
-          enum: [public, subscribers, closed, chats]
-        shot_status:
-          type: string
-          enum: [approved, shot, hardShot]
-        fast_start:
-          type: boolean
-        subtitle:
-          type: object
-          properties:
-            lang:
-              type: string
-            url:
-              type: string
-              description: Ends in .srt or .vtt
-        risk:
-          type: integer
-        canonical_url:
-          type: string
-        ocr_text:
-          type: string
-        can_be_boosted:
-          type: boolean
-        lat:
-          type: number
-        lon:
-          type: number
-        has_header:
-          type: boolean
-          description: Only observed on videos and gifs
-        source:
-          $ref: "#/components/schemas/ContentSource"
+          x-group: attribution
         ftag:
           type: string
           description: Only observed as "feat"
+          x-group: attribution
+        engagement_rate:
+          type: string
+          description: Not observed
+          x-group: analytics
+        engagement_rate_explain:
+          type: string
+          description: Not observed
+          x-group: analytics
+        ocr_text:
+          type: string
+          x-group: analytics
+        lat:
+          type: number
+          x-group: analytics
+        lon:
+          type: number
+          x-group: analytics
 
     Channel:
       type: object

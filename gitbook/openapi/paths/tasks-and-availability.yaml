@@ -3,7 +3,7 @@
 "/tasks/{task_id}":
   get:
     operationId: getTaskStatus
-    tags: [Tasks]
+    tags: [Content]
     summary: Get Task Status
     description: |
       Poll the status of an asynchronous task returned from a previous call

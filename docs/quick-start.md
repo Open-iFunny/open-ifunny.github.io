@@ -349,8 +349,9 @@ Retrieve details for the authenticated user. Requires a Bearer Token.
 
 ## Next Steps
 
-- **Full API Reference:** Browse all endpoints at [API Reference → OAuth2](reference/api/oauth2.md)
-- **Data Types:** Learn the shape of objects like `User`, `Post`, and `Comment` at [Data Types](reference/data-types/index.md)
+- **Practical guides:** Explore common scenarios at [Interacting with iFunny](interacting/index.md)
+- **Full API Reference:** Browse all endpoints at [API Reference → OAuth2](reference/api/rest/oauth2.md)
+- **Guides:** Learn how to work with users, content, and chats at [Interacting with iFunny](interacting/index.md)
 - **Libraries:**
   - TypeScript: [makeshiftartist/ifunny.ts](https://github.com/makeshiftartist/ifunny.ts) ([docs](https://makeshiftartist.github.io/iFunny.ts/))
-  - Go: [open-ifunny/ifunny-go](https://github.com/open-ifunny/ifunny-go)
+  - Go: [open-ifunny/ifunny-go](https://github.com/open-ifunny/ifunny-go) ([docs](https://pkg.go.dev/github.com/open-ifunny/ifunny-go))

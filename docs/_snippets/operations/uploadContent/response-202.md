@@ -18,6 +18,7 @@
       "error_description"?: "string"
     }
 
+    // Only present on "success"
     // UploadContent202DataResult
     {
       "cid"?: "string"
@@ -42,6 +43,7 @@
       error_description?: string;
     }
 
+    // Only present on "success"
     interface UploadContent202DataResult {
       cid?: string;
     }
@@ -65,6 +67,7 @@
     	ErrorDescription *string `json:"error_description,omitempty"`
     }
 
+    // Only present on "success"
     type UploadContent202DataResult struct {
     	Cid *string `json:"cid,omitempty"`
     }

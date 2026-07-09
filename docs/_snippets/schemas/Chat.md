@@ -1,6 +1,7 @@
 === "JSON"
 
     ```json
+    // A DM or Group Chat, similar to a Discord channel.
     // Chat
     {
       "touch_dt"?: "integer",
@@ -27,6 +28,7 @@
       "text"?: "string"
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     // ChatType
     "ChatType": "enum(1, 2, 3)"
 
@@ -47,6 +49,7 @@
 === "TypeScript"
 
     ```typescript
+    // A DM or Group Chat, similar to a Discord channel.
     interface Chat {
       touch_dt?: number;
       name?: string;
@@ -71,6 +74,7 @@
       text?: string;
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     type ChatType = 1 | 2 | 3;
 
     interface ChatMessagePayload {
@@ -88,6 +92,7 @@
 === "Go"
 
     ```go
+    // A DM or Group Chat, similar to a Discord channel.
     type Chat struct {
     	TouchDt *int `json:"touch_dt,omitempty"`
     	Name *string `json:"name,omitempty"`

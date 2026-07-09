@@ -12,6 +12,7 @@
       "paging"?: "PagingCursors"
     }
 
+    // Functionally the same as User, with the addition of the blocked users field.
     // BlockedUser
     {
       "block_type"?: "enum(installation, user)",
@@ -31,6 +32,9 @@
       "indirectly_blocked_users_count"?: "integer"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -79,6 +83,7 @@
       paging?: PagingCursors;
     }
 
+    // Functionally the same as User, with the addition of the blocked users field.
     interface BlockedUser {
       block_type?: 'installation' | 'user';
       id?: string;
@@ -97,6 +102,9 @@
       indirectly_blocked_users_count?: number;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
@@ -140,6 +148,7 @@
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // Functionally the same as User, with the addition of the blocked users field.
     type BlockedUser struct {
     	BlockType *string `json:"block_type,omitempty"`
     	Id *string `json:"id,omitempty"`
@@ -158,6 +167,9 @@
     	IndirectlyBlockedUsersCount *int `json:"indirectly_blocked_users_count,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`

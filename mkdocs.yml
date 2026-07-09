@@ -56,6 +56,10 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+      # Cap the per-page "on this page" TOC at H1-H3 so it reads as a menu of
+      # operations/procedures (rendered as H3) instead of every sub-section
+      # heading (path/query params, request body, per-response codes).
+      toc_depth: 3
   # PyMdown Extensions - required by Material for tabs, code blocks, etc.
   - pymdownx.betterem
   - pymdownx.caret
@@ -95,27 +99,28 @@ exclude_docs: |
 nav:
   - Home: index.md
   - Quick Start: quick-start.md
+  - Interacting with iFunny:
+      - interacting/index.md
+      - Connecting and Authenticating: interacting/connecting-and-authenticating.md
+      - Exploring Feeds and Curations: interacting/exploring-feeds-and-curations.md
+      - Making Friends and Foes: interacting/making-friends-and-foes.md
+      - Chats and Channels: interacting/chats-and-channels.md
+      - Trust and Safety: interacting/trust-and-safety.md
   - Reference:
       - API Reference:
           - reference/api/index.md
-          - 🔑 OAuth2: reference/api/oauth2.md
-          - 🤖 Client: reference/api/client.md
-          - 🫂 Users: reference/api/users.md
-          - 😂 Content: reference/api/content.md
-          - 💭 Comments: reference/api/comments.md
-          - 📡 Chat: reference/api/chat.md
-          - 🧭 Discovery: reference/api/discovery.md
-          - ⏳ Tasks: reference/api/tasks.md
-      - Data Types:
-          - reference/data-types/index.md
-          - 🤖 Client, OAuth & Basic Token: reference/data-types/client-types.md
-          - 🎭 User Types: reference/data-types/user-types.md
-          - 🤣 Content, Comments & Tasks: reference/data-types/content-types.md
-          - 🔍 Search & Discovery: reference/data-types/search-discovery.md
-      - Chat Types:
-          - reference/chat-types/index.md
-          - 🤝 Auth: reference/chat-types/auth.md
-          - 💬 Chats + DMs: reference/chat-types/chats-dms.md
-          - 📢 Channels + Explore: reference/chat-types/channels-explore.md
-          - 📬 Subscriptions + Events: reference/chat-types/subscriptions-events.md
-          - 🌀 WAMP: reference/chat-types/wamp.md
+          - REST:
+              - reference/api/rest/index.md
+              - 🔑 OAuth2: reference/api/rest/oauth2.md
+              - 🙂 Client: reference/api/rest/client.md
+              - ⚖️ Bans & Appeals: reference/api/rest/bans-appeals.md
+              - 🫂 Users: reference/api/rest/users.md
+              - 📸 Content: reference/api/rest/content.md
+              - 💭 Comments: reference/api/rest/comments.md
+              - 📡 Chat: reference/api/rest/chat.md
+              - 🧭 Discovery: reference/api/rest/discovery.md
+          - WAMP:
+              - reference/api/wamp/index.md
+              - 💬 Chats + DMs: reference/api/wamp/chats-dms.md
+              - 📬 Subscriptions + Events: reference/api/wamp/subscriptions-events.md
+              - 🔪 Procedures: reference/api/wamp/procedures.md

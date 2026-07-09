@@ -7,6 +7,7 @@
       "status"?: "200"
     }
 
+    // Account Information for the authenticated client.
     // ClientProfile
     {
       "about"?: "string",
@@ -111,6 +112,7 @@
       status?: 200;
     }
 
+    // Account Information for the authenticated client.
     interface ClientProfile {
       about?: string;
       id?: string;
@@ -207,6 +209,7 @@
     	Status *int `json:"status,omitempty"`
     }
 
+    // Account Information for the authenticated client.
     type ClientProfile struct {
     	About *string `json:"about,omitempty"`
     	Id *string `json:"id,omitempty"`

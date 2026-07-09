@@ -47,11 +47,17 @@ tags:
 
 categories:
   - name: chats-dms
+    title: Chats + DMs
+    emoji: 💬
     description: Channel management and messaging procedures/topics
   - name: subscriptions-events
+    title: Subscriptions + Events
+    emoji: 📬
     description: Event stream subscriptions and real-time updates
-  - name: wamp
-    description: Invites, moderation, and protocol reference
+  - name: procedures
+    title: Procedures
+    emoji: 🔪
+    description: Invites, moderation, and other one-off procedures
 
 procedures:
   - uri: co.fun.chat.hide_chat
@@ -178,7 +184,7 @@ procedures:
 
   - uri: co.fun.chat.invite.invite
     tag: invites
-    category: wamp
+    category: procedures
     summary: Invite users to a channel
     kwargs:
       type: object
@@ -191,7 +197,7 @@ procedures:
 
   - uri: co.fun.chat.invite.accept
     tag: invites
-    category: wamp
+    category: procedures
     summary: Accept a channel invitation
     kwargs:
       type: object
@@ -201,7 +207,7 @@ procedures:
 
   - uri: co.fun.chat.invite.decline
     tag: invites
-    category: wamp
+    category: procedures
     summary: Decline a channel invitation
     kwargs:
       type: object
@@ -211,7 +217,7 @@ procedures:
 
   - uri: co.fun.chat.kick_member
     tag: moderation
-    category: wamp
+    category: procedures
     summary: Remove a user from a channel
     kwargs:
       type: object
@@ -281,7 +287,7 @@ components:
         iFunny OAuth2 bearer token. On CHALLENGE, reply with an
         AUTHENTICATE frame carrying the bearer as the signature; no
         authid needs to be sent.
-      credential_ref: reference/api/oauth2.md#op-loginorrefresh
+      credential_ref: reference/api/rest/oauth2.md#op-loginorrefresh
 
   schemas:
     ChannelType:

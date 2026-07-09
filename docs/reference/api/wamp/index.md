@@ -1,6 +1,6 @@
 ---
 title: WAMP Reference
-description: WAMP procedures and topics, grouped by tag.
+description: WAMP procedures and topics, grouped by category.
 ---
 
 # 📡 WAMP Reference
@@ -18,11 +18,11 @@ layouts identical to the REST reference.
 
 - **production** — `wss://chat.ifunny.co/chat` (realm `co.fun.chat.ifunny`)
   - Subprotocols: `wamp.json`, `wamp.2.json`
-  - Auth: `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+  - Auth: `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
-## 💬 [channels](chats-dms.md)
+## 💬 [Chats + DMs](chats-dms.md)
 
-Create, discover, join, leave, and hide chat channels.
+Channel management and messaging procedures/topics
 
 **Procedures:**
 
@@ -35,20 +35,20 @@ Create, discover, join, leave, and hide chat channels.
 - [`co.fun.chat.leave_chat`](chats-dms.md#proc-co-fun-chat-leave-chat) — Leave a channel by name
 - [`co.fun.chat.list_messages`](chats-dms.md#proc-co-fun-chat-list-messages) — List messages in a channel
 
-## 📨 [invites](wamp.md)
+## 🔪 [Procedures](procedures.md)
 
-Extend, accept, and decline channel invitations.
+Invites, moderation, and other one-off procedures
 
 **Procedures:**
 
-- [`co.fun.chat.invite.invite`](wamp.md#proc-co-fun-chat-invite-invite) — Invite users to a channel
-- [`co.fun.chat.invite.accept`](wamp.md#proc-co-fun-chat-invite-accept) — Accept a channel invitation
-- [`co.fun.chat.invite.decline`](wamp.md#proc-co-fun-chat-invite-decline) — Decline a channel invitation
-- [`co.fun.chat.kick_member`](wamp.md#proc-co-fun-chat-kick-member) — Remove a user from a channel
+- [`co.fun.chat.invite.invite`](procedures.md#proc-co-fun-chat-invite-invite) — Invite users to a channel
+- [`co.fun.chat.invite.accept`](procedures.md#proc-co-fun-chat-invite-accept) — Accept a channel invitation
+- [`co.fun.chat.invite.decline`](procedures.md#proc-co-fun-chat-invite-decline) — Decline a channel invitation
+- [`co.fun.chat.kick_member`](procedures.md#proc-co-fun-chat-kick-member) — Remove a user from a channel
 
-## 📬 [subscriptions](subscriptions-events.md)
+## 📬 [Subscriptions + Events](subscriptions-events.md)
 
-Topic subscriptions and event patterns.
+Event stream subscriptions and real-time updates
 
 **Topics:**
 

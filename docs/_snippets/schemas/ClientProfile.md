@@ -1,6 +1,7 @@
 === "JSON"
 
     ```json
+    // Account Information for the authenticated client.
     // ClientProfile
     {
       "about"?: "string",
@@ -100,6 +101,7 @@
 === "TypeScript"
 
     ```typescript
+    // Account Information for the authenticated client.
     interface ClientProfile {
       about?: string;
       id?: string;
@@ -191,6 +193,7 @@
 === "Go"
 
     ```go
+    // Account Information for the authenticated client.
     type ClientProfile struct {
     	About *string `json:"about,omitempty"`
     	Id *string `json:"id,omitempty"`

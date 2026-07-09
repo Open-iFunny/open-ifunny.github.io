@@ -127,6 +127,36 @@ function tabsBlockWithFields(fieldsTableMarkdown, jsonText, tsText, goText) {
   ].join('\n');
 }
 
+// Tabbed group with "Fields" tab + WAMP tab (showing WAMP protocol wire format)
+// followed by TypeScript/Go tabs. The WAMP wire format is JSON on the wire, so a
+// separate "JSON" tab would be redundant with the WAMP tab.
+function tabsBlockWithFieldsWampList(fieldsTableMarkdown, wampListText, jsonText, tsText, goText) {
+  const fieldsBlock = indent4(fieldsTableMarkdown);
+  // Wire format uses JSON syntax but with placeholder tokens like
+  // <request_id> that aren't valid JSON, so render as plain text to
+  // avoid highlighter noise.
+  const wampListBlock = indent4(['```text', wampListText, '```'].join('\n'));
+  const tsBlock = indent4(['```typescript', tsText, '```'].join('\n'));
+  const goBlock = indent4(['```go', goText, '```'].join('\n'));
+  return [
+    '=== "Fields"',
+    '',
+    fieldsBlock,
+    '',
+    '=== "WAMP"',
+    '',
+    wampListBlock,
+    '',
+    '=== "TypeScript"',
+    '',
+    tsBlock,
+    '',
+    '=== "Go"',
+    '',
+    goBlock,
+  ].join('\n');
+}
+
 // ---------------------------------------------------------------------
 // Format renderers: JSON pseudo-schema, TypeScript, Go
 // (spec-independent - operate on IR only)
@@ -156,21 +186,43 @@ function jsonType(node) {
   }
 }
 
+function descriptionCommentLines(description, prefix) {
+  if (!description) return '';
+  return description
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => `${prefix}${line}`.trimEnd())
+    .join('\n') + '\n';
+}
+
 function renderJSON(name, ir) {
+  const descComment = descriptionCommentLines(ir.description, '// ');
   if (ir.kind !== 'object') {
-    return `// ${name}\n"${name}": "${jsonType(ir)}"`;
+    return `${descComment}// ${name}\n"${name}": "${jsonType(ir)}"`;
   }
-  return `// ${name}\n${renderJSONBody(ir, 0)}`;
+  return `${descComment}// ${name}\n${renderJSONBody(ir, 0)}`;
 }
 
 function renderJSONBody(ir, level) {
   const pad = '  '.repeat(level);
   const padIn = '  '.repeat(level + 1);
-  const lines = ir.properties.map((p) => {
+  // Emit properties with a blank line between x-group boundaries so long
+  // structs read as a few labelled chunks rather than one wall of fields.
+  const chunks = [];
+  let lastGroup = null;
+  let currentGroup = [];
+  for (const p of ir.properties) {
+    const g = p.group || null;
+    if (g !== lastGroup && currentGroup.length) {
+      chunks.push(currentGroup.join(',\n'));
+      currentGroup = [];
+    }
+    lastGroup = g;
     const key = p.required ? `"${p.name}"` : `"${p.name}"?`;
-    return `${padIn}${key}: "${jsonType(p.node)}"`;
-  });
-  return `{\n${lines.join(',\n')}\n${pad}}`;
+    currentGroup.push(`${padIn}${key}: "${jsonType(p.node)}"`);
+  }
+  if (currentGroup.length) chunks.push(currentGroup.join(',\n'));
+  return `{\n${chunks.join(',\n\n')}\n${pad}}`;
 }
 
 function tsType(node) {
@@ -202,11 +254,21 @@ function tsKey(name) {
 }
 
 function renderTS(name, ir) {
+  const descComment = descriptionCommentLines(ir.description, '// ');
   if (ir.kind !== 'object') {
-    return `type ${name} = ${tsType(ir)};`;
+    return `${descComment}type ${name} = ${tsType(ir)};`;
   }
-  const lines = ir.properties.map((p) => `  ${tsKey(p.name)}${p.required ? '' : '?'}: ${tsType(p.node)};`);
-  return `interface ${name} {\n${lines.join('\n')}\n}`;
+  const lines = [];
+  let lastGroup = null;
+  for (const p of ir.properties) {
+    const g = p.group || null;
+    if (g !== lastGroup && lines.length) {
+      lines.push('');
+    }
+    lastGroup = g;
+    lines.push(`  ${tsKey(p.name)}${p.required ? '' : '?'}: ${tsType(p.node)};`);
+  }
+  return `${descComment}interface ${name} {\n${lines.join('\n')}\n}`;
 }
 
 function isIntEnumIR(ir) {
@@ -286,14 +348,22 @@ function goFieldType(p, ownerName, goCtx) {
 const JSON_GO_TAG = { tagKey: 'json', tagName: (n) => n };
 
 function renderGo(name, ir, goCtx, goTag) {
+  const descComment = descriptionCommentLines(ir.description, '// ');
   if (ir.kind !== 'object') {
-    return `type ${name} ${goType(ir, goCtx)}`;
+    return `${descComment}type ${name} ${goType(ir, goCtx)}`;
   }
-  const lines = ir.properties.map((p) => {
+  const lines = [];
+  let lastGroup = null;
+  for (const p of ir.properties) {
+    const g = p.group || null;
+    if (g !== lastGroup && lines.length) {
+      lines.push('');
+    }
+    lastGroup = g;
     const tag = `\`${goTag.tagKey}:"${goTag.tagName(p.name)}${p.required ? '' : ',omitempty'}"\``;
-    return `\t${pascalCase(p.name) || 'Field'} ${goFieldType(p, name, goCtx)} ${tag}`;
-  });
-  return `type ${name} struct {\n${lines.join('\n')}\n}`;
+    lines.push(`\t${pascalCase(p.name) || 'Field'} ${goFieldType(p, name, goCtx)} ${tag}`);
+  }
+  return `${descComment}type ${name} struct {\n${lines.join('\n')}\n}`;
 }
 
 function buildSchemaTexts(schemaData, name, goTag) {
@@ -402,6 +472,9 @@ function createSchemaIR(spec) {
         required: (flat.required || []).includes(propName),
         node: resolveNode(ctx, propSchema, selfName + pascalCase(propName)),
         description: propSchema.description,
+        // x-group is an OpenAPI extension we use to visually chunk long
+        // structs; renderers emit a blank line between groups.
+        group: propSchema['x-group'],
       }));
       return { kind: 'object', properties: props, description: flat.description };
     }
@@ -531,6 +604,7 @@ module.exports = {
   indent4,
   tabsBlock,
   tabsBlockWithFields,
+  tabsBlockWithFieldsWampList,
   // Format renderers
   jsonType,
   renderJSON,

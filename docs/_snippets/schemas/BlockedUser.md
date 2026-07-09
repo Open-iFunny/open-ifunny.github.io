@@ -1,6 +1,7 @@
 === "JSON"
 
     ```json
+    // Functionally the same as User, with the addition of the blocked users field.
     // BlockedUser
     {
       "block_type"?: "enum(installation, user)",
@@ -44,6 +45,7 @@
 === "TypeScript"
 
     ```typescript
+    // Functionally the same as User, with the addition of the blocked users field.
     interface BlockedUser {
       block_type?: 'installation' | 'user';
       id?: string;
@@ -83,6 +85,7 @@
 === "Go"
 
     ```go
+    // Functionally the same as User, with the addition of the blocked users field.
     type BlockedUser struct {
     	BlockType *string `json:"block_type,omitempty"`
     	Id *string `json:"id,omitempty"`

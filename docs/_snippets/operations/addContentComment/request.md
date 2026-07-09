@@ -19,6 +19,7 @@
       "original_nick"?: "string"
     }
 
+    // Minimal user representation used in lists (comments, timelines, etc).
     // User
     {
       "block_type"?: "enum(installation, user)",
@@ -77,6 +78,7 @@
       original_nick?: string;
     }
 
+    // Minimal user representation used in lists (comments, timelines, etc).
     interface User {
       block_type?: 'installation' | 'user';
       id?: string;
@@ -131,6 +133,7 @@
     	OriginalNick *string `json:"original_nick,omitempty"`
     }
 
+    // Minimal user representation used in lists (comments, timelines, etc).
     type User struct {
     	BlockType *string `json:"block_type,omitempty"`
     	Id *string `json:"id,omitempty"`

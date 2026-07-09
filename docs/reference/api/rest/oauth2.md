@@ -7,7 +7,9 @@ description: "Authentication and authorization"
 
 Authentication and authorization
 
-### `POST /users` — Register Account  {: #op-registeraccount }
+### Register Account  {: #op-registeraccount }
+
+**`POST /users`**
 
 Create a new account on iFunny.
 
@@ -195,7 +197,9 @@ Create a new account on iFunny.
     }
     ```
 
-### `POST /oauth2/login` — Login / Refresh Bearer Token  {: #op-loginorrefresh }
+### Login / Refresh Bearer Token  {: #op-loginorrefresh }
+
+**`POST /oauth2/login`**
 
 This single path serves two grant types in the source documentation:
 
@@ -433,7 +437,9 @@ This single path serves two grant types in the source documentation:
     }
     ```
 
-### `POST /oauth2/revoke` — Revoke Access Token  {: #op-revokeaccesstoken }
+### Revoke Access Token  {: #op-revokeaccesstoken }
+
+**`POST /oauth2/revoke`**
 
 Revokes a created access token. This will log out every device using this token.
 
@@ -502,7 +508,9 @@ Revokes a created access token. This will log out every device using this token.
     }
     ```
 
-### `GET /nicks/available` — Check Nick Availability  {: #op-checknickavailability }
+### Check Nick Availability  {: #op-checknickavailability }
+
+**`GET /nicks/available`**
 
 Check whether a nickname is available for signup or account rename.
 Returns `{available: boolean}`.
@@ -588,7 +596,9 @@ Returns `{available: boolean}`.
     }
     ```
 
-### `GET /emails/available` — Check Email Availability  {: #op-checkemailavailability }
+### Check Email Availability  {: #op-checkemailavailability }
+
+**`GET /emails/available`**
 
 Check whether an email address is available for signup or account
 rebinding. Returns `{available: boolean}`.

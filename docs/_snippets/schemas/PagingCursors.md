@@ -1,6 +1,9 @@
 === "JSON"
 
     ```json
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -20,6 +23,9 @@
 === "TypeScript"
 
     ```typescript
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
@@ -37,6 +43,9 @@
 === "Go"
 
     ```go
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`

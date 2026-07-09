@@ -1,10 +1,214 @@
+---
+title: Bans & Appeals
+description: "Ban and appeal records for the authenticated client"
+---
+
+# ⚖️ Bans & Appeals
+
+Ban and appeal records for the authenticated client
+
+### Client Appeals  {: #op-getclientappeals }
+
+**`GET /users/my/appeals`**
+
+Fetch the client ban/strike appeals.
+
+**Base URL:** `https://api.ifunny.mobi/v4`  
+**Auth:** BearerAuth + ProjectId
+
+#### Responses
+
+##### `200 OK` — Appeal Array
+
 === "JSON"
 
     ```json
-    // GetContentById200Response
+    // GetClientAppeals200Response
     {
-      "data"?: "Content",
+      "data"?: "GetClientAppeals200Data",
       "status"?: "200"
+    }
+
+    // GetClientAppeals200Data
+    {
+      "appeals"?: "Appeal[]"
+    }
+
+    // Appeal
+    {
+      "ban_id"?: "string",
+      "ban_reason"?: "string",
+      "created_at"?: "integer",
+      "id"?: "string",
+      "status"?: "enum(pending, denied)",
+      "strike_id"?: "string",
+      "type"?: "enum(ban, strike)"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetClientAppeals200Response {
+      data?: GetClientAppeals200Data;
+      status?: 200;
+    }
+
+    interface GetClientAppeals200Data {
+      appeals?: Appeal[];
+    }
+
+    interface Appeal {
+      ban_id?: string;
+      ban_reason?: string;
+      created_at?: number;
+      id?: string;
+      status?: 'pending' | 'denied';
+      strike_id?: string;
+      type?: 'ban' | 'strike';
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetClientAppeals200Response struct {
+    	Data GetClientAppeals200Data `json:"data,omitempty"`
+    	Status *int `json:"status,omitempty"`
+    }
+
+    type GetClientAppeals200Data struct {
+    	Appeals []Appeal `json:"appeals,omitempty"`
+    }
+
+    type Appeal struct {
+    	BanId *string `json:"ban_id,omitempty"`
+    	BanReason *string `json:"ban_reason,omitempty"`
+    	CreatedAt *int `json:"created_at,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	Status *string `json:"status,omitempty"`
+    	StrikeId *string `json:"strike_id,omitempty"`
+    	Type *string `json:"type,omitempty"`
+    }
+    ```
+
+##### `401 Unauthorized` — Unauthorized
+
+=== "JSON"
+
+    ```json
+    // GetClientAppeals401Response
+    "GetClientAppeals401Response": "Error"
+
+    // Error
+    {
+      "error"?: "string",
+      "error_description"?: "string",
+      "status"?: "integer"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    type GetClientAppeals401Response = Error;
+
+    interface Error {
+      error?: string;
+      error_description?: string;
+      status?: number;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetClientAppeals401Response Error
+
+    type Error struct {
+    	Error *string `json:"error,omitempty"`
+    	ErrorDescription *string `json:"error_description,omitempty"`
+    	Status *int `json:"status,omitempty"`
+    }
+    ```
+
+### Client Bans  {: #op-getclientbans }
+
+**`GET /users/my/bans`**
+
+Paginate through the Client's bans.
+
+**Base URL:** `https://api.ifunny.mobi/v4`  
+**Auth:** BearerAuth + ProjectId
+
+#### Query parameters
+
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `limit` | `Number` | no |  |
+
+=== "JSON"
+
+    ```json
+    // GetClientBansQuery
+    {
+      "limit"?: "integer"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetClientBansQuery {
+      limit?: number;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetClientBansQuery struct {
+    	Limit *int `query:"limit,omitempty"`
+    }
+    ```
+
+#### Responses
+
+##### `200 OK` — Client Bans
+
+=== "JSON"
+
+    ```json
+    // GetClientBans200Response
+    {
+      "data"?: "GetClientBans200Data"
+    }
+
+    // GetClientBans200Data
+    {
+      "bans"?: "ClientBan[]"
+    }
+
+    // ClientBan
+    {
+      "date_until"?: "integer",
+      "id"?: "string",
+      "type"?: "enum(chat_access, comment_creation, content_creation, profile_access, repubing, smiling, subscribing, other, collective_shadow)",
+      "ban_reason"?: "enum(abuse_harassment, child_pornography, hardcore, hate_speech, bot_spam, threats_of_harm, death_gore, other)",
+      "created_at"?: "integer",
+      "pid"?: "integer",
+      "is_appealed"?: "boolean",
+      "can_be_appealed"?: "boolean",
+      "was_shown"?: "boolean",
+      "is_active"?: "boolean",
+      "is_shortable"?: "boolean",
+      "related_content"?: "Content",
+      "related_comment"?: "Comment",
+      "date_until_minimum"?: "integer",
+      "type_message"?: "string",
+      "ban_reason_message"?: "string"
     }
 
     // A single piece of iFunny content. The `type` field discriminates the
@@ -73,6 +277,26 @@
       "ocr_text"?: "string",
       "lat"?: "number",
       "lon"?: "number"
+    }
+
+    // Comment
+    {
+      "is_reply"?: "false",
+      "id"?: "string",
+      "cid"?: "string",
+      "state"?: "CommentState",
+      "date"?: "integer",
+      "text"?: "string",
+      "num"?: "CommentNums",
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_edited"?: "boolean",
+      "user"?: "User",
+      "deletion_reason"?: "CommentDeletionReason",
+      "content"?: "Content",
+      "attachments"?: "CommentAttachment[]",
+      "content_thumbs"?: "ContentThumbnail",
+      "last_reply"?: "Reply"
     }
 
     // Images: pic, mem, comics, caption.
@@ -217,6 +441,51 @@
       "creator"?: "User"
     }
 
+    // CommentState
+    "CommentState": "enum(normal, top, abused, deleted, deleted_self)"
+
+    // CommentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "replies"?: "integer"
+    }
+
+    // CommentDeletionReason
+    "CommentDeletionReason": "enum(del_by_spam_filter, del_content, del_content_creator, del_for_abuses, del_root_comment, del_via_portal)"
+
+    // CommentAttachment
+    {
+      "content"?: "Content[]",
+      "content_from_links"?: "Content[]",
+      "mention_user"?: "UserMention[]",
+      "giphy"?: "Content[]"
+    }
+
+    // Same shape as Comment, with additional thread-position fields.
+    // Reply
+    {
+      "is_reply"?: "true",
+      "id"?: "string",
+      "cid"?: "string",
+      "state"?: "CommentState",
+      "date"?: "integer",
+      "text"?: "string",
+      "num"?: "CommentNums",
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_edited"?: "boolean",
+      "user"?: "User",
+      "deletion_reason"?: "CommentDeletionReason",
+      "content"?: "Content",
+      "attachments"?: "CommentAttachment[]",
+      "content_thumbs"?: "ContentThumbnail",
+      "last_reply"?: "Reply",
+      "root_comm_id"?: "string",
+      "parent_comm_id"?: "string",
+      "depth"?: "integer"
+    }
+
     // UserNum
     {
       "subscribers"?: "integer",
@@ -236,6 +505,17 @@
       "h"?: "integer"
     }
 
+    // UserMention
+    {
+      "id"?: "string",
+      "creator"?: "User",
+      "nick"?: "string",
+      "start_index"?: "integer",
+      "stop_index"?: "integer",
+      "user_id"?: "string",
+      "original_nick"?: "string"
+    }
+
     // ProfilePhotoThumb
     {
       "large_url"?: "string",
@@ -247,9 +527,31 @@
 === "TypeScript"
 
     ```typescript
-    interface GetContentById200Response {
-      data?: Content;
-      status?: 200;
+    interface GetClientBans200Response {
+      data?: GetClientBans200Data;
+    }
+
+    interface GetClientBans200Data {
+      bans?: ClientBan[];
+    }
+
+    interface ClientBan {
+      date_until?: number;
+      id?: string;
+      type?: 'chat_access' | 'comment_creation' | 'content_creation' | 'profile_access' | 'repubing' | 'smiling' | 'subscribing' | 'other' | 'collective_shadow';
+      ban_reason?: 'abuse_harassment' | 'child_pornography' | 'hardcore' | 'hate_speech' | 'bot_spam' | 'threats_of_harm' | 'death_gore' | 'other';
+      created_at?: number;
+      pid?: number;
+      is_appealed?: boolean;
+      can_be_appealed?: boolean;
+      was_shown?: boolean;
+      is_active?: boolean;
+      is_shortable?: boolean;
+      related_content?: Content;
+      related_comment?: Comment;
+      date_until_minimum?: number;
+      type_message?: string;
+      ban_reason_message?: string;
     }
 
     // A single piece of iFunny content. The `type` field discriminates the
@@ -317,6 +619,25 @@
       ocr_text?: string;
       lat?: number;
       lon?: number;
+    }
+
+    interface Comment {
+      is_reply?: false;
+      id?: string;
+      cid?: string;
+      state?: CommentState;
+      date?: number;
+      text?: string;
+      num?: CommentNums;
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_edited?: boolean;
+      user?: User;
+      deletion_reason?: CommentDeletionReason;
+      content?: Content;
+      attachments?: CommentAttachment[];
+      content_thumbs?: ContentThumbnail;
+      last_reply?: Reply;
     }
 
     // Images: pic, mem, comics, caption.
@@ -443,6 +764,46 @@
       creator?: User;
     }
 
+    type CommentState = 'normal' | 'top' | 'abused' | 'deleted' | 'deleted_self';
+
+    interface CommentNums {
+      smiles?: number;
+      unsmiles?: number;
+      replies?: number;
+    }
+
+    type CommentDeletionReason = 'del_by_spam_filter' | 'del_content' | 'del_content_creator' | 'del_for_abuses' | 'del_root_comment' | 'del_via_portal';
+
+    interface CommentAttachment {
+      content?: Content[];
+      content_from_links?: Content[];
+      mention_user?: UserMention[];
+      giphy?: Content[];
+    }
+
+    // Same shape as Comment, with additional thread-position fields.
+    interface Reply {
+      is_reply?: true;
+      id?: string;
+      cid?: string;
+      state?: CommentState;
+      date?: number;
+      text?: string;
+      num?: CommentNums;
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_edited?: boolean;
+      user?: User;
+      deletion_reason?: CommentDeletionReason;
+      content?: Content;
+      attachments?: CommentAttachment[];
+      content_thumbs?: ContentThumbnail;
+      last_reply?: Reply;
+      root_comm_id?: string;
+      parent_comm_id?: string;
+      depth?: number;
+    }
+
     interface UserNum {
       subscribers?: number;
       subscriptions?: number;
@@ -459,6 +820,16 @@
       h?: number;
     }
 
+    interface UserMention {
+      id?: string;
+      creator?: User;
+      nick?: string;
+      start_index?: number;
+      stop_index?: number;
+      user_id?: string;
+      original_nick?: string;
+    }
+
     interface ProfilePhotoThumb {
       large_url?: string;
       medium_url?: string;
@@ -469,9 +840,31 @@
 === "Go"
 
     ```go
-    type GetContentById200Response struct {
-    	Data Content `json:"data,omitempty"`
-    	Status *int `json:"status,omitempty"`
+    type GetClientBans200Response struct {
+    	Data GetClientBans200Data `json:"data,omitempty"`
+    }
+
+    type GetClientBans200Data struct {
+    	Bans []ClientBan `json:"bans,omitempty"`
+    }
+
+    type ClientBan struct {
+    	DateUntil *int `json:"date_until,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	Type *string `json:"type,omitempty"`
+    	BanReason *string `json:"ban_reason,omitempty"`
+    	CreatedAt *int `json:"created_at,omitempty"`
+    	Pid *int `json:"pid,omitempty"`
+    	IsAppealed *bool `json:"is_appealed,omitempty"`
+    	CanBeAppealed *bool `json:"can_be_appealed,omitempty"`
+    	WasShown *bool `json:"was_shown,omitempty"`
+    	IsActive *bool `json:"is_active,omitempty"`
+    	IsShortable *bool `json:"is_shortable,omitempty"`
+    	RelatedContent Content `json:"related_content,omitempty"`
+    	RelatedComment Comment `json:"related_comment,omitempty"`
+    	DateUntilMinimum *int `json:"date_until_minimum,omitempty"`
+    	TypeMessage *string `json:"type_message,omitempty"`
+    	BanReasonMessage *string `json:"ban_reason_message,omitempty"`
     }
 
     // A single piece of iFunny content. The `type` field discriminates the
@@ -539,6 +932,25 @@
     	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
+    }
+
+    type Comment struct {
+    	IsReply *bool `json:"is_reply,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	Cid *string `json:"cid,omitempty"`
+    	State CommentState `json:"state,omitempty"`
+    	Date *int `json:"date,omitempty"`
+    	Text *string `json:"text,omitempty"`
+    	Num CommentNums `json:"num,omitempty"`
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsEdited *bool `json:"is_edited,omitempty"`
+    	User User `json:"user,omitempty"`
+    	DeletionReason CommentDeletionReason `json:"deletion_reason,omitempty"`
+    	Content Content `json:"content,omitempty"`
+    	Attachments []CommentAttachment `json:"attachments,omitempty"`
+    	ContentThumbs ContentThumbnail `json:"content_thumbs,omitempty"`
+    	LastReply Reply `json:"last_reply,omitempty"`
     }
 
     // Images: pic, mem, comics, caption.
@@ -665,6 +1077,46 @@
     	Creator User `json:"creator,omitempty"`
     }
 
+    type CommentState string
+
+    type CommentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	Replies *int `json:"replies,omitempty"`
+    }
+
+    type CommentDeletionReason string
+
+    type CommentAttachment struct {
+    	Content []Content `json:"content,omitempty"`
+    	ContentFromLinks []Content `json:"content_from_links,omitempty"`
+    	MentionUser []UserMention `json:"mention_user,omitempty"`
+    	Giphy []Content `json:"giphy,omitempty"`
+    }
+
+    // Same shape as Comment, with additional thread-position fields.
+    type Reply struct {
+    	IsReply *bool `json:"is_reply,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	Cid *string `json:"cid,omitempty"`
+    	State CommentState `json:"state,omitempty"`
+    	Date *int `json:"date,omitempty"`
+    	Text *string `json:"text,omitempty"`
+    	Num CommentNums `json:"num,omitempty"`
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsEdited *bool `json:"is_edited,omitempty"`
+    	User User `json:"user,omitempty"`
+    	DeletionReason CommentDeletionReason `json:"deletion_reason,omitempty"`
+    	Content Content `json:"content,omitempty"`
+    	Attachments []CommentAttachment `json:"attachments,omitempty"`
+    	ContentThumbs ContentThumbnail `json:"content_thumbs,omitempty"`
+    	LastReply Reply `json:"last_reply,omitempty"`
+    	RootCommId *string `json:"root_comm_id,omitempty"`
+    	ParentCommId *string `json:"parent_comm_id,omitempty"`
+    	Depth *int `json:"depth,omitempty"`
+    }
+
     type UserNum struct {
     	Subscribers *int `json:"subscribers,omitempty"`
     	Subscriptions *int `json:"subscriptions,omitempty"`
@@ -679,6 +1131,16 @@
     type ContentThumbnailProportionalSize struct {
     	W *int `json:"w,omitempty"`
     	H *int `json:"h,omitempty"`
+    }
+
+    type UserMention struct {
+    	Id *string `json:"id,omitempty"`
+    	Creator User `json:"creator,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	StartIndex *int `json:"start_index,omitempty"`
+    	StopIndex *int `json:"stop_index,omitempty"`
+    	UserId *string `json:"user_id,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
     }
 
     type ProfilePhotoThumb struct {

@@ -1,19 +1,21 @@
 ---
-title: subscriptions
-description: "Topic subscriptions and event patterns."
+title: Subscriptions + Events
+description: "Event stream subscriptions and real-time updates"
 ---
 
-# 📬 subscriptions
+# 📬 Subscriptions + Events
 
-Topic subscriptions and event patterns.
+Event stream subscriptions and real-time updates
 
 ## Topics
 
-### SUBSCRIBE `co.fun.chat.user.{id}.chats` — Subscribe to updates about your joined channels  {: #topic-co-fun-chat-user-id-chats }
+### Subscribe to updates about your joined channels  {: #topic-co-fun-chat-user-id-chats }
+
+**`SUBSCRIBE co.fun.chat.user.{id}.chats`**
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### URI parameters
 
@@ -26,6 +28,7 @@ Topic subscriptions and event patterns.
 === "JSON"
 
     ```json
+    // Channel-update payload; shape mirrors `get_chat` results.
     // ChatsEventKwargs
     {
 
@@ -35,6 +38,7 @@ Topic subscriptions and event patterns.
 === "TypeScript"
 
     ```typescript
+    // Channel-update payload; shape mirrors `get_chat` results.
     interface ChatsEventKwargs {
 
     }
@@ -43,16 +47,19 @@ Topic subscriptions and event patterns.
 === "Go"
 
     ```go
+    // Channel-update payload; shape mirrors `get_chat` results.
     type ChatsEventKwargs struct {
 
     }
     ```
 
-### SUBSCRIBE `co.fun.chat.user.{id}.invites` — Subscribe to incoming channel invitations  {: #topic-co-fun-chat-user-id-invites }
+### Subscribe to incoming channel invitations  {: #topic-co-fun-chat-user-id-invites }
+
+**`SUBSCRIBE co.fun.chat.user.{id}.invites`**
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### URI parameters
 
@@ -68,13 +75,16 @@ Topic subscriptions and event patterns.
     | ---- | ---- | -------- | ----------- |
     | `type` | `Number` | yes | Always `300` (INVITED) on this topic. — One of: 100, 101, 200, 300 |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // InvitesEventKwargs
-    {
-      "type": "enum(100, 101, 200, 300)"
-    }
+    ```text
+    [EVENT, <subscription_id>, <publication_id>, {},
+      [
+      ],
+      {
+          "type": …
+        }
+    ]
     ```
 
 === "TypeScript"
@@ -102,14 +112,16 @@ Topic subscriptions and event patterns.
     )
     ```
 
-### SUBSCRIBE `co.fun.chat.chat.{channel_name}` — Subscribe to events in a channel  {: #topic-co-fun-chat-chat-channel-name }
+### Subscribe to events in a channel  {: #topic-co-fun-chat-chat-channel-name }
+
+**`SUBSCRIBE co.fun.chat.chat.{channel_name}`**
 
 Every join, exit, message, and invite dispatched to a channel
 arrives on this topic. Dispatch on the `type` field to decode.
 
 **URL:** `wss://chat.ifunny.co/chat`  
 **Realm:** `co.fun.chat.ifunny`  
-**Auth:** `ticket` (ticket) — credential: [reference/api/oauth2.md#op-loginorrefresh](../../reference/api/oauth2.md#op-loginorrefresh)
+**Auth:** `ticket` (ticket) — credential: [reference/api/rest/oauth2.md#op-loginorrefresh](../../../reference/api/rest/oauth2.md#op-loginorrefresh)
 
 #### URI parameters
 
@@ -127,15 +139,18 @@ arrives on this topic. Dispatch on the `type` field to decode.
     | `message_type` | `Number` | no | Present on `MESSAGE` events; `1` for plain text. |
     | `text` | `String` | no | Present on `MESSAGE` events. |
 
-=== "JSON"
+=== "WAMP"
 
-    ```json
-    // ChatEventKwargs
-    {
-      "type": "enum(100, 101, 200, 300)",
-      "message_type"?: "integer",
-      "text"?: "string"
-    }
+    ```text
+    [EVENT, <subscription_id>, <publication_id>, {},
+      [
+      ],
+      {
+          "type": …,
+          "message_type": …,
+          "text": …
+        }
+    ]
     ```
 
 === "TypeScript"

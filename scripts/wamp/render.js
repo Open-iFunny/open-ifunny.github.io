@@ -27,13 +27,14 @@ const {
   slugify,
   tabsBlock,
   tabsBlockWithFields,
+  tabsBlockWithFieldsWampList,
   buildSchemaTexts,
   JSON_GO_TAG,
   createSchemaIR,
 } = require('../lib/schema-ir');
 
 const WAMP_SPEC_PATH = path.join(__dirname, '..', '..', 'wamp', 'ifunny-wamp.yaml');
-const OUT_DIR = path.join(__dirname, '..', '..', 'docs', 'reference', 'chat-types');
+const OUT_DIR = path.join(__dirname, '..', '..', 'docs', 'reference', 'api', 'wamp');
 
 const spec = parse(WAMP_SPEC_PATH);
 const ir = createSchemaIR(spec);
@@ -57,7 +58,7 @@ function collectByCategory() {
   }
 
   // Group procedures and topics by their category field
-  const byFile = new Map();  // category name → { file, tags: Set, procedures: [], topics: [] }
+  const byFile = new Map();  // category name → { file, category, tags: Set, procedures: [], topics: [] }
 
   // Collect procedures by category
   for (const p of spec.procedures || []) {
@@ -70,7 +71,7 @@ function collectByCategory() {
     }
 
     if (!byFile.has(category)) {
-      byFile.set(category, { file: category, tags: new Set(), procedures: [], topics: [] });
+      byFile.set(category, { file: category, category: categoryMap.get(category), tags: new Set(), procedures: [], topics: [] });
     }
     byFile.get(category).procedures.push(p);
 
@@ -90,7 +91,7 @@ function collectByCategory() {
     }
 
     if (!byFile.has(category)) {
-      byFile.set(category, { file: category, tags: new Set(), procedures: [], topics: [] });
+      byFile.set(category, { file: category, category: categoryMap.get(category), tags: new Set(), procedures: [], topics: [] });
     }
     byFile.get(category).topics.push(t);
 
@@ -144,6 +145,71 @@ function typeTabs_WithFields(schema, name, fieldsTable) {
   return tabsBlock(jsonText, tsText, goText);
 }
 
+// Generate WAMP-list representation: [CALL, <request_id>, {}, uri, positional_args[], kwargs{}]
+// For procedures. Uses template placeholders for runtime values.
+function wampListForProcedure(procedureUri, args, kwargs) {
+  const argsList = args && args.length
+    ? args.map((a, i) => `    // [${i}] ${a.name}`).join('\n')
+    : '';
+
+  // Build a preview of kwargs with field names from the spec
+  let kwargsPreview = '{}';
+  if (kwargs && typeof kwargs === 'object' && kwargs.type === 'object' && kwargs.properties && typeof kwargs.properties === 'object') {
+    const kvLines = Object.keys(kwargs.properties).map((name) => `      "${name}": …`);
+    if (kvLines.length > 0) {
+      kwargsPreview = '{\n' + kvLines.join(',\n') + '\n    }';
+    }
+  } else if (kwargs) {
+    kwargsPreview = '{ … }';
+  }
+
+  let result = `[CALL, <request_id>, {}, "${procedureUri}",\n  [\n`;
+  if (argsList) {
+    result += argsList + '\n';
+  }
+  result += `  ],\n  ${kwargsPreview}\n]`;
+  return result;
+}
+
+// Generate WAMP-list representation for topics (events)
+// For topic events: [EVENT, <subscription_id>, <publication_id>, {}, args[], kwargs{}]
+// Shows only the EVENT payload, not the SUBSCRIBED handshake (that's protocol boilerplate).
+function wampListForTopic(topicUri, args, kwargs) {
+  const argsList = args && args.length
+    ? args.map((a, i) => `    // [${i}] ${a.name}`).join('\n')
+    : '';
+
+  // Build a preview of kwargs with field names from the spec
+  let kwargsPreview = '{}';
+  if (kwargs && typeof kwargs === 'object' && kwargs.type === 'object' && kwargs.properties && typeof kwargs.properties === 'object') {
+    const kvLines = Object.keys(kwargs.properties).map((name) => `      "${name}": …`);
+    if (kvLines.length > 0) {
+      kwargsPreview = '{\n' + kvLines.join(',\n') + '\n    }';
+    }
+  } else if (kwargs) {
+    kwargsPreview = '{ … }';
+  }
+
+  let result = `[EVENT, <subscription_id>, <publication_id>, {},\n  [\n`;
+  if (argsList) {
+    result += argsList + '\n';
+  }
+  result += `  ],\n  ${kwargsPreview}\n]`;
+  return result;
+}
+
+function typeTabs_WithFieldsWampList(schema, name, fieldsTable, wampListText) {
+  const data = renderSchemaWithDeps(schema, name);
+  const { jsonText, tsText, goText } = buildSchemaTexts(data, name, JSON_GO_TAG);
+  if (fieldsTable && wampListText) {
+    return tabsBlockWithFieldsWampList(fieldsTable, wampListText, jsonText, tsText, goText);
+  }
+  if (fieldsTable) {
+    return tabsBlockWithFields(fieldsTable, jsonText, tsText, goText);
+  }
+  return tabsBlock(jsonText, tsText, goText);
+}
+
 // ---------------------------------------------------------------------
 // Auth summary
 // ---------------------------------------------------------------------
@@ -157,9 +223,9 @@ function describeServerAuth(server) {
   const authId = ref.split('/').pop();
   const bits = [`\`${authId}\` (${auth.type})`];
   if (auth.credential_ref) {
-    // Tag pages live at docs/reference/chat-types/<file>.md, so credential_ref
-    // (authored relative to docs/) needs `../../` to climb back to docs/.
-    bits.push(`credential: [${auth.credential_ref}](../../${auth.credential_ref})`);
+    // WAMP pages live at docs/reference/api/wamp/<file>.md, so credential_ref
+    // (authored relative to docs/) needs `../../../` to climb back to docs/.
+    bits.push(`credential: [${auth.credential_ref}](../../../${auth.credential_ref})`);
   }
   return bits.join(' — ');
 }
@@ -228,7 +294,9 @@ function renderProcedure(p) {
   const parts = [];
   const baseName = pascalCase(p.uri.split('.').pop());
   const server = serverForItem(p);
-  parts.push(`### CALL \`${p.uri}\` — ${p.summary}  {: #proc-${procedureSlug(p)} }`);
+  parts.push(`### ${p.summary}  {: #proc-${procedureSlug(p)} }`);
+  parts.push('');
+  parts.push(`**\`CALL ${p.uri}\`**`);
   parts.push('');
   if (p.description) {
     parts.push(p.description);
@@ -243,7 +311,8 @@ function renderProcedure(p) {
     parts.push('#### Positional args');
     parts.push('');
     const argsTable = positionalArgTable(p.args);
-    parts.push(typeTabs_WithFields(positionalArgsToSchema(p.args, `${baseName}Args`), `${baseName}Args`, argsTable));
+    const wampList = wampListForProcedure(p.uri, p.args, p.kwargs);
+    parts.push(typeTabs_WithFieldsWampList(positionalArgsToSchema(p.args, `${baseName}Args`), `${baseName}Args`, argsTable, wampList));
     parts.push('');
   }
 
@@ -251,7 +320,8 @@ function renderProcedure(p) {
     parts.push('#### Kwargs');
     parts.push('');
     const table = kwargsFieldsTable(p.kwargs);
-    parts.push(typeTabs_WithFields(p.kwargs, `${baseName}Kwargs`, table));
+    const wampList = wampListForProcedure(p.uri, p.args, p.kwargs);
+    parts.push(typeTabs_WithFieldsWampList(p.kwargs, `${baseName}Kwargs`, table, wampList));
     parts.push('');
   }
 
@@ -281,7 +351,9 @@ function renderTopic(t) {
   const parts = [];
   const baseName = pascalCase(t.uri.split('.').filter((seg) => !seg.startsWith('{')).pop());
   const server = serverForItem(t);
-  parts.push(`### SUBSCRIBE \`${t.uri}\` — ${t.summary}  {: #topic-${topicSlug(t)} }`);
+  parts.push(`### ${t.summary}  {: #topic-${topicSlug(t)} }`);
+  parts.push('');
+  parts.push(`**\`SUBSCRIBE ${t.uri}\`**`);
   parts.push('');
   if (t.description) {
     parts.push(t.description);
@@ -303,7 +375,8 @@ function renderTopic(t) {
     parts.push('#### Event positional args');
     parts.push('');
     const argsTable = positionalArgTable(t.args);
-    parts.push(typeTabs_WithFields(positionalArgsToSchema(t.args, `${baseName}EventArgs`), `${baseName}EventArgs`, argsTable));
+    const wampList = wampListForTopic(t.uri, t.args, t.kwargs);
+    parts.push(typeTabs_WithFieldsWampList(positionalArgsToSchema(t.args, `${baseName}EventArgs`), `${baseName}EventArgs`, argsTable, wampList));
     parts.push('');
   }
 
@@ -311,7 +384,8 @@ function renderTopic(t) {
     parts.push('#### Event kwargs');
     parts.push('');
     const table = kwargsFieldsTable(t.kwargs);
-    parts.push(typeTabs_WithFields(t.kwargs, `${baseName}EventKwargs`, table));
+    const wampList = wampListForTopic(t.uri, t.args, t.kwargs);
+    parts.push(typeTabs_WithFieldsWampList(t.kwargs, `${baseName}EventKwargs`, table, wampList));
     parts.push('');
   }
 
@@ -323,22 +397,26 @@ function renderTopic(t) {
 // ---------------------------------------------------------------------
 
 function renderCategoryPage(group) {
-  const { file, tags, procedures, topics } = group;
+  const { file, category, tags, procedures, topics } = group;
   const lines = [];
 
-  // Use the first tag for the page heading and metadata (if multiple tags in one file)
+  // Prefer category-level title/emoji/description when set; the first-tag
+  // fallback is only useful for legacy specs that don't declare categories.
   const primaryTag = tags[0] || { name: file };
-  const frontmatterDescription = (primaryTag.description || `WAMP procedures and topics related to ${primaryTag.name}`).replace(/\s*\n\s*/g, ' ').trim();
+  const pageTitle = (category && category.title) || primaryTag.name;
+  const pageEmoji = (category && category.emoji) || tagEmoji(primaryTag);
+  const pageDescription = (category && category.description) || primaryTag.description || '';
+  const frontmatterDescription = (pageDescription || `WAMP procedures and topics related to ${pageTitle}`).replace(/\s*\n\s*/g, ' ').trim();
 
   lines.push('---');
-  lines.push(`title: ${primaryTag.name}`);
+  lines.push(`title: ${pageTitle}`);
   lines.push(`description: ${JSON.stringify(frontmatterDescription)}`);
   lines.push('---');
   lines.push('');
-  lines.push(`# ${tagEmoji(primaryTag)} ${primaryTag.name}`);
+  lines.push(`# ${pageEmoji} ${pageTitle}`);
   lines.push('');
-  if (primaryTag.description) {
-    lines.push(primaryTag.description);
+  if (pageDescription) {
+    lines.push(pageDescription);
     lines.push('');
   }
 
@@ -391,12 +469,15 @@ function renderIndex(groups) {
   }
 
   for (const g of groups) {
-    // Use first tag for heading and link, or fall back to file name
+    // Prefer category-level title/emoji/description; fall back to first tag.
     const primaryTag = g.tags[0] || { name: g.file };
-    lines.push(`## ${tagEmoji(primaryTag)} [${primaryTag.name}](${g.file}.md)`);
+    const title = (g.category && g.category.title) || primaryTag.name;
+    const emoji = (g.category && g.category.emoji) || tagEmoji(primaryTag);
+    const desc = (g.category && g.category.description) || primaryTag.description || '';
+    lines.push(`## ${emoji} [${title}](${g.file}.md)`);
     lines.push('');
-    if (primaryTag.description) {
-      lines.push(primaryTag.description);
+    if (desc) {
+      lines.push(desc);
       lines.push('');
     }
     if (g.procedures.length) {

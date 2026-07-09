@@ -35,7 +35,7 @@ const {
 
 const SPEC_PATH = path.join(__dirname, '..', 'gitbook', 'openapi', 'ifunny-api.yaml');
 const DOCS_DIR = path.join(__dirname, '..', 'docs');
-const API_REFERENCE_DIR = path.join(DOCS_DIR, 'reference', 'api');
+const API_REFERENCE_DIR = path.join(DOCS_DIR, 'reference', 'api', 'rest');
 const SNIPPETS_DIR = path.join(DOCS_DIR, '_snippets');
 const REDOCLY_BIN = path.join(__dirname, '..', 'node_modules', '.bin', 'redocly');
 
@@ -64,18 +64,18 @@ const {
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
 
-// Cute per-tag emoji, matching the style used throughout the docs
-// (e.g. 🔑 OAuth2, 🫂 Users, 😂 Content). "Chat" gets 📡 rather than 💬,
-// since 💬 is already used by the hand-written WAMP protocol pages.
+// Cute per-tag emoji, matching the style used throughout the docs.
+// "Chat" gets 📡 rather than 💬, since 💬 is already used by the WAMP
+// chats+DMs page.
 const TAG_EMOJI = {
   OAuth2: '🔑',
-  Client: '🤖',
+  Client: '🙂',
+  'Bans & Appeals': '⚖️',
   Users: '🫂',
-  Content: '😂',
+  Content: '📸',
   Comments: '💭',
   Chat: '📡',
   Discovery: '🧭',
-  Tasks: '⏳',
 };
 const DEFAULT_TAG_EMOJI = '📁';
 
@@ -86,12 +86,12 @@ function tagEmoji(name) {
 const TAG_FILE = {
   OAuth2: 'oauth2',
   Client: 'client',
+  'Bans & Appeals': 'bans-appeals',
   Users: 'users',
   Content: 'content',
   Comments: 'comments',
   Chat: 'chat',
   Discovery: 'discovery',
-  Tasks: 'tasks',
 };
 
 function tagFile(name) {
@@ -146,6 +146,11 @@ function buildOperationData(entry) {
   const pathParams = parameters.filter((p) => p.in === 'path');
   const queryParams = parameters.filter((p) => p.in === 'query');
   const headerParams = parameters.filter((p) => p.in === 'header');
+  // Path parameters are always required by definition; force required=true so
+  // the rendered types don't add pointer/omitempty markers.
+  const pathSchemaData = pathParams.length
+    ? renderParamsSchemaWithDeps(pathParams.map((p) => ({ ...p, required: true })), `${baseName}Path`)
+    : null;
   const querySchemaData = queryParams.length ? renderParamsSchemaWithDeps(queryParams, `${baseName}Query`) : null;
   const headerSchemaData = headerParams.length ? renderParamsSchemaWithDeps(headerParams, `${baseName}Header`) : null;
 
@@ -186,6 +191,7 @@ function buildOperationData(entry) {
     pathParams,
     queryParams,
     headerParams,
+    pathSchemaData,
     querySchemaData,
     headerSchemaData,
     requestBody,
@@ -213,6 +219,7 @@ const BASE_URL = (spec.servers && spec.servers[0] && spec.servers[0].url) || '';
 // combined type view - mirrors how a hand-written Go client would bind
 // query strings vs. HTTP headers, as opposed to the `json:"..."` tags
 // used for request/response bodies.
+const PATH_GO_TAG = { tagKey: 'path', tagName: (n) => n };
 const QUERY_GO_TAG = { tagKey: 'query', tagName: (n) => n };
 const HEADER_GO_TAG = { tagKey: 'header', tagName: canonicalHeaderName };
 
@@ -256,8 +263,12 @@ function responseSection(o, r) {
 
 function renderOperation(o) {
   const parts = [];
-  // e.g.  ### `GET /oauth2/token` — Login  {: #op-login }
-  parts.push(`### \`${o.method.toUpperCase()} ${o.routePath}\` — ${o.summary}  {: #op-${o.slug} }`);
+  // Heading is the human-readable summary so the auto-generated TOC on each
+  // page reads like a menu of operations rather than a wall of URLs. The
+  // method + route lives on the line beneath as bold monospace.
+  parts.push(`### ${o.summary}  {: #op-${o.slug} }`);
+  parts.push('');
+  parts.push(`**\`${o.method.toUpperCase()} ${o.routePath}\`**`);
   parts.push('');
   if (o.description) {
     parts.push(o.description);
@@ -270,7 +281,8 @@ function renderOperation(o) {
   if (o.pathParams.length) {
     parts.push('#### Path parameters');
     parts.push('');
-    parts.push(parameterTable(o.pathParams.map((p) => ({ ...p, required: true }))));
+    const pathTable = parameterTable(o.pathParams.map((p) => ({ ...p, required: true })));
+    parts.push(typeSection(o.pathSchemaData, `${pascalCase(o.operationId)}Path`, PATH_GO_TAG, pathTable));
     parts.push('');
   }
   if (o.queryParams.length) {

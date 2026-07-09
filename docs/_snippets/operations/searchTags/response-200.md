@@ -17,6 +17,7 @@
       "items"?: "Tag[]"
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     // Tag
     {
       "title"?: "string"
@@ -39,6 +40,7 @@
       items?: Tag[];
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     interface Tag {
       title?: string;
     }
@@ -60,6 +62,7 @@
     	Items []Tag `json:"items,omitempty"`
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     type Tag struct {
     	Title *string `json:"title,omitempty"`
     }

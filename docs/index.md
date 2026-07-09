@@ -23,5 +23,5 @@ Dive a little deeper and start exploring our API reference to get an idea of eve
 
 [More: api-reference →](reference/api/index.md)
 
-[More: chats →](reference/chat-types/index.md)
+[More: chats →](reference/api/wamp/index.md)
 

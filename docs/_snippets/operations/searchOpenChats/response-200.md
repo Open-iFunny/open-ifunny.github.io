@@ -18,6 +18,7 @@
       "paging"?: "PagingCursors"
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     // Chat
     {
       "touch_dt"?: "integer",
@@ -33,6 +34,9 @@
       "members_total"?: "integer"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -53,6 +57,7 @@
       "text"?: "string"
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     // ChatType
     "ChatType": "enum(1, 2, 3)"
 
@@ -93,6 +98,7 @@
       paging?: PagingCursors;
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     interface Chat {
       touch_dt?: number;
       name?: string;
@@ -107,6 +113,9 @@
       members_total?: number;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
@@ -125,6 +134,7 @@
       text?: string;
     }
 
+    // 1=Private Direct Message, 2=Private Group Chat, 3=Public Group Chat
     type ChatType = 1 | 2 | 3;
 
     interface PagingCursorsCursors {
@@ -161,6 +171,7 @@
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // A DM or Group Chat, similar to a Discord channel.
     type Chat struct {
     	TouchDt *int `json:"touch_dt,omitempty"`
     	Name *string `json:"name,omitempty"`
@@ -175,6 +186,9 @@
     	MembersTotal *int `json:"members_total,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`

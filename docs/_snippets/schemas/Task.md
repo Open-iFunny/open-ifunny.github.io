@@ -12,6 +12,7 @@
       "error_description"?: "string"
     }
 
+    // Present only on `success`.
     // TaskResult
     {
       "cid"?: "string"
@@ -31,6 +32,7 @@
       error_description?: string;
     }
 
+    // Present only on `success`.
     interface TaskResult {
       cid?: string;
     }
@@ -49,6 +51,7 @@
     	ErrorDescription *string `json:"error_description,omitempty"`
     }
 
+    // Present only on `success`.
     type TaskResult struct {
     	Cid *string `json:"cid,omitempty"`
     }

@@ -3,11 +3,13 @@ title: Content
 description: "Methods for interacting with content (posts)"
 ---
 
-# 😂 Content
+# 📸 Content
 
 Methods for interacting with content (posts)
 
-### `GET /feeds/featured` — Scroll Featured  {: #op-getfeaturedfeed }
+### Scroll Featured  {: #op-getfeaturedfeed }
+
+**`GET /feeds/featured`**
 
 Paginate through content in featured.
 
@@ -93,8 +95,44 @@ Paginate through content in featured.
       "map"?: "integer"
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     // Content
     {
+      "id"?: "string",
+      "type"?: "ContentType",
+      "state"?: "enum(delayed, deleted, draft, published)",
+      "title"?: "string",
+      "url"?: "string",
+
+      "fixed_title"?: "string",
+      "description"?: "string",
+      "tags"?: "string[]",
+      "share_url"?: "string",
+      "canonical_url"?: "string",
+      "link"?: "string",
+      "date_create"?: "integer",
+      "publish_at"?: "integer",
+      "issue_at"?: "integer",
+
+      "creator"?: "User",
+      "num"?: "ContentNums",
+
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_abused"?: "boolean",
+      "is_featured"?: "boolean",
+      "is_republished"?: "boolean",
+      "is_pinned"?: "boolean",
+
+      "thumb"?: "ContentThumbnail",
+      "bg_color"?: "string",
+      "size"?: "ContentSize",
+      "has_header"?: "boolean",
+      "subtitle"?: "ContentSubtitle",
+
       "pic"?: "ContentPic",
       "caption"?: "ContentCaption",
       "comics"?: "ContentComics",
@@ -105,50 +143,29 @@ Paginate through content in featured.
       "coub"?: "ContentCoub",
       "gif"?: "ContentGif",
       "app"?: "ContentApp",
-      "id"?: "string",
-      "type"?: "ContentType",
-      "url"?: "string",
-      "share_url"?: "string",
-      "old_watermark"?: "boolean",
-      "link"?: "string",
-      "title"?: "string",
-      "fixed_title"?: "string",
-      "description"?: "string",
-      "tags"?: "string[]",
-      "state"?: "enum(delayed, deleted, draft, published)",
-      "date_create"?: "integer",
-      "publish_at"?: "integer",
-      "is_smiled"?: "boolean",
-      "is_unsmiled"?: "boolean",
-      "is_abused"?: "boolean",
-      "is_featured"?: "boolean",
-      "is_republished"?: "boolean",
-      "is_pinned"?: "boolean",
-      "bg_color"?: "string",
-      "thumb"?: "ContentThumbnail",
-      "copyright"?: "ContentCopyright",
-      "num"?: "ContentNums",
-      "creator"?: "User",
-      "size"?: "ContentSize",
-      "issue_at"?: "integer",
-      "traceback_url"?: "string",
-      "engagement_rate"?: "string",
-      "engagement_rate_explain"?: "string",
+
       "visibility"?: "enum(public, subscribers, closed, chats)",
       "shot_status"?: "enum(approved, shot, hardShot)",
       "fast_start"?: "boolean",
-      "subtitle"?: "ContentSubtitle",
       "risk"?: "integer",
-      "canonical_url"?: "string",
-      "ocr_text"?: "string",
       "can_be_boosted"?: "boolean",
-      "lat"?: "number",
-      "lon"?: "number",
-      "has_header"?: "boolean",
+      "old_watermark"?: "boolean",
+
+      "copyright"?: "ContentCopyright",
       "source"?: "ContentSource",
-      "ftag"?: "string"
+      "traceback_url"?: "string",
+      "ftag"?: "string",
+
+      "engagement_rate"?: "string",
+      "engagement_rate_explain"?: "string",
+      "ocr_text"?: "string",
+      "lat"?: "number",
+      "lon"?: "number"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -156,6 +173,69 @@ Paginate through content in featured.
       "hasPrev"?: "boolean",
       "has_next"?: "boolean",
       "has_prev"?: "boolean"
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    // ContentType
+    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    // User
+    {
+      "block_type"?: "enum(installation, user)",
+      "id"?: "string",
+      "is_banned"?: "boolean",
+      "is_blocked"?: "boolean",
+      "is_deleted"?: "boolean",
+      "is_in_subscribers"?: "boolean",
+      "is_in_subscriptions"?: "boolean",
+      "is_verified"?: "boolean",
+      "nick"?: "string",
+      "nick_color"?: "string",
+      "num"?: "UserNum",
+      "original_nick"?: "string",
+      "photo"?: "ProfilePhoto",
+      "total_posts"?: "integer"
+    }
+
+    // ContentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "guest_smiles"?: "integer",
+      "comments"?: "integer",
+      "views"?: "integer",
+      "republished"?: "integer",
+      "shares"?: "integer"
+    }
+
+    // ContentThumbnail
+    {
+      "small_url"?: "string",
+      "url"?: "string",
+      "large_url"?: "string",
+      "x640_url"?: "string",
+      "webp_url"?: "string",
+      "large_webp_url"?: "string",
+      "x640_webp_url"?: "string",
+      "proportional_url"?: "string",
+      "proportional_webp_url"?: "string",
+      "proportional_size"?: "ContentThumbnailProportionalSize"
+    }
+
+    // ContentSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
+    }
+
+    // ContentSubtitle
+    {
+      "lang"?: "string",
+      "url"?: "string"
     }
 
     // ContentPic
@@ -224,67 +304,9 @@ Paginate through content in featured.
       "is_scroll_allowed"?: "boolean"
     }
 
-    // ContentType
-    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
-
-    // ContentThumbnail
-    {
-      "small_url"?: "string",
-      "url"?: "string",
-      "large_url"?: "string",
-      "x640_url"?: "string",
-      "webp_url"?: "string",
-      "large_webp_url"?: "string",
-      "x640_webp_url"?: "string",
-      "proportional_url"?: "string",
-      "proportional_webp_url"?: "string",
-      "proportional_size"?: "ContentThumbnailProportionalSize"
-    }
-
     // ContentCopyright
     {
       "note"?: "string",
-      "url"?: "string"
-    }
-
-    // ContentNums
-    {
-      "smiles"?: "integer",
-      "unsmiles"?: "integer",
-      "guest_smiles"?: "integer",
-      "comments"?: "integer",
-      "views"?: "integer",
-      "republished"?: "integer",
-      "shares"?: "integer"
-    }
-
-    // User
-    {
-      "block_type"?: "enum(installation, user)",
-      "id"?: "string",
-      "is_banned"?: "boolean",
-      "is_blocked"?: "boolean",
-      "is_deleted"?: "boolean",
-      "is_in_subscribers"?: "boolean",
-      "is_in_subscriptions"?: "boolean",
-      "is_verified"?: "boolean",
-      "nick"?: "string",
-      "nick_color"?: "string",
-      "num"?: "UserNum",
-      "original_nick"?: "string",
-      "photo"?: "ProfilePhoto",
-      "total_posts"?: "integer"
-    }
-
-    // ContentSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
-    // ContentSubtitle
-    {
-      "lang"?: "string",
       "url"?: "string"
     }
 
@@ -301,12 +323,6 @@ Paginate through content in featured.
       "prev"?: "string"
     }
 
-    // ContentThumbnailProportionalSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
     // UserNum
     {
       "subscribers"?: "integer",
@@ -318,6 +334,12 @@ Paginate through content in featured.
       "bg_color"?: "string",
       "thumb"?: "ProfilePhotoThumb",
       "url"?: "string"
+    }
+
+    // ContentThumbnailProportionalSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
     }
 
     // ProfilePhotoThumb
@@ -360,7 +382,43 @@ Paginate through content in featured.
       map?: number;
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     interface Content {
+      id?: string;
+      type?: ContentType;
+      state?: 'delayed' | 'deleted' | 'draft' | 'published';
+      title?: string;
+      url?: string;
+
+      fixed_title?: string;
+      description?: string;
+      tags?: string[];
+      share_url?: string;
+      canonical_url?: string;
+      link?: string;
+      date_create?: number;
+      publish_at?: number;
+      issue_at?: number;
+
+      creator?: User;
+      num?: ContentNums;
+
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_abused?: boolean;
+      is_featured?: boolean;
+      is_republished?: boolean;
+      is_pinned?: boolean;
+
+      thumb?: ContentThumbnail;
+      bg_color?: string;
+      size?: ContentSize;
+      has_header?: boolean;
+      subtitle?: ContentSubtitle;
+
       pic?: ContentPic;
       caption?: ContentCaption;
       comics?: ContentComics;
@@ -371,56 +429,92 @@ Paginate through content in featured.
       coub?: ContentCoub;
       gif?: ContentGif;
       app?: ContentApp;
-      id?: string;
-      type?: ContentType;
-      url?: string;
-      share_url?: string;
-      old_watermark?: boolean;
-      link?: string;
-      title?: string;
-      fixed_title?: string;
-      description?: string;
-      tags?: string[];
-      state?: 'delayed' | 'deleted' | 'draft' | 'published';
-      date_create?: number;
-      publish_at?: number;
-      is_smiled?: boolean;
-      is_unsmiled?: boolean;
-      is_abused?: boolean;
-      is_featured?: boolean;
-      is_republished?: boolean;
-      is_pinned?: boolean;
-      bg_color?: string;
-      thumb?: ContentThumbnail;
-      copyright?: ContentCopyright;
-      num?: ContentNums;
-      creator?: User;
-      size?: ContentSize;
-      issue_at?: number;
-      traceback_url?: string;
-      engagement_rate?: string;
-      engagement_rate_explain?: string;
+
       visibility?: 'public' | 'subscribers' | 'closed' | 'chats';
       shot_status?: 'approved' | 'shot' | 'hardShot';
       fast_start?: boolean;
-      subtitle?: ContentSubtitle;
       risk?: number;
-      canonical_url?: string;
-      ocr_text?: string;
       can_be_boosted?: boolean;
+      old_watermark?: boolean;
+
+      copyright?: ContentCopyright;
+      source?: ContentSource;
+      traceback_url?: string;
+      ftag?: string;
+
+      engagement_rate?: string;
+      engagement_rate_explain?: string;
+      ocr_text?: string;
       lat?: number;
       lon?: number;
-      has_header?: boolean;
-      source?: ContentSource;
-      ftag?: string;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
       hasPrev?: boolean;
       has_next?: boolean;
       has_prev?: boolean;
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    interface User {
+      block_type?: 'installation' | 'user';
+      id?: string;
+      is_banned?: boolean;
+      is_blocked?: boolean;
+      is_deleted?: boolean;
+      is_in_subscribers?: boolean;
+      is_in_subscriptions?: boolean;
+      is_verified?: boolean;
+      nick?: string;
+      nick_color?: string;
+      num?: UserNum;
+      original_nick?: string;
+      photo?: ProfilePhoto;
+      total_posts?: number;
+    }
+
+    interface ContentNums {
+      smiles?: number;
+      unsmiles?: number;
+      guest_smiles?: number;
+      comments?: number;
+      views?: number;
+      republished?: number;
+      shares?: number;
+    }
+
+    interface ContentThumbnail {
+      small_url?: string;
+      url?: string;
+      large_url?: string;
+      x640_url?: string;
+      webp_url?: string;
+      large_webp_url?: string;
+      x640_webp_url?: string;
+      proportional_url?: string;
+      proportional_webp_url?: string;
+      proportional_size?: ContentThumbnailProportionalSize;
+    }
+
+    interface ContentSize {
+      w?: number;
+      h?: number;
+    }
+
+    interface ContentSubtitle {
+      lang?: string;
+      url?: string;
     }
 
     interface ContentPic {
@@ -479,60 +573,8 @@ Paginate through content in featured.
       is_scroll_allowed?: boolean;
     }
 
-    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
-
-    interface ContentThumbnail {
-      small_url?: string;
-      url?: string;
-      large_url?: string;
-      x640_url?: string;
-      webp_url?: string;
-      large_webp_url?: string;
-      x640_webp_url?: string;
-      proportional_url?: string;
-      proportional_webp_url?: string;
-      proportional_size?: ContentThumbnailProportionalSize;
-    }
-
     interface ContentCopyright {
       note?: string;
-      url?: string;
-    }
-
-    interface ContentNums {
-      smiles?: number;
-      unsmiles?: number;
-      guest_smiles?: number;
-      comments?: number;
-      views?: number;
-      republished?: number;
-      shares?: number;
-    }
-
-    interface User {
-      block_type?: 'installation' | 'user';
-      id?: string;
-      is_banned?: boolean;
-      is_blocked?: boolean;
-      is_deleted?: boolean;
-      is_in_subscribers?: boolean;
-      is_in_subscriptions?: boolean;
-      is_verified?: boolean;
-      nick?: string;
-      nick_color?: string;
-      num?: UserNum;
-      original_nick?: string;
-      photo?: ProfilePhoto;
-      total_posts?: number;
-    }
-
-    interface ContentSize {
-      w?: number;
-      h?: number;
-    }
-
-    interface ContentSubtitle {
-      lang?: string;
       url?: string;
     }
 
@@ -547,11 +589,6 @@ Paginate through content in featured.
       prev?: string;
     }
 
-    interface ContentThumbnailProportionalSize {
-      w?: number;
-      h?: number;
-    }
-
     interface UserNum {
       subscribers?: number;
       subscriptions?: number;
@@ -561,6 +598,11 @@ Paginate through content in featured.
       bg_color?: string;
       thumb?: ProfilePhotoThumb;
       url?: string;
+    }
+
+    interface ContentThumbnailProportionalSize {
+      w?: number;
+      h?: number;
     }
 
     interface ProfilePhotoThumb {
@@ -602,7 +644,43 @@ Paginate through content in featured.
     	Map *int `json:"map,omitempty"`
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     type Content struct {
+    	Id *string `json:"id,omitempty"`
+    	Type ContentType `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	Title *string `json:"title,omitempty"`
+    	Url *string `json:"url,omitempty"`
+
+    	FixedTitle *string `json:"fixed_title,omitempty"`
+    	Description *string `json:"description,omitempty"`
+    	Tags []string `json:"tags,omitempty"`
+    	ShareUrl *string `json:"share_url,omitempty"`
+    	CanonicalUrl *string `json:"canonical_url,omitempty"`
+    	Link *string `json:"link,omitempty"`
+    	DateCreate *int `json:"date_create,omitempty"`
+    	PublishAt *int `json:"publish_at,omitempty"`
+    	IssueAt *int `json:"issue_at,omitempty"`
+
+    	Creator User `json:"creator,omitempty"`
+    	Num ContentNums `json:"num,omitempty"`
+
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsAbused *bool `json:"is_abused,omitempty"`
+    	IsFeatured *bool `json:"is_featured,omitempty"`
+    	IsRepublished *bool `json:"is_republished,omitempty"`
+    	IsPinned *bool `json:"is_pinned,omitempty"`
+
+    	Thumb ContentThumbnail `json:"thumb,omitempty"`
+    	BgColor *string `json:"bg_color,omitempty"`
+    	Size ContentSize `json:"size,omitempty"`
+    	HasHeader *bool `json:"has_header,omitempty"`
+    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
+
     	Pic ContentPic `json:"pic,omitempty"`
     	Caption ContentCaption `json:"caption,omitempty"`
     	Comics ContentComics `json:"comics,omitempty"`
@@ -613,56 +691,92 @@ Paginate through content in featured.
     	Coub ContentCoub `json:"coub,omitempty"`
     	Gif ContentGif `json:"gif,omitempty"`
     	App ContentApp `json:"app,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	Type ContentType `json:"type,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	ShareUrl *string `json:"share_url,omitempty"`
-    	OldWatermark *bool `json:"old_watermark,omitempty"`
-    	Link *string `json:"link,omitempty"`
-    	Title *string `json:"title,omitempty"`
-    	FixedTitle *string `json:"fixed_title,omitempty"`
-    	Description *string `json:"description,omitempty"`
-    	Tags []string `json:"tags,omitempty"`
-    	State *string `json:"state,omitempty"`
-    	DateCreate *int `json:"date_create,omitempty"`
-    	PublishAt *int `json:"publish_at,omitempty"`
-    	IsSmiled *bool `json:"is_smiled,omitempty"`
-    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
-    	IsAbused *bool `json:"is_abused,omitempty"`
-    	IsFeatured *bool `json:"is_featured,omitempty"`
-    	IsRepublished *bool `json:"is_republished,omitempty"`
-    	IsPinned *bool `json:"is_pinned,omitempty"`
-    	BgColor *string `json:"bg_color,omitempty"`
-    	Thumb ContentThumbnail `json:"thumb,omitempty"`
-    	Copyright ContentCopyright `json:"copyright,omitempty"`
-    	Num ContentNums `json:"num,omitempty"`
-    	Creator User `json:"creator,omitempty"`
-    	Size ContentSize `json:"size,omitempty"`
-    	IssueAt *int `json:"issue_at,omitempty"`
-    	TracebackUrl *string `json:"traceback_url,omitempty"`
-    	EngagementRate *string `json:"engagement_rate,omitempty"`
-    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+
     	Visibility *string `json:"visibility,omitempty"`
     	ShotStatus *string `json:"shot_status,omitempty"`
     	FastStart *bool `json:"fast_start,omitempty"`
-    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
     	Risk *int `json:"risk,omitempty"`
-    	CanonicalUrl *string `json:"canonical_url,omitempty"`
-    	OcrText *string `json:"ocr_text,omitempty"`
     	CanBeBoosted *bool `json:"can_be_boosted,omitempty"`
+    	OldWatermark *bool `json:"old_watermark,omitempty"`
+
+    	Copyright ContentCopyright `json:"copyright,omitempty"`
+    	Source ContentSource `json:"source,omitempty"`
+    	TracebackUrl *string `json:"traceback_url,omitempty"`
+    	Ftag *string `json:"ftag,omitempty"`
+
+    	EngagementRate *string `json:"engagement_rate,omitempty"`
+    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+    	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
-    	HasHeader *bool `json:"has_header,omitempty"`
-    	Source ContentSource `json:"source,omitempty"`
-    	Ftag *string `json:"ftag,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
     	HasPrev *bool `json:"hasPrev,omitempty"`
     	HasNext *bool `json:"has_next,omitempty"`
     	HasPrev *bool `json:"has_prev,omitempty"`
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType string
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    type User struct {
+    	BlockType *string `json:"block_type,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	IsBanned *bool `json:"is_banned,omitempty"`
+    	IsBlocked *bool `json:"is_blocked,omitempty"`
+    	IsDeleted *bool `json:"is_deleted,omitempty"`
+    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
+    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
+    	IsVerified *bool `json:"is_verified,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	NickColor *string `json:"nick_color,omitempty"`
+    	Num UserNum `json:"num,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
+    	Photo ProfilePhoto `json:"photo,omitempty"`
+    	TotalPosts *int `json:"total_posts,omitempty"`
+    }
+
+    type ContentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	GuestSmiles *int `json:"guest_smiles,omitempty"`
+    	Comments *int `json:"comments,omitempty"`
+    	Views *int `json:"views,omitempty"`
+    	Republished *int `json:"republished,omitempty"`
+    	Shares *int `json:"shares,omitempty"`
+    }
+
+    type ContentThumbnail struct {
+    	SmallUrl *string `json:"small_url,omitempty"`
+    	Url *string `json:"url,omitempty"`
+    	LargeUrl *string `json:"large_url,omitempty"`
+    	X640Url *string `json:"x640_url,omitempty"`
+    	WebpUrl *string `json:"webp_url,omitempty"`
+    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
+    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
+    	ProportionalUrl *string `json:"proportional_url,omitempty"`
+    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
+    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
+    }
+
+    type ContentSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
+    type ContentSubtitle struct {
+    	Lang *string `json:"lang,omitempty"`
+    	Url *string `json:"url,omitempty"`
     }
 
     type ContentPic struct {
@@ -721,60 +835,8 @@ Paginate through content in featured.
     	IsScrollAllowed *bool `json:"is_scroll_allowed,omitempty"`
     }
 
-    type ContentType string
-
-    type ContentThumbnail struct {
-    	SmallUrl *string `json:"small_url,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	LargeUrl *string `json:"large_url,omitempty"`
-    	X640Url *string `json:"x640_url,omitempty"`
-    	WebpUrl *string `json:"webp_url,omitempty"`
-    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
-    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
-    	ProportionalUrl *string `json:"proportional_url,omitempty"`
-    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
-    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
-    }
-
     type ContentCopyright struct {
     	Note *string `json:"note,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    }
-
-    type ContentNums struct {
-    	Smiles *int `json:"smiles,omitempty"`
-    	Unsmiles *int `json:"unsmiles,omitempty"`
-    	GuestSmiles *int `json:"guest_smiles,omitempty"`
-    	Comments *int `json:"comments,omitempty"`
-    	Views *int `json:"views,omitempty"`
-    	Republished *int `json:"republished,omitempty"`
-    	Shares *int `json:"shares,omitempty"`
-    }
-
-    type User struct {
-    	BlockType *string `json:"block_type,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	IsBanned *bool `json:"is_banned,omitempty"`
-    	IsBlocked *bool `json:"is_blocked,omitempty"`
-    	IsDeleted *bool `json:"is_deleted,omitempty"`
-    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
-    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
-    	IsVerified *bool `json:"is_verified,omitempty"`
-    	Nick *string `json:"nick,omitempty"`
-    	NickColor *string `json:"nick_color,omitempty"`
-    	Num UserNum `json:"num,omitempty"`
-    	OriginalNick *string `json:"original_nick,omitempty"`
-    	Photo ProfilePhoto `json:"photo,omitempty"`
-    	TotalPosts *int `json:"total_posts,omitempty"`
-    }
-
-    type ContentSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
-    type ContentSubtitle struct {
-    	Lang *string `json:"lang,omitempty"`
     	Url *string `json:"url,omitempty"`
     }
 
@@ -789,11 +851,6 @@ Paginate through content in featured.
     	Prev *string `json:"prev,omitempty"`
     }
 
-    type ContentThumbnailProportionalSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
     type UserNum struct {
     	Subscribers *int `json:"subscribers,omitempty"`
     	Subscriptions *int `json:"subscriptions,omitempty"`
@@ -805,6 +862,11 @@ Paginate through content in featured.
     	Url *string `json:"url,omitempty"`
     }
 
+    type ContentThumbnailProportionalSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
     type ProfilePhotoThumb struct {
     	LargeUrl *string `json:"large_url,omitempty"`
     	MediumUrl *string `json:"medium_url,omitempty"`
@@ -812,7 +874,9 @@ Paginate through content in featured.
     }
     ```
 
-### `POST /feeds/collective` — Scroll Collective  {: #op-getcollectivefeed }
+### Scroll Collective  {: #op-getcollectivefeed }
+
+**`POST /feeds/collective`**
 
 Paginate through content in collective. Unclear why iFunny made this a POST
 instead of GET.
@@ -895,8 +959,44 @@ instead of GET.
       "map"?: "integer"
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     // Content
     {
+      "id"?: "string",
+      "type"?: "ContentType",
+      "state"?: "enum(delayed, deleted, draft, published)",
+      "title"?: "string",
+      "url"?: "string",
+
+      "fixed_title"?: "string",
+      "description"?: "string",
+      "tags"?: "string[]",
+      "share_url"?: "string",
+      "canonical_url"?: "string",
+      "link"?: "string",
+      "date_create"?: "integer",
+      "publish_at"?: "integer",
+      "issue_at"?: "integer",
+
+      "creator"?: "User",
+      "num"?: "ContentNums",
+
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_abused"?: "boolean",
+      "is_featured"?: "boolean",
+      "is_republished"?: "boolean",
+      "is_pinned"?: "boolean",
+
+      "thumb"?: "ContentThumbnail",
+      "bg_color"?: "string",
+      "size"?: "ContentSize",
+      "has_header"?: "boolean",
+      "subtitle"?: "ContentSubtitle",
+
       "pic"?: "ContentPic",
       "caption"?: "ContentCaption",
       "comics"?: "ContentComics",
@@ -907,50 +1007,29 @@ instead of GET.
       "coub"?: "ContentCoub",
       "gif"?: "ContentGif",
       "app"?: "ContentApp",
-      "id"?: "string",
-      "type"?: "ContentType",
-      "url"?: "string",
-      "share_url"?: "string",
-      "old_watermark"?: "boolean",
-      "link"?: "string",
-      "title"?: "string",
-      "fixed_title"?: "string",
-      "description"?: "string",
-      "tags"?: "string[]",
-      "state"?: "enum(delayed, deleted, draft, published)",
-      "date_create"?: "integer",
-      "publish_at"?: "integer",
-      "is_smiled"?: "boolean",
-      "is_unsmiled"?: "boolean",
-      "is_abused"?: "boolean",
-      "is_featured"?: "boolean",
-      "is_republished"?: "boolean",
-      "is_pinned"?: "boolean",
-      "bg_color"?: "string",
-      "thumb"?: "ContentThumbnail",
-      "copyright"?: "ContentCopyright",
-      "num"?: "ContentNums",
-      "creator"?: "User",
-      "size"?: "ContentSize",
-      "issue_at"?: "integer",
-      "traceback_url"?: "string",
-      "engagement_rate"?: "string",
-      "engagement_rate_explain"?: "string",
+
       "visibility"?: "enum(public, subscribers, closed, chats)",
       "shot_status"?: "enum(approved, shot, hardShot)",
       "fast_start"?: "boolean",
-      "subtitle"?: "ContentSubtitle",
       "risk"?: "integer",
-      "canonical_url"?: "string",
-      "ocr_text"?: "string",
       "can_be_boosted"?: "boolean",
-      "lat"?: "number",
-      "lon"?: "number",
-      "has_header"?: "boolean",
+      "old_watermark"?: "boolean",
+
+      "copyright"?: "ContentCopyright",
       "source"?: "ContentSource",
-      "ftag"?: "string"
+      "traceback_url"?: "string",
+      "ftag"?: "string",
+
+      "engagement_rate"?: "string",
+      "engagement_rate_explain"?: "string",
+      "ocr_text"?: "string",
+      "lat"?: "number",
+      "lon"?: "number"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -958,6 +1037,69 @@ instead of GET.
       "hasPrev"?: "boolean",
       "has_next"?: "boolean",
       "has_prev"?: "boolean"
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    // ContentType
+    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    // User
+    {
+      "block_type"?: "enum(installation, user)",
+      "id"?: "string",
+      "is_banned"?: "boolean",
+      "is_blocked"?: "boolean",
+      "is_deleted"?: "boolean",
+      "is_in_subscribers"?: "boolean",
+      "is_in_subscriptions"?: "boolean",
+      "is_verified"?: "boolean",
+      "nick"?: "string",
+      "nick_color"?: "string",
+      "num"?: "UserNum",
+      "original_nick"?: "string",
+      "photo"?: "ProfilePhoto",
+      "total_posts"?: "integer"
+    }
+
+    // ContentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "guest_smiles"?: "integer",
+      "comments"?: "integer",
+      "views"?: "integer",
+      "republished"?: "integer",
+      "shares"?: "integer"
+    }
+
+    // ContentThumbnail
+    {
+      "small_url"?: "string",
+      "url"?: "string",
+      "large_url"?: "string",
+      "x640_url"?: "string",
+      "webp_url"?: "string",
+      "large_webp_url"?: "string",
+      "x640_webp_url"?: "string",
+      "proportional_url"?: "string",
+      "proportional_webp_url"?: "string",
+      "proportional_size"?: "ContentThumbnailProportionalSize"
+    }
+
+    // ContentSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
+    }
+
+    // ContentSubtitle
+    {
+      "lang"?: "string",
+      "url"?: "string"
     }
 
     // ContentPic
@@ -1026,67 +1168,9 @@ instead of GET.
       "is_scroll_allowed"?: "boolean"
     }
 
-    // ContentType
-    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
-
-    // ContentThumbnail
-    {
-      "small_url"?: "string",
-      "url"?: "string",
-      "large_url"?: "string",
-      "x640_url"?: "string",
-      "webp_url"?: "string",
-      "large_webp_url"?: "string",
-      "x640_webp_url"?: "string",
-      "proportional_url"?: "string",
-      "proportional_webp_url"?: "string",
-      "proportional_size"?: "ContentThumbnailProportionalSize"
-    }
-
     // ContentCopyright
     {
       "note"?: "string",
-      "url"?: "string"
-    }
-
-    // ContentNums
-    {
-      "smiles"?: "integer",
-      "unsmiles"?: "integer",
-      "guest_smiles"?: "integer",
-      "comments"?: "integer",
-      "views"?: "integer",
-      "republished"?: "integer",
-      "shares"?: "integer"
-    }
-
-    // User
-    {
-      "block_type"?: "enum(installation, user)",
-      "id"?: "string",
-      "is_banned"?: "boolean",
-      "is_blocked"?: "boolean",
-      "is_deleted"?: "boolean",
-      "is_in_subscribers"?: "boolean",
-      "is_in_subscriptions"?: "boolean",
-      "is_verified"?: "boolean",
-      "nick"?: "string",
-      "nick_color"?: "string",
-      "num"?: "UserNum",
-      "original_nick"?: "string",
-      "photo"?: "ProfilePhoto",
-      "total_posts"?: "integer"
-    }
-
-    // ContentSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
-    // ContentSubtitle
-    {
-      "lang"?: "string",
       "url"?: "string"
     }
 
@@ -1103,12 +1187,6 @@ instead of GET.
       "prev"?: "string"
     }
 
-    // ContentThumbnailProportionalSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
     // UserNum
     {
       "subscribers"?: "integer",
@@ -1120,6 +1198,12 @@ instead of GET.
       "bg_color"?: "string",
       "thumb"?: "ProfilePhotoThumb",
       "url"?: "string"
+    }
+
+    // ContentThumbnailProportionalSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
     }
 
     // ProfilePhotoThumb
@@ -1162,7 +1246,43 @@ instead of GET.
       map?: number;
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     interface Content {
+      id?: string;
+      type?: ContentType;
+      state?: 'delayed' | 'deleted' | 'draft' | 'published';
+      title?: string;
+      url?: string;
+
+      fixed_title?: string;
+      description?: string;
+      tags?: string[];
+      share_url?: string;
+      canonical_url?: string;
+      link?: string;
+      date_create?: number;
+      publish_at?: number;
+      issue_at?: number;
+
+      creator?: User;
+      num?: ContentNums;
+
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_abused?: boolean;
+      is_featured?: boolean;
+      is_republished?: boolean;
+      is_pinned?: boolean;
+
+      thumb?: ContentThumbnail;
+      bg_color?: string;
+      size?: ContentSize;
+      has_header?: boolean;
+      subtitle?: ContentSubtitle;
+
       pic?: ContentPic;
       caption?: ContentCaption;
       comics?: ContentComics;
@@ -1173,56 +1293,92 @@ instead of GET.
       coub?: ContentCoub;
       gif?: ContentGif;
       app?: ContentApp;
-      id?: string;
-      type?: ContentType;
-      url?: string;
-      share_url?: string;
-      old_watermark?: boolean;
-      link?: string;
-      title?: string;
-      fixed_title?: string;
-      description?: string;
-      tags?: string[];
-      state?: 'delayed' | 'deleted' | 'draft' | 'published';
-      date_create?: number;
-      publish_at?: number;
-      is_smiled?: boolean;
-      is_unsmiled?: boolean;
-      is_abused?: boolean;
-      is_featured?: boolean;
-      is_republished?: boolean;
-      is_pinned?: boolean;
-      bg_color?: string;
-      thumb?: ContentThumbnail;
-      copyright?: ContentCopyright;
-      num?: ContentNums;
-      creator?: User;
-      size?: ContentSize;
-      issue_at?: number;
-      traceback_url?: string;
-      engagement_rate?: string;
-      engagement_rate_explain?: string;
+
       visibility?: 'public' | 'subscribers' | 'closed' | 'chats';
       shot_status?: 'approved' | 'shot' | 'hardShot';
       fast_start?: boolean;
-      subtitle?: ContentSubtitle;
       risk?: number;
-      canonical_url?: string;
-      ocr_text?: string;
       can_be_boosted?: boolean;
+      old_watermark?: boolean;
+
+      copyright?: ContentCopyright;
+      source?: ContentSource;
+      traceback_url?: string;
+      ftag?: string;
+
+      engagement_rate?: string;
+      engagement_rate_explain?: string;
+      ocr_text?: string;
       lat?: number;
       lon?: number;
-      has_header?: boolean;
-      source?: ContentSource;
-      ftag?: string;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
       hasPrev?: boolean;
       has_next?: boolean;
       has_prev?: boolean;
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    interface User {
+      block_type?: 'installation' | 'user';
+      id?: string;
+      is_banned?: boolean;
+      is_blocked?: boolean;
+      is_deleted?: boolean;
+      is_in_subscribers?: boolean;
+      is_in_subscriptions?: boolean;
+      is_verified?: boolean;
+      nick?: string;
+      nick_color?: string;
+      num?: UserNum;
+      original_nick?: string;
+      photo?: ProfilePhoto;
+      total_posts?: number;
+    }
+
+    interface ContentNums {
+      smiles?: number;
+      unsmiles?: number;
+      guest_smiles?: number;
+      comments?: number;
+      views?: number;
+      republished?: number;
+      shares?: number;
+    }
+
+    interface ContentThumbnail {
+      small_url?: string;
+      url?: string;
+      large_url?: string;
+      x640_url?: string;
+      webp_url?: string;
+      large_webp_url?: string;
+      x640_webp_url?: string;
+      proportional_url?: string;
+      proportional_webp_url?: string;
+      proportional_size?: ContentThumbnailProportionalSize;
+    }
+
+    interface ContentSize {
+      w?: number;
+      h?: number;
+    }
+
+    interface ContentSubtitle {
+      lang?: string;
+      url?: string;
     }
 
     interface ContentPic {
@@ -1281,60 +1437,8 @@ instead of GET.
       is_scroll_allowed?: boolean;
     }
 
-    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
-
-    interface ContentThumbnail {
-      small_url?: string;
-      url?: string;
-      large_url?: string;
-      x640_url?: string;
-      webp_url?: string;
-      large_webp_url?: string;
-      x640_webp_url?: string;
-      proportional_url?: string;
-      proportional_webp_url?: string;
-      proportional_size?: ContentThumbnailProportionalSize;
-    }
-
     interface ContentCopyright {
       note?: string;
-      url?: string;
-    }
-
-    interface ContentNums {
-      smiles?: number;
-      unsmiles?: number;
-      guest_smiles?: number;
-      comments?: number;
-      views?: number;
-      republished?: number;
-      shares?: number;
-    }
-
-    interface User {
-      block_type?: 'installation' | 'user';
-      id?: string;
-      is_banned?: boolean;
-      is_blocked?: boolean;
-      is_deleted?: boolean;
-      is_in_subscribers?: boolean;
-      is_in_subscriptions?: boolean;
-      is_verified?: boolean;
-      nick?: string;
-      nick_color?: string;
-      num?: UserNum;
-      original_nick?: string;
-      photo?: ProfilePhoto;
-      total_posts?: number;
-    }
-
-    interface ContentSize {
-      w?: number;
-      h?: number;
-    }
-
-    interface ContentSubtitle {
-      lang?: string;
       url?: string;
     }
 
@@ -1349,11 +1453,6 @@ instead of GET.
       prev?: string;
     }
 
-    interface ContentThumbnailProportionalSize {
-      w?: number;
-      h?: number;
-    }
-
     interface UserNum {
       subscribers?: number;
       subscriptions?: number;
@@ -1363,6 +1462,11 @@ instead of GET.
       bg_color?: string;
       thumb?: ProfilePhotoThumb;
       url?: string;
+    }
+
+    interface ContentThumbnailProportionalSize {
+      w?: number;
+      h?: number;
     }
 
     interface ProfilePhotoThumb {
@@ -1404,7 +1508,43 @@ instead of GET.
     	Map *int `json:"map,omitempty"`
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     type Content struct {
+    	Id *string `json:"id,omitempty"`
+    	Type ContentType `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	Title *string `json:"title,omitempty"`
+    	Url *string `json:"url,omitempty"`
+
+    	FixedTitle *string `json:"fixed_title,omitempty"`
+    	Description *string `json:"description,omitempty"`
+    	Tags []string `json:"tags,omitempty"`
+    	ShareUrl *string `json:"share_url,omitempty"`
+    	CanonicalUrl *string `json:"canonical_url,omitempty"`
+    	Link *string `json:"link,omitempty"`
+    	DateCreate *int `json:"date_create,omitempty"`
+    	PublishAt *int `json:"publish_at,omitempty"`
+    	IssueAt *int `json:"issue_at,omitempty"`
+
+    	Creator User `json:"creator,omitempty"`
+    	Num ContentNums `json:"num,omitempty"`
+
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsAbused *bool `json:"is_abused,omitempty"`
+    	IsFeatured *bool `json:"is_featured,omitempty"`
+    	IsRepublished *bool `json:"is_republished,omitempty"`
+    	IsPinned *bool `json:"is_pinned,omitempty"`
+
+    	Thumb ContentThumbnail `json:"thumb,omitempty"`
+    	BgColor *string `json:"bg_color,omitempty"`
+    	Size ContentSize `json:"size,omitempty"`
+    	HasHeader *bool `json:"has_header,omitempty"`
+    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
+
     	Pic ContentPic `json:"pic,omitempty"`
     	Caption ContentCaption `json:"caption,omitempty"`
     	Comics ContentComics `json:"comics,omitempty"`
@@ -1415,56 +1555,92 @@ instead of GET.
     	Coub ContentCoub `json:"coub,omitempty"`
     	Gif ContentGif `json:"gif,omitempty"`
     	App ContentApp `json:"app,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	Type ContentType `json:"type,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	ShareUrl *string `json:"share_url,omitempty"`
-    	OldWatermark *bool `json:"old_watermark,omitempty"`
-    	Link *string `json:"link,omitempty"`
-    	Title *string `json:"title,omitempty"`
-    	FixedTitle *string `json:"fixed_title,omitempty"`
-    	Description *string `json:"description,omitempty"`
-    	Tags []string `json:"tags,omitempty"`
-    	State *string `json:"state,omitempty"`
-    	DateCreate *int `json:"date_create,omitempty"`
-    	PublishAt *int `json:"publish_at,omitempty"`
-    	IsSmiled *bool `json:"is_smiled,omitempty"`
-    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
-    	IsAbused *bool `json:"is_abused,omitempty"`
-    	IsFeatured *bool `json:"is_featured,omitempty"`
-    	IsRepublished *bool `json:"is_republished,omitempty"`
-    	IsPinned *bool `json:"is_pinned,omitempty"`
-    	BgColor *string `json:"bg_color,omitempty"`
-    	Thumb ContentThumbnail `json:"thumb,omitempty"`
-    	Copyright ContentCopyright `json:"copyright,omitempty"`
-    	Num ContentNums `json:"num,omitempty"`
-    	Creator User `json:"creator,omitempty"`
-    	Size ContentSize `json:"size,omitempty"`
-    	IssueAt *int `json:"issue_at,omitempty"`
-    	TracebackUrl *string `json:"traceback_url,omitempty"`
-    	EngagementRate *string `json:"engagement_rate,omitempty"`
-    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+
     	Visibility *string `json:"visibility,omitempty"`
     	ShotStatus *string `json:"shot_status,omitempty"`
     	FastStart *bool `json:"fast_start,omitempty"`
-    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
     	Risk *int `json:"risk,omitempty"`
-    	CanonicalUrl *string `json:"canonical_url,omitempty"`
-    	OcrText *string `json:"ocr_text,omitempty"`
     	CanBeBoosted *bool `json:"can_be_boosted,omitempty"`
+    	OldWatermark *bool `json:"old_watermark,omitempty"`
+
+    	Copyright ContentCopyright `json:"copyright,omitempty"`
+    	Source ContentSource `json:"source,omitempty"`
+    	TracebackUrl *string `json:"traceback_url,omitempty"`
+    	Ftag *string `json:"ftag,omitempty"`
+
+    	EngagementRate *string `json:"engagement_rate,omitempty"`
+    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+    	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
-    	HasHeader *bool `json:"has_header,omitempty"`
-    	Source ContentSource `json:"source,omitempty"`
-    	Ftag *string `json:"ftag,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
     	HasPrev *bool `json:"hasPrev,omitempty"`
     	HasNext *bool `json:"has_next,omitempty"`
     	HasPrev *bool `json:"has_prev,omitempty"`
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType string
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    type User struct {
+    	BlockType *string `json:"block_type,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	IsBanned *bool `json:"is_banned,omitempty"`
+    	IsBlocked *bool `json:"is_blocked,omitempty"`
+    	IsDeleted *bool `json:"is_deleted,omitempty"`
+    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
+    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
+    	IsVerified *bool `json:"is_verified,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	NickColor *string `json:"nick_color,omitempty"`
+    	Num UserNum `json:"num,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
+    	Photo ProfilePhoto `json:"photo,omitempty"`
+    	TotalPosts *int `json:"total_posts,omitempty"`
+    }
+
+    type ContentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	GuestSmiles *int `json:"guest_smiles,omitempty"`
+    	Comments *int `json:"comments,omitempty"`
+    	Views *int `json:"views,omitempty"`
+    	Republished *int `json:"republished,omitempty"`
+    	Shares *int `json:"shares,omitempty"`
+    }
+
+    type ContentThumbnail struct {
+    	SmallUrl *string `json:"small_url,omitempty"`
+    	Url *string `json:"url,omitempty"`
+    	LargeUrl *string `json:"large_url,omitempty"`
+    	X640Url *string `json:"x640_url,omitempty"`
+    	WebpUrl *string `json:"webp_url,omitempty"`
+    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
+    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
+    	ProportionalUrl *string `json:"proportional_url,omitempty"`
+    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
+    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
+    }
+
+    type ContentSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
+    type ContentSubtitle struct {
+    	Lang *string `json:"lang,omitempty"`
+    	Url *string `json:"url,omitempty"`
     }
 
     type ContentPic struct {
@@ -1523,60 +1699,8 @@ instead of GET.
     	IsScrollAllowed *bool `json:"is_scroll_allowed,omitempty"`
     }
 
-    type ContentType string
-
-    type ContentThumbnail struct {
-    	SmallUrl *string `json:"small_url,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	LargeUrl *string `json:"large_url,omitempty"`
-    	X640Url *string `json:"x640_url,omitempty"`
-    	WebpUrl *string `json:"webp_url,omitempty"`
-    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
-    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
-    	ProportionalUrl *string `json:"proportional_url,omitempty"`
-    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
-    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
-    }
-
     type ContentCopyright struct {
     	Note *string `json:"note,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    }
-
-    type ContentNums struct {
-    	Smiles *int `json:"smiles,omitempty"`
-    	Unsmiles *int `json:"unsmiles,omitempty"`
-    	GuestSmiles *int `json:"guest_smiles,omitempty"`
-    	Comments *int `json:"comments,omitempty"`
-    	Views *int `json:"views,omitempty"`
-    	Republished *int `json:"republished,omitempty"`
-    	Shares *int `json:"shares,omitempty"`
-    }
-
-    type User struct {
-    	BlockType *string `json:"block_type,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	IsBanned *bool `json:"is_banned,omitempty"`
-    	IsBlocked *bool `json:"is_blocked,omitempty"`
-    	IsDeleted *bool `json:"is_deleted,omitempty"`
-    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
-    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
-    	IsVerified *bool `json:"is_verified,omitempty"`
-    	Nick *string `json:"nick,omitempty"`
-    	NickColor *string `json:"nick_color,omitempty"`
-    	Num UserNum `json:"num,omitempty"`
-    	OriginalNick *string `json:"original_nick,omitempty"`
-    	Photo ProfilePhoto `json:"photo,omitempty"`
-    	TotalPosts *int `json:"total_posts,omitempty"`
-    }
-
-    type ContentSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
-    type ContentSubtitle struct {
-    	Lang *string `json:"lang,omitempty"`
     	Url *string `json:"url,omitempty"`
     }
 
@@ -1591,11 +1715,6 @@ instead of GET.
     	Prev *string `json:"prev,omitempty"`
     }
 
-    type ContentThumbnailProportionalSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
     type UserNum struct {
     	Subscribers *int `json:"subscribers,omitempty"`
     	Subscriptions *int `json:"subscriptions,omitempty"`
@@ -1607,6 +1726,11 @@ instead of GET.
     	Url *string `json:"url,omitempty"`
     }
 
+    type ContentThumbnailProportionalSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
     type ProfilePhotoThumb struct {
     	LargeUrl *string `json:"large_url,omitempty"`
     	MediumUrl *string `json:"medium_url,omitempty"`
@@ -1614,7 +1738,9 @@ instead of GET.
     }
     ```
 
-### `GET /timelines/home` — Scroll Subscription Timeline  {: #op-getsubscriptiontimeline }
+### Scroll Subscription Timeline  {: #op-getsubscriptiontimeline }
+
+**`GET /timelines/home`**
 
 Paginate through content in the Client's subscription Feed.
 
@@ -1696,8 +1822,44 @@ Paginate through content in the Client's subscription Feed.
       "map"?: "integer"
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     // Content
     {
+      "id"?: "string",
+      "type"?: "ContentType",
+      "state"?: "enum(delayed, deleted, draft, published)",
+      "title"?: "string",
+      "url"?: "string",
+
+      "fixed_title"?: "string",
+      "description"?: "string",
+      "tags"?: "string[]",
+      "share_url"?: "string",
+      "canonical_url"?: "string",
+      "link"?: "string",
+      "date_create"?: "integer",
+      "publish_at"?: "integer",
+      "issue_at"?: "integer",
+
+      "creator"?: "User",
+      "num"?: "ContentNums",
+
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_abused"?: "boolean",
+      "is_featured"?: "boolean",
+      "is_republished"?: "boolean",
+      "is_pinned"?: "boolean",
+
+      "thumb"?: "ContentThumbnail",
+      "bg_color"?: "string",
+      "size"?: "ContentSize",
+      "has_header"?: "boolean",
+      "subtitle"?: "ContentSubtitle",
+
       "pic"?: "ContentPic",
       "caption"?: "ContentCaption",
       "comics"?: "ContentComics",
@@ -1708,50 +1870,29 @@ Paginate through content in the Client's subscription Feed.
       "coub"?: "ContentCoub",
       "gif"?: "ContentGif",
       "app"?: "ContentApp",
-      "id"?: "string",
-      "type"?: "ContentType",
-      "url"?: "string",
-      "share_url"?: "string",
-      "old_watermark"?: "boolean",
-      "link"?: "string",
-      "title"?: "string",
-      "fixed_title"?: "string",
-      "description"?: "string",
-      "tags"?: "string[]",
-      "state"?: "enum(delayed, deleted, draft, published)",
-      "date_create"?: "integer",
-      "publish_at"?: "integer",
-      "is_smiled"?: "boolean",
-      "is_unsmiled"?: "boolean",
-      "is_abused"?: "boolean",
-      "is_featured"?: "boolean",
-      "is_republished"?: "boolean",
-      "is_pinned"?: "boolean",
-      "bg_color"?: "string",
-      "thumb"?: "ContentThumbnail",
-      "copyright"?: "ContentCopyright",
-      "num"?: "ContentNums",
-      "creator"?: "User",
-      "size"?: "ContentSize",
-      "issue_at"?: "integer",
-      "traceback_url"?: "string",
-      "engagement_rate"?: "string",
-      "engagement_rate_explain"?: "string",
+
       "visibility"?: "enum(public, subscribers, closed, chats)",
       "shot_status"?: "enum(approved, shot, hardShot)",
       "fast_start"?: "boolean",
-      "subtitle"?: "ContentSubtitle",
       "risk"?: "integer",
-      "canonical_url"?: "string",
-      "ocr_text"?: "string",
       "can_be_boosted"?: "boolean",
-      "lat"?: "number",
-      "lon"?: "number",
-      "has_header"?: "boolean",
+      "old_watermark"?: "boolean",
+
+      "copyright"?: "ContentCopyright",
       "source"?: "ContentSource",
-      "ftag"?: "string"
+      "traceback_url"?: "string",
+      "ftag"?: "string",
+
+      "engagement_rate"?: "string",
+      "engagement_rate_explain"?: "string",
+      "ocr_text"?: "string",
+      "lat"?: "number",
+      "lon"?: "number"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -1759,6 +1900,69 @@ Paginate through content in the Client's subscription Feed.
       "hasPrev"?: "boolean",
       "has_next"?: "boolean",
       "has_prev"?: "boolean"
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    // ContentType
+    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    // User
+    {
+      "block_type"?: "enum(installation, user)",
+      "id"?: "string",
+      "is_banned"?: "boolean",
+      "is_blocked"?: "boolean",
+      "is_deleted"?: "boolean",
+      "is_in_subscribers"?: "boolean",
+      "is_in_subscriptions"?: "boolean",
+      "is_verified"?: "boolean",
+      "nick"?: "string",
+      "nick_color"?: "string",
+      "num"?: "UserNum",
+      "original_nick"?: "string",
+      "photo"?: "ProfilePhoto",
+      "total_posts"?: "integer"
+    }
+
+    // ContentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "guest_smiles"?: "integer",
+      "comments"?: "integer",
+      "views"?: "integer",
+      "republished"?: "integer",
+      "shares"?: "integer"
+    }
+
+    // ContentThumbnail
+    {
+      "small_url"?: "string",
+      "url"?: "string",
+      "large_url"?: "string",
+      "x640_url"?: "string",
+      "webp_url"?: "string",
+      "large_webp_url"?: "string",
+      "x640_webp_url"?: "string",
+      "proportional_url"?: "string",
+      "proportional_webp_url"?: "string",
+      "proportional_size"?: "ContentThumbnailProportionalSize"
+    }
+
+    // ContentSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
+    }
+
+    // ContentSubtitle
+    {
+      "lang"?: "string",
+      "url"?: "string"
     }
 
     // ContentPic
@@ -1827,67 +2031,9 @@ Paginate through content in the Client's subscription Feed.
       "is_scroll_allowed"?: "boolean"
     }
 
-    // ContentType
-    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
-
-    // ContentThumbnail
-    {
-      "small_url"?: "string",
-      "url"?: "string",
-      "large_url"?: "string",
-      "x640_url"?: "string",
-      "webp_url"?: "string",
-      "large_webp_url"?: "string",
-      "x640_webp_url"?: "string",
-      "proportional_url"?: "string",
-      "proportional_webp_url"?: "string",
-      "proportional_size"?: "ContentThumbnailProportionalSize"
-    }
-
     // ContentCopyright
     {
       "note"?: "string",
-      "url"?: "string"
-    }
-
-    // ContentNums
-    {
-      "smiles"?: "integer",
-      "unsmiles"?: "integer",
-      "guest_smiles"?: "integer",
-      "comments"?: "integer",
-      "views"?: "integer",
-      "republished"?: "integer",
-      "shares"?: "integer"
-    }
-
-    // User
-    {
-      "block_type"?: "enum(installation, user)",
-      "id"?: "string",
-      "is_banned"?: "boolean",
-      "is_blocked"?: "boolean",
-      "is_deleted"?: "boolean",
-      "is_in_subscribers"?: "boolean",
-      "is_in_subscriptions"?: "boolean",
-      "is_verified"?: "boolean",
-      "nick"?: "string",
-      "nick_color"?: "string",
-      "num"?: "UserNum",
-      "original_nick"?: "string",
-      "photo"?: "ProfilePhoto",
-      "total_posts"?: "integer"
-    }
-
-    // ContentSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
-    // ContentSubtitle
-    {
-      "lang"?: "string",
       "url"?: "string"
     }
 
@@ -1904,12 +2050,6 @@ Paginate through content in the Client's subscription Feed.
       "prev"?: "string"
     }
 
-    // ContentThumbnailProportionalSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
     // UserNum
     {
       "subscribers"?: "integer",
@@ -1921,6 +2061,12 @@ Paginate through content in the Client's subscription Feed.
       "bg_color"?: "string",
       "thumb"?: "ProfilePhotoThumb",
       "url"?: "string"
+    }
+
+    // ContentThumbnailProportionalSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
     }
 
     // ProfilePhotoThumb
@@ -1963,7 +2109,43 @@ Paginate through content in the Client's subscription Feed.
       map?: number;
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     interface Content {
+      id?: string;
+      type?: ContentType;
+      state?: 'delayed' | 'deleted' | 'draft' | 'published';
+      title?: string;
+      url?: string;
+
+      fixed_title?: string;
+      description?: string;
+      tags?: string[];
+      share_url?: string;
+      canonical_url?: string;
+      link?: string;
+      date_create?: number;
+      publish_at?: number;
+      issue_at?: number;
+
+      creator?: User;
+      num?: ContentNums;
+
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_abused?: boolean;
+      is_featured?: boolean;
+      is_republished?: boolean;
+      is_pinned?: boolean;
+
+      thumb?: ContentThumbnail;
+      bg_color?: string;
+      size?: ContentSize;
+      has_header?: boolean;
+      subtitle?: ContentSubtitle;
+
       pic?: ContentPic;
       caption?: ContentCaption;
       comics?: ContentComics;
@@ -1974,56 +2156,92 @@ Paginate through content in the Client's subscription Feed.
       coub?: ContentCoub;
       gif?: ContentGif;
       app?: ContentApp;
-      id?: string;
-      type?: ContentType;
-      url?: string;
-      share_url?: string;
-      old_watermark?: boolean;
-      link?: string;
-      title?: string;
-      fixed_title?: string;
-      description?: string;
-      tags?: string[];
-      state?: 'delayed' | 'deleted' | 'draft' | 'published';
-      date_create?: number;
-      publish_at?: number;
-      is_smiled?: boolean;
-      is_unsmiled?: boolean;
-      is_abused?: boolean;
-      is_featured?: boolean;
-      is_republished?: boolean;
-      is_pinned?: boolean;
-      bg_color?: string;
-      thumb?: ContentThumbnail;
-      copyright?: ContentCopyright;
-      num?: ContentNums;
-      creator?: User;
-      size?: ContentSize;
-      issue_at?: number;
-      traceback_url?: string;
-      engagement_rate?: string;
-      engagement_rate_explain?: string;
+
       visibility?: 'public' | 'subscribers' | 'closed' | 'chats';
       shot_status?: 'approved' | 'shot' | 'hardShot';
       fast_start?: boolean;
-      subtitle?: ContentSubtitle;
       risk?: number;
-      canonical_url?: string;
-      ocr_text?: string;
       can_be_boosted?: boolean;
+      old_watermark?: boolean;
+
+      copyright?: ContentCopyright;
+      source?: ContentSource;
+      traceback_url?: string;
+      ftag?: string;
+
+      engagement_rate?: string;
+      engagement_rate_explain?: string;
+      ocr_text?: string;
       lat?: number;
       lon?: number;
-      has_header?: boolean;
-      source?: ContentSource;
-      ftag?: string;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
       hasPrev?: boolean;
       has_next?: boolean;
       has_prev?: boolean;
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    interface User {
+      block_type?: 'installation' | 'user';
+      id?: string;
+      is_banned?: boolean;
+      is_blocked?: boolean;
+      is_deleted?: boolean;
+      is_in_subscribers?: boolean;
+      is_in_subscriptions?: boolean;
+      is_verified?: boolean;
+      nick?: string;
+      nick_color?: string;
+      num?: UserNum;
+      original_nick?: string;
+      photo?: ProfilePhoto;
+      total_posts?: number;
+    }
+
+    interface ContentNums {
+      smiles?: number;
+      unsmiles?: number;
+      guest_smiles?: number;
+      comments?: number;
+      views?: number;
+      republished?: number;
+      shares?: number;
+    }
+
+    interface ContentThumbnail {
+      small_url?: string;
+      url?: string;
+      large_url?: string;
+      x640_url?: string;
+      webp_url?: string;
+      large_webp_url?: string;
+      x640_webp_url?: string;
+      proportional_url?: string;
+      proportional_webp_url?: string;
+      proportional_size?: ContentThumbnailProportionalSize;
+    }
+
+    interface ContentSize {
+      w?: number;
+      h?: number;
+    }
+
+    interface ContentSubtitle {
+      lang?: string;
+      url?: string;
     }
 
     interface ContentPic {
@@ -2082,60 +2300,8 @@ Paginate through content in the Client's subscription Feed.
       is_scroll_allowed?: boolean;
     }
 
-    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
-
-    interface ContentThumbnail {
-      small_url?: string;
-      url?: string;
-      large_url?: string;
-      x640_url?: string;
-      webp_url?: string;
-      large_webp_url?: string;
-      x640_webp_url?: string;
-      proportional_url?: string;
-      proportional_webp_url?: string;
-      proportional_size?: ContentThumbnailProportionalSize;
-    }
-
     interface ContentCopyright {
       note?: string;
-      url?: string;
-    }
-
-    interface ContentNums {
-      smiles?: number;
-      unsmiles?: number;
-      guest_smiles?: number;
-      comments?: number;
-      views?: number;
-      republished?: number;
-      shares?: number;
-    }
-
-    interface User {
-      block_type?: 'installation' | 'user';
-      id?: string;
-      is_banned?: boolean;
-      is_blocked?: boolean;
-      is_deleted?: boolean;
-      is_in_subscribers?: boolean;
-      is_in_subscriptions?: boolean;
-      is_verified?: boolean;
-      nick?: string;
-      nick_color?: string;
-      num?: UserNum;
-      original_nick?: string;
-      photo?: ProfilePhoto;
-      total_posts?: number;
-    }
-
-    interface ContentSize {
-      w?: number;
-      h?: number;
-    }
-
-    interface ContentSubtitle {
-      lang?: string;
       url?: string;
     }
 
@@ -2150,11 +2316,6 @@ Paginate through content in the Client's subscription Feed.
       prev?: string;
     }
 
-    interface ContentThumbnailProportionalSize {
-      w?: number;
-      h?: number;
-    }
-
     interface UserNum {
       subscribers?: number;
       subscriptions?: number;
@@ -2164,6 +2325,11 @@ Paginate through content in the Client's subscription Feed.
       bg_color?: string;
       thumb?: ProfilePhotoThumb;
       url?: string;
+    }
+
+    interface ContentThumbnailProportionalSize {
+      w?: number;
+      h?: number;
     }
 
     interface ProfilePhotoThumb {
@@ -2205,7 +2371,43 @@ Paginate through content in the Client's subscription Feed.
     	Map *int `json:"map,omitempty"`
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     type Content struct {
+    	Id *string `json:"id,omitempty"`
+    	Type ContentType `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	Title *string `json:"title,omitempty"`
+    	Url *string `json:"url,omitempty"`
+
+    	FixedTitle *string `json:"fixed_title,omitempty"`
+    	Description *string `json:"description,omitempty"`
+    	Tags []string `json:"tags,omitempty"`
+    	ShareUrl *string `json:"share_url,omitempty"`
+    	CanonicalUrl *string `json:"canonical_url,omitempty"`
+    	Link *string `json:"link,omitempty"`
+    	DateCreate *int `json:"date_create,omitempty"`
+    	PublishAt *int `json:"publish_at,omitempty"`
+    	IssueAt *int `json:"issue_at,omitempty"`
+
+    	Creator User `json:"creator,omitempty"`
+    	Num ContentNums `json:"num,omitempty"`
+
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsAbused *bool `json:"is_abused,omitempty"`
+    	IsFeatured *bool `json:"is_featured,omitempty"`
+    	IsRepublished *bool `json:"is_republished,omitempty"`
+    	IsPinned *bool `json:"is_pinned,omitempty"`
+
+    	Thumb ContentThumbnail `json:"thumb,omitempty"`
+    	BgColor *string `json:"bg_color,omitempty"`
+    	Size ContentSize `json:"size,omitempty"`
+    	HasHeader *bool `json:"has_header,omitempty"`
+    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
+
     	Pic ContentPic `json:"pic,omitempty"`
     	Caption ContentCaption `json:"caption,omitempty"`
     	Comics ContentComics `json:"comics,omitempty"`
@@ -2216,56 +2418,92 @@ Paginate through content in the Client's subscription Feed.
     	Coub ContentCoub `json:"coub,omitempty"`
     	Gif ContentGif `json:"gif,omitempty"`
     	App ContentApp `json:"app,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	Type ContentType `json:"type,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	ShareUrl *string `json:"share_url,omitempty"`
-    	OldWatermark *bool `json:"old_watermark,omitempty"`
-    	Link *string `json:"link,omitempty"`
-    	Title *string `json:"title,omitempty"`
-    	FixedTitle *string `json:"fixed_title,omitempty"`
-    	Description *string `json:"description,omitempty"`
-    	Tags []string `json:"tags,omitempty"`
-    	State *string `json:"state,omitempty"`
-    	DateCreate *int `json:"date_create,omitempty"`
-    	PublishAt *int `json:"publish_at,omitempty"`
-    	IsSmiled *bool `json:"is_smiled,omitempty"`
-    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
-    	IsAbused *bool `json:"is_abused,omitempty"`
-    	IsFeatured *bool `json:"is_featured,omitempty"`
-    	IsRepublished *bool `json:"is_republished,omitempty"`
-    	IsPinned *bool `json:"is_pinned,omitempty"`
-    	BgColor *string `json:"bg_color,omitempty"`
-    	Thumb ContentThumbnail `json:"thumb,omitempty"`
-    	Copyright ContentCopyright `json:"copyright,omitempty"`
-    	Num ContentNums `json:"num,omitempty"`
-    	Creator User `json:"creator,omitempty"`
-    	Size ContentSize `json:"size,omitempty"`
-    	IssueAt *int `json:"issue_at,omitempty"`
-    	TracebackUrl *string `json:"traceback_url,omitempty"`
-    	EngagementRate *string `json:"engagement_rate,omitempty"`
-    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+
     	Visibility *string `json:"visibility,omitempty"`
     	ShotStatus *string `json:"shot_status,omitempty"`
     	FastStart *bool `json:"fast_start,omitempty"`
-    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
     	Risk *int `json:"risk,omitempty"`
-    	CanonicalUrl *string `json:"canonical_url,omitempty"`
-    	OcrText *string `json:"ocr_text,omitempty"`
     	CanBeBoosted *bool `json:"can_be_boosted,omitempty"`
+    	OldWatermark *bool `json:"old_watermark,omitempty"`
+
+    	Copyright ContentCopyright `json:"copyright,omitempty"`
+    	Source ContentSource `json:"source,omitempty"`
+    	TracebackUrl *string `json:"traceback_url,omitempty"`
+    	Ftag *string `json:"ftag,omitempty"`
+
+    	EngagementRate *string `json:"engagement_rate,omitempty"`
+    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+    	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
-    	HasHeader *bool `json:"has_header,omitempty"`
-    	Source ContentSource `json:"source,omitempty"`
-    	Ftag *string `json:"ftag,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
     	HasPrev *bool `json:"hasPrev,omitempty"`
     	HasNext *bool `json:"has_next,omitempty"`
     	HasPrev *bool `json:"has_prev,omitempty"`
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType string
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    type User struct {
+    	BlockType *string `json:"block_type,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	IsBanned *bool `json:"is_banned,omitempty"`
+    	IsBlocked *bool `json:"is_blocked,omitempty"`
+    	IsDeleted *bool `json:"is_deleted,omitempty"`
+    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
+    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
+    	IsVerified *bool `json:"is_verified,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	NickColor *string `json:"nick_color,omitempty"`
+    	Num UserNum `json:"num,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
+    	Photo ProfilePhoto `json:"photo,omitempty"`
+    	TotalPosts *int `json:"total_posts,omitempty"`
+    }
+
+    type ContentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	GuestSmiles *int `json:"guest_smiles,omitempty"`
+    	Comments *int `json:"comments,omitempty"`
+    	Views *int `json:"views,omitempty"`
+    	Republished *int `json:"republished,omitempty"`
+    	Shares *int `json:"shares,omitempty"`
+    }
+
+    type ContentThumbnail struct {
+    	SmallUrl *string `json:"small_url,omitempty"`
+    	Url *string `json:"url,omitempty"`
+    	LargeUrl *string `json:"large_url,omitempty"`
+    	X640Url *string `json:"x640_url,omitempty"`
+    	WebpUrl *string `json:"webp_url,omitempty"`
+    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
+    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
+    	ProportionalUrl *string `json:"proportional_url,omitempty"`
+    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
+    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
+    }
+
+    type ContentSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
+    type ContentSubtitle struct {
+    	Lang *string `json:"lang,omitempty"`
+    	Url *string `json:"url,omitempty"`
     }
 
     type ContentPic struct {
@@ -2324,60 +2562,8 @@ Paginate through content in the Client's subscription Feed.
     	IsScrollAllowed *bool `json:"is_scroll_allowed,omitempty"`
     }
 
-    type ContentType string
-
-    type ContentThumbnail struct {
-    	SmallUrl *string `json:"small_url,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	LargeUrl *string `json:"large_url,omitempty"`
-    	X640Url *string `json:"x640_url,omitempty"`
-    	WebpUrl *string `json:"webp_url,omitempty"`
-    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
-    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
-    	ProportionalUrl *string `json:"proportional_url,omitempty"`
-    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
-    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
-    }
-
     type ContentCopyright struct {
     	Note *string `json:"note,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    }
-
-    type ContentNums struct {
-    	Smiles *int `json:"smiles,omitempty"`
-    	Unsmiles *int `json:"unsmiles,omitempty"`
-    	GuestSmiles *int `json:"guest_smiles,omitempty"`
-    	Comments *int `json:"comments,omitempty"`
-    	Views *int `json:"views,omitempty"`
-    	Republished *int `json:"republished,omitempty"`
-    	Shares *int `json:"shares,omitempty"`
-    }
-
-    type User struct {
-    	BlockType *string `json:"block_type,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	IsBanned *bool `json:"is_banned,omitempty"`
-    	IsBlocked *bool `json:"is_blocked,omitempty"`
-    	IsDeleted *bool `json:"is_deleted,omitempty"`
-    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
-    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
-    	IsVerified *bool `json:"is_verified,omitempty"`
-    	Nick *string `json:"nick,omitempty"`
-    	NickColor *string `json:"nick_color,omitempty"`
-    	Num UserNum `json:"num,omitempty"`
-    	OriginalNick *string `json:"original_nick,omitempty"`
-    	Photo ProfilePhoto `json:"photo,omitempty"`
-    	TotalPosts *int `json:"total_posts,omitempty"`
-    }
-
-    type ContentSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
-    type ContentSubtitle struct {
-    	Lang *string `json:"lang,omitempty"`
     	Url *string `json:"url,omitempty"`
     }
 
@@ -2392,11 +2578,6 @@ Paginate through content in the Client's subscription Feed.
     	Prev *string `json:"prev,omitempty"`
     }
 
-    type ContentThumbnailProportionalSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
     type UserNum struct {
     	Subscribers *int `json:"subscribers,omitempty"`
     	Subscriptions *int `json:"subscriptions,omitempty"`
@@ -2408,6 +2589,11 @@ Paginate through content in the Client's subscription Feed.
     	Url *string `json:"url,omitempty"`
     }
 
+    type ContentThumbnailProportionalSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
     type ProfilePhotoThumb struct {
     	LargeUrl *string `json:"large_url,omitempty"`
     	MediumUrl *string `json:"medium_url,omitempty"`
@@ -2415,7 +2601,9 @@ Paginate through content in the Client's subscription Feed.
     }
     ```
 
-### `GET /content/{id}` — Get Content by ID  {: #op-getcontentbyid }
+### Get Content by ID  {: #op-getcontentbyid }
+
+**`GET /content/{id}`**
 
 Fetch content by its ID.
 
@@ -2424,9 +2612,36 @@ Fetch content by its ID.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // GetContentByIdPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetContentByIdPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetContentByIdPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -2441,8 +2656,44 @@ Fetch content by its ID.
       "status"?: "200"
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     // Content
     {
+      "id"?: "string",
+      "type"?: "ContentType",
+      "state"?: "enum(delayed, deleted, draft, published)",
+      "title"?: "string",
+      "url"?: "string",
+
+      "fixed_title"?: "string",
+      "description"?: "string",
+      "tags"?: "string[]",
+      "share_url"?: "string",
+      "canonical_url"?: "string",
+      "link"?: "string",
+      "date_create"?: "integer",
+      "publish_at"?: "integer",
+      "issue_at"?: "integer",
+
+      "creator"?: "User",
+      "num"?: "ContentNums",
+
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_abused"?: "boolean",
+      "is_featured"?: "boolean",
+      "is_republished"?: "boolean",
+      "is_pinned"?: "boolean",
+
+      "thumb"?: "ContentThumbnail",
+      "bg_color"?: "string",
+      "size"?: "ContentSize",
+      "has_header"?: "boolean",
+      "subtitle"?: "ContentSubtitle",
+
       "pic"?: "ContentPic",
       "caption"?: "ContentCaption",
       "comics"?: "ContentComics",
@@ -2453,48 +2704,87 @@ Fetch content by its ID.
       "coub"?: "ContentCoub",
       "gif"?: "ContentGif",
       "app"?: "ContentApp",
-      "id"?: "string",
-      "type"?: "ContentType",
-      "url"?: "string",
-      "share_url"?: "string",
-      "old_watermark"?: "boolean",
-      "link"?: "string",
-      "title"?: "string",
-      "fixed_title"?: "string",
-      "description"?: "string",
-      "tags"?: "string[]",
-      "state"?: "enum(delayed, deleted, draft, published)",
-      "date_create"?: "integer",
-      "publish_at"?: "integer",
-      "is_smiled"?: "boolean",
-      "is_unsmiled"?: "boolean",
-      "is_abused"?: "boolean",
-      "is_featured"?: "boolean",
-      "is_republished"?: "boolean",
-      "is_pinned"?: "boolean",
-      "bg_color"?: "string",
-      "thumb"?: "ContentThumbnail",
-      "copyright"?: "ContentCopyright",
-      "num"?: "ContentNums",
-      "creator"?: "User",
-      "size"?: "ContentSize",
-      "issue_at"?: "integer",
-      "traceback_url"?: "string",
-      "engagement_rate"?: "string",
-      "engagement_rate_explain"?: "string",
+
       "visibility"?: "enum(public, subscribers, closed, chats)",
       "shot_status"?: "enum(approved, shot, hardShot)",
       "fast_start"?: "boolean",
-      "subtitle"?: "ContentSubtitle",
       "risk"?: "integer",
-      "canonical_url"?: "string",
-      "ocr_text"?: "string",
       "can_be_boosted"?: "boolean",
-      "lat"?: "number",
-      "lon"?: "number",
-      "has_header"?: "boolean",
+      "old_watermark"?: "boolean",
+
+      "copyright"?: "ContentCopyright",
       "source"?: "ContentSource",
-      "ftag"?: "string"
+      "traceback_url"?: "string",
+      "ftag"?: "string",
+
+      "engagement_rate"?: "string",
+      "engagement_rate_explain"?: "string",
+      "ocr_text"?: "string",
+      "lat"?: "number",
+      "lon"?: "number"
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    // ContentType
+    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    // User
+    {
+      "block_type"?: "enum(installation, user)",
+      "id"?: "string",
+      "is_banned"?: "boolean",
+      "is_blocked"?: "boolean",
+      "is_deleted"?: "boolean",
+      "is_in_subscribers"?: "boolean",
+      "is_in_subscriptions"?: "boolean",
+      "is_verified"?: "boolean",
+      "nick"?: "string",
+      "nick_color"?: "string",
+      "num"?: "UserNum",
+      "original_nick"?: "string",
+      "photo"?: "ProfilePhoto",
+      "total_posts"?: "integer"
+    }
+
+    // ContentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "guest_smiles"?: "integer",
+      "comments"?: "integer",
+      "views"?: "integer",
+      "republished"?: "integer",
+      "shares"?: "integer"
+    }
+
+    // ContentThumbnail
+    {
+      "small_url"?: "string",
+      "url"?: "string",
+      "large_url"?: "string",
+      "x640_url"?: "string",
+      "webp_url"?: "string",
+      "large_webp_url"?: "string",
+      "x640_webp_url"?: "string",
+      "proportional_url"?: "string",
+      "proportional_webp_url"?: "string",
+      "proportional_size"?: "ContentThumbnailProportionalSize"
+    }
+
+    // ContentSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
+    }
+
+    // ContentSubtitle
+    {
+      "lang"?: "string",
+      "url"?: "string"
     }
 
     // ContentPic
@@ -2563,67 +2853,9 @@ Fetch content by its ID.
       "is_scroll_allowed"?: "boolean"
     }
 
-    // ContentType
-    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
-
-    // ContentThumbnail
-    {
-      "small_url"?: "string",
-      "url"?: "string",
-      "large_url"?: "string",
-      "x640_url"?: "string",
-      "webp_url"?: "string",
-      "large_webp_url"?: "string",
-      "x640_webp_url"?: "string",
-      "proportional_url"?: "string",
-      "proportional_webp_url"?: "string",
-      "proportional_size"?: "ContentThumbnailProportionalSize"
-    }
-
     // ContentCopyright
     {
       "note"?: "string",
-      "url"?: "string"
-    }
-
-    // ContentNums
-    {
-      "smiles"?: "integer",
-      "unsmiles"?: "integer",
-      "guest_smiles"?: "integer",
-      "comments"?: "integer",
-      "views"?: "integer",
-      "republished"?: "integer",
-      "shares"?: "integer"
-    }
-
-    // User
-    {
-      "block_type"?: "enum(installation, user)",
-      "id"?: "string",
-      "is_banned"?: "boolean",
-      "is_blocked"?: "boolean",
-      "is_deleted"?: "boolean",
-      "is_in_subscribers"?: "boolean",
-      "is_in_subscriptions"?: "boolean",
-      "is_verified"?: "boolean",
-      "nick"?: "string",
-      "nick_color"?: "string",
-      "num"?: "UserNum",
-      "original_nick"?: "string",
-      "photo"?: "ProfilePhoto",
-      "total_posts"?: "integer"
-    }
-
-    // ContentSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
-    // ContentSubtitle
-    {
-      "lang"?: "string",
       "url"?: "string"
     }
 
@@ -2632,12 +2864,6 @@ Fetch content by its ID.
       "id"?: "string",
       "date_create"?: "integer",
       "creator"?: "User"
-    }
-
-    // ContentThumbnailProportionalSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
     }
 
     // UserNum
@@ -2651,6 +2877,12 @@ Fetch content by its ID.
       "bg_color"?: "string",
       "thumb"?: "ProfilePhotoThumb",
       "url"?: "string"
+    }
+
+    // ContentThumbnailProportionalSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
     }
 
     // ProfilePhotoThumb
@@ -2669,7 +2901,43 @@ Fetch content by its ID.
       status?: 200;
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     interface Content {
+      id?: string;
+      type?: ContentType;
+      state?: 'delayed' | 'deleted' | 'draft' | 'published';
+      title?: string;
+      url?: string;
+
+      fixed_title?: string;
+      description?: string;
+      tags?: string[];
+      share_url?: string;
+      canonical_url?: string;
+      link?: string;
+      date_create?: number;
+      publish_at?: number;
+      issue_at?: number;
+
+      creator?: User;
+      num?: ContentNums;
+
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_abused?: boolean;
+      is_featured?: boolean;
+      is_republished?: boolean;
+      is_pinned?: boolean;
+
+      thumb?: ContentThumbnail;
+      bg_color?: string;
+      size?: ContentSize;
+      has_header?: boolean;
+      subtitle?: ContentSubtitle;
+
       pic?: ContentPic;
       caption?: ContentCaption;
       comics?: ContentComics;
@@ -2680,48 +2948,81 @@ Fetch content by its ID.
       coub?: ContentCoub;
       gif?: ContentGif;
       app?: ContentApp;
-      id?: string;
-      type?: ContentType;
-      url?: string;
-      share_url?: string;
-      old_watermark?: boolean;
-      link?: string;
-      title?: string;
-      fixed_title?: string;
-      description?: string;
-      tags?: string[];
-      state?: 'delayed' | 'deleted' | 'draft' | 'published';
-      date_create?: number;
-      publish_at?: number;
-      is_smiled?: boolean;
-      is_unsmiled?: boolean;
-      is_abused?: boolean;
-      is_featured?: boolean;
-      is_republished?: boolean;
-      is_pinned?: boolean;
-      bg_color?: string;
-      thumb?: ContentThumbnail;
-      copyright?: ContentCopyright;
-      num?: ContentNums;
-      creator?: User;
-      size?: ContentSize;
-      issue_at?: number;
-      traceback_url?: string;
-      engagement_rate?: string;
-      engagement_rate_explain?: string;
+
       visibility?: 'public' | 'subscribers' | 'closed' | 'chats';
       shot_status?: 'approved' | 'shot' | 'hardShot';
       fast_start?: boolean;
-      subtitle?: ContentSubtitle;
       risk?: number;
-      canonical_url?: string;
-      ocr_text?: string;
       can_be_boosted?: boolean;
+      old_watermark?: boolean;
+
+      copyright?: ContentCopyright;
+      source?: ContentSource;
+      traceback_url?: string;
+      ftag?: string;
+
+      engagement_rate?: string;
+      engagement_rate_explain?: string;
+      ocr_text?: string;
       lat?: number;
       lon?: number;
-      has_header?: boolean;
-      source?: ContentSource;
-      ftag?: string;
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    interface User {
+      block_type?: 'installation' | 'user';
+      id?: string;
+      is_banned?: boolean;
+      is_blocked?: boolean;
+      is_deleted?: boolean;
+      is_in_subscribers?: boolean;
+      is_in_subscriptions?: boolean;
+      is_verified?: boolean;
+      nick?: string;
+      nick_color?: string;
+      num?: UserNum;
+      original_nick?: string;
+      photo?: ProfilePhoto;
+      total_posts?: number;
+    }
+
+    interface ContentNums {
+      smiles?: number;
+      unsmiles?: number;
+      guest_smiles?: number;
+      comments?: number;
+      views?: number;
+      republished?: number;
+      shares?: number;
+    }
+
+    interface ContentThumbnail {
+      small_url?: string;
+      url?: string;
+      large_url?: string;
+      x640_url?: string;
+      webp_url?: string;
+      large_webp_url?: string;
+      x640_webp_url?: string;
+      proportional_url?: string;
+      proportional_webp_url?: string;
+      proportional_size?: ContentThumbnailProportionalSize;
+    }
+
+    interface ContentSize {
+      w?: number;
+      h?: number;
+    }
+
+    interface ContentSubtitle {
+      lang?: string;
+      url?: string;
     }
 
     interface ContentPic {
@@ -2780,60 +3081,8 @@ Fetch content by its ID.
       is_scroll_allowed?: boolean;
     }
 
-    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
-
-    interface ContentThumbnail {
-      small_url?: string;
-      url?: string;
-      large_url?: string;
-      x640_url?: string;
-      webp_url?: string;
-      large_webp_url?: string;
-      x640_webp_url?: string;
-      proportional_url?: string;
-      proportional_webp_url?: string;
-      proportional_size?: ContentThumbnailProportionalSize;
-    }
-
     interface ContentCopyright {
       note?: string;
-      url?: string;
-    }
-
-    interface ContentNums {
-      smiles?: number;
-      unsmiles?: number;
-      guest_smiles?: number;
-      comments?: number;
-      views?: number;
-      republished?: number;
-      shares?: number;
-    }
-
-    interface User {
-      block_type?: 'installation' | 'user';
-      id?: string;
-      is_banned?: boolean;
-      is_blocked?: boolean;
-      is_deleted?: boolean;
-      is_in_subscribers?: boolean;
-      is_in_subscriptions?: boolean;
-      is_verified?: boolean;
-      nick?: string;
-      nick_color?: string;
-      num?: UserNum;
-      original_nick?: string;
-      photo?: ProfilePhoto;
-      total_posts?: number;
-    }
-
-    interface ContentSize {
-      w?: number;
-      h?: number;
-    }
-
-    interface ContentSubtitle {
-      lang?: string;
       url?: string;
     }
 
@@ -2841,11 +3090,6 @@ Fetch content by its ID.
       id?: string;
       date_create?: number;
       creator?: User;
-    }
-
-    interface ContentThumbnailProportionalSize {
-      w?: number;
-      h?: number;
     }
 
     interface UserNum {
@@ -2857,6 +3101,11 @@ Fetch content by its ID.
       bg_color?: string;
       thumb?: ProfilePhotoThumb;
       url?: string;
+    }
+
+    interface ContentThumbnailProportionalSize {
+      w?: number;
+      h?: number;
     }
 
     interface ProfilePhotoThumb {
@@ -2874,7 +3123,43 @@ Fetch content by its ID.
     	Status *int `json:"status,omitempty"`
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     type Content struct {
+    	Id *string `json:"id,omitempty"`
+    	Type ContentType `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	Title *string `json:"title,omitempty"`
+    	Url *string `json:"url,omitempty"`
+
+    	FixedTitle *string `json:"fixed_title,omitempty"`
+    	Description *string `json:"description,omitempty"`
+    	Tags []string `json:"tags,omitempty"`
+    	ShareUrl *string `json:"share_url,omitempty"`
+    	CanonicalUrl *string `json:"canonical_url,omitempty"`
+    	Link *string `json:"link,omitempty"`
+    	DateCreate *int `json:"date_create,omitempty"`
+    	PublishAt *int `json:"publish_at,omitempty"`
+    	IssueAt *int `json:"issue_at,omitempty"`
+
+    	Creator User `json:"creator,omitempty"`
+    	Num ContentNums `json:"num,omitempty"`
+
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsAbused *bool `json:"is_abused,omitempty"`
+    	IsFeatured *bool `json:"is_featured,omitempty"`
+    	IsRepublished *bool `json:"is_republished,omitempty"`
+    	IsPinned *bool `json:"is_pinned,omitempty"`
+
+    	Thumb ContentThumbnail `json:"thumb,omitempty"`
+    	BgColor *string `json:"bg_color,omitempty"`
+    	Size ContentSize `json:"size,omitempty"`
+    	HasHeader *bool `json:"has_header,omitempty"`
+    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
+
     	Pic ContentPic `json:"pic,omitempty"`
     	Caption ContentCaption `json:"caption,omitempty"`
     	Comics ContentComics `json:"comics,omitempty"`
@@ -2885,48 +3170,81 @@ Fetch content by its ID.
     	Coub ContentCoub `json:"coub,omitempty"`
     	Gif ContentGif `json:"gif,omitempty"`
     	App ContentApp `json:"app,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	Type ContentType `json:"type,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	ShareUrl *string `json:"share_url,omitempty"`
-    	OldWatermark *bool `json:"old_watermark,omitempty"`
-    	Link *string `json:"link,omitempty"`
-    	Title *string `json:"title,omitempty"`
-    	FixedTitle *string `json:"fixed_title,omitempty"`
-    	Description *string `json:"description,omitempty"`
-    	Tags []string `json:"tags,omitempty"`
-    	State *string `json:"state,omitempty"`
-    	DateCreate *int `json:"date_create,omitempty"`
-    	PublishAt *int `json:"publish_at,omitempty"`
-    	IsSmiled *bool `json:"is_smiled,omitempty"`
-    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
-    	IsAbused *bool `json:"is_abused,omitempty"`
-    	IsFeatured *bool `json:"is_featured,omitempty"`
-    	IsRepublished *bool `json:"is_republished,omitempty"`
-    	IsPinned *bool `json:"is_pinned,omitempty"`
-    	BgColor *string `json:"bg_color,omitempty"`
-    	Thumb ContentThumbnail `json:"thumb,omitempty"`
-    	Copyright ContentCopyright `json:"copyright,omitempty"`
-    	Num ContentNums `json:"num,omitempty"`
-    	Creator User `json:"creator,omitempty"`
-    	Size ContentSize `json:"size,omitempty"`
-    	IssueAt *int `json:"issue_at,omitempty"`
-    	TracebackUrl *string `json:"traceback_url,omitempty"`
-    	EngagementRate *string `json:"engagement_rate,omitempty"`
-    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+
     	Visibility *string `json:"visibility,omitempty"`
     	ShotStatus *string `json:"shot_status,omitempty"`
     	FastStart *bool `json:"fast_start,omitempty"`
-    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
     	Risk *int `json:"risk,omitempty"`
-    	CanonicalUrl *string `json:"canonical_url,omitempty"`
-    	OcrText *string `json:"ocr_text,omitempty"`
     	CanBeBoosted *bool `json:"can_be_boosted,omitempty"`
+    	OldWatermark *bool `json:"old_watermark,omitempty"`
+
+    	Copyright ContentCopyright `json:"copyright,omitempty"`
+    	Source ContentSource `json:"source,omitempty"`
+    	TracebackUrl *string `json:"traceback_url,omitempty"`
+    	Ftag *string `json:"ftag,omitempty"`
+
+    	EngagementRate *string `json:"engagement_rate,omitempty"`
+    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+    	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
-    	HasHeader *bool `json:"has_header,omitempty"`
-    	Source ContentSource `json:"source,omitempty"`
-    	Ftag *string `json:"ftag,omitempty"`
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType string
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    type User struct {
+    	BlockType *string `json:"block_type,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	IsBanned *bool `json:"is_banned,omitempty"`
+    	IsBlocked *bool `json:"is_blocked,omitempty"`
+    	IsDeleted *bool `json:"is_deleted,omitempty"`
+    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
+    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
+    	IsVerified *bool `json:"is_verified,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	NickColor *string `json:"nick_color,omitempty"`
+    	Num UserNum `json:"num,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
+    	Photo ProfilePhoto `json:"photo,omitempty"`
+    	TotalPosts *int `json:"total_posts,omitempty"`
+    }
+
+    type ContentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	GuestSmiles *int `json:"guest_smiles,omitempty"`
+    	Comments *int `json:"comments,omitempty"`
+    	Views *int `json:"views,omitempty"`
+    	Republished *int `json:"republished,omitempty"`
+    	Shares *int `json:"shares,omitempty"`
+    }
+
+    type ContentThumbnail struct {
+    	SmallUrl *string `json:"small_url,omitempty"`
+    	Url *string `json:"url,omitempty"`
+    	LargeUrl *string `json:"large_url,omitempty"`
+    	X640Url *string `json:"x640_url,omitempty"`
+    	WebpUrl *string `json:"webp_url,omitempty"`
+    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
+    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
+    	ProportionalUrl *string `json:"proportional_url,omitempty"`
+    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
+    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
+    }
+
+    type ContentSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
+    type ContentSubtitle struct {
+    	Lang *string `json:"lang,omitempty"`
+    	Url *string `json:"url,omitempty"`
     }
 
     type ContentPic struct {
@@ -2985,60 +3303,8 @@ Fetch content by its ID.
     	IsScrollAllowed *bool `json:"is_scroll_allowed,omitempty"`
     }
 
-    type ContentType string
-
-    type ContentThumbnail struct {
-    	SmallUrl *string `json:"small_url,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	LargeUrl *string `json:"large_url,omitempty"`
-    	X640Url *string `json:"x640_url,omitempty"`
-    	WebpUrl *string `json:"webp_url,omitempty"`
-    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
-    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
-    	ProportionalUrl *string `json:"proportional_url,omitempty"`
-    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
-    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
-    }
-
     type ContentCopyright struct {
     	Note *string `json:"note,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    }
-
-    type ContentNums struct {
-    	Smiles *int `json:"smiles,omitempty"`
-    	Unsmiles *int `json:"unsmiles,omitempty"`
-    	GuestSmiles *int `json:"guest_smiles,omitempty"`
-    	Comments *int `json:"comments,omitempty"`
-    	Views *int `json:"views,omitempty"`
-    	Republished *int `json:"republished,omitempty"`
-    	Shares *int `json:"shares,omitempty"`
-    }
-
-    type User struct {
-    	BlockType *string `json:"block_type,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	IsBanned *bool `json:"is_banned,omitempty"`
-    	IsBlocked *bool `json:"is_blocked,omitempty"`
-    	IsDeleted *bool `json:"is_deleted,omitempty"`
-    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
-    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
-    	IsVerified *bool `json:"is_verified,omitempty"`
-    	Nick *string `json:"nick,omitempty"`
-    	NickColor *string `json:"nick_color,omitempty"`
-    	Num UserNum `json:"num,omitempty"`
-    	OriginalNick *string `json:"original_nick,omitempty"`
-    	Photo ProfilePhoto `json:"photo,omitempty"`
-    	TotalPosts *int `json:"total_posts,omitempty"`
-    }
-
-    type ContentSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
-    type ContentSubtitle struct {
-    	Lang *string `json:"lang,omitempty"`
     	Url *string `json:"url,omitempty"`
     }
 
@@ -3046,11 +3312,6 @@ Fetch content by its ID.
     	Id *string `json:"id,omitempty"`
     	DateCreate *int `json:"date_create,omitempty"`
     	Creator User `json:"creator,omitempty"`
-    }
-
-    type ContentThumbnailProportionalSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
     }
 
     type UserNum struct {
@@ -3062,6 +3323,11 @@ Fetch content by its ID.
     	BgColor *string `json:"bg_color,omitempty"`
     	Thumb ProfilePhotoThumb `json:"thumb,omitempty"`
     	Url *string `json:"url,omitempty"`
+    }
+
+    type ContentThumbnailProportionalSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
     }
 
     type ProfilePhotoThumb struct {
@@ -3111,7 +3377,9 @@ Fetch content by its ID.
     }
     ```
 
-### `PATCH /content/{id}` — Modify Content  {: #op-modifycontent }
+### Modify Content  {: #op-modifycontent }
+
+**`PATCH /content/{id}`**
 
 Update a delayed/scheduled post's publish time or visibility.
 Send exactly one of `publish_at` or `visibility`.
@@ -3121,9 +3389,36 @@ Send exactly one of `publish_at` or `visibility`.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // ModifyContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface ModifyContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type ModifyContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Request body (`application/x-www-form-urlencoded`)
 
@@ -3248,7 +3543,9 @@ No response body.
     }
     ```
 
-### `DELETE /content/{id}` — Delete Content  {: #op-deletecontent }
+### Delete Content  {: #op-deletecontent }
+
+**`DELETE /content/{id}`**
 
 Delete a post. Only the author may call this. Returns a task-style
 envelope; poll `GET /tasks/{id}` for terminal state.
@@ -3258,9 +3555,36 @@ envelope; poll `GET /tasks/{id}` for terminal state.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // DeleteContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface DeleteContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type DeleteContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -3286,6 +3610,7 @@ envelope; poll `GET /tasks/{id}` for terminal state.
       "error_description"?: "string"
     }
 
+    // Present only on `success`.
     // TaskResult
     {
       "cid"?: "string"
@@ -3310,6 +3635,7 @@ envelope; poll `GET /tasks/{id}` for terminal state.
       error_description?: string;
     }
 
+    // Present only on `success`.
     interface TaskResult {
       cid?: string;
     }
@@ -3333,6 +3659,7 @@ envelope; poll `GET /tasks/{id}` for terminal state.
     	ErrorDescription *string `json:"error_description,omitempty"`
     }
 
+    // Present only on `success`.
     type TaskResult struct {
     	Cid *string `json:"cid,omitempty"`
     }
@@ -3418,7 +3745,9 @@ envelope; poll `GET /tasks/{id}` for terminal state.
     }
     ```
 
-### `POST /content` — Upload Content  {: #op-uploadcontent }
+### Upload Content  {: #op-uploadcontent }
+
+**`POST /content`**
 
 Uploads new content.
 
@@ -3493,6 +3822,7 @@ Note: the source documentation listed this as `GET /content`; corrected to
       "error_description"?: "string"
     }
 
+    // Only present on "success"
     // UploadContent202DataResult
     {
       "cid"?: "string"
@@ -3517,6 +3847,7 @@ Note: the source documentation listed this as `GET /content`; corrected to
       error_description?: string;
     }
 
+    // Only present on "success"
     interface UploadContent202DataResult {
       cid?: string;
     }
@@ -3540,12 +3871,15 @@ Note: the source documentation listed this as `GET /content`; corrected to
     	ErrorDescription *string `json:"error_description,omitempty"`
     }
 
+    // Only present on "success"
     type UploadContent202DataResult struct {
     	Cid *string `json:"cid,omitempty"`
     }
     ```
 
-### `POST /content/{id}/republished` — Republish Content  {: #op-republishcontent }
+### Republish Content  {: #op-republishcontent }
+
+**`POST /content/{id}/republished`**
 
 Republish the content to your account.
 
@@ -3554,9 +3888,36 @@ Republish the content to your account.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // RepublishContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface RepublishContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type RepublishContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -3646,7 +4007,9 @@ Republish the content to your account.
     }
     ```
 
-### `DELETE /content/{id}/republished` — Delete Republish  {: #op-deleterepublish }
+### Delete Republish  {: #op-deleterepublish }
+
+**`DELETE /content/{id}/republished`**
 
 If the client has republished the content, this will remove it.
 
@@ -3655,9 +4018,36 @@ If the client has republished the content, this will remove it.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // DeleteRepublishPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface DeleteRepublishPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type DeleteRepublishPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -3701,7 +4091,9 @@ If the client has republished the content, this will remove it.
     }
     ```
 
-### `PUT /content/{id}/smiles` — Smile Content  {: #op-smilecontent }
+### Smile Content  {: #op-smilecontent }
+
+**`PUT /content/{id}/smiles`**
 
 Smiles (likes) the content.
 
@@ -3713,9 +4105,36 @@ Smiles (likes) the content.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // SmileContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface SmileContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type SmileContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -3775,7 +4194,9 @@ Smiles (likes) the content.
     }
     ```
 
-### `DELETE /content/{id}/smiles` — Remove Content Smile  {: #op-removecontentsmile }
+### Remove Content Smile  {: #op-removecontentsmile }
+
+**`DELETE /content/{id}/smiles`**
 
 Remove the Client's smile on the content.
 **NOT** the same as unsmiling the content.
@@ -3785,9 +4206,36 @@ Remove the Client's smile on the content.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // RemoveContentSmilePath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface RemoveContentSmilePath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type RemoveContentSmilePath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Query parameters
 
@@ -3880,7 +4328,9 @@ Remove the Client's smile on the content.
     }
     ```
 
-### `PUT /content/{id}/unsmiles` — Unsmile Content  {: #op-unsmilecontent }
+### Unsmile Content  {: #op-unsmilecontent }
+
+**`PUT /content/{id}/unsmiles`**
 
 Unsmiles (dislikes) a content.
 
@@ -3889,9 +4339,36 @@ Unsmiles (dislikes) a content.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // UnsmileContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface UnsmileContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type UnsmileContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Query parameters
 
@@ -3984,7 +4461,9 @@ Unsmiles (dislikes) a content.
     }
     ```
 
-### `DELETE /content/{id}/unsmiles` — Remove Content Unsmile  {: #op-removecontentunsmile }
+### Remove Content Unsmile  {: #op-removecontentunsmile }
+
+**`DELETE /content/{id}/unsmiles`**
 
 Removes the Client's Unsmile from the Content.
 **NOT** the same as smiling the Content.
@@ -3994,9 +4473,36 @@ Removes the Client's Unsmile from the Content.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // RemoveContentUnsmilePath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface RemoveContentUnsmilePath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type RemoveContentUnsmilePath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -4056,7 +4562,9 @@ Removes the Client's Unsmile from the Content.
     }
     ```
 
-### `PUT /content/{id}/categories` — Add Content Categories  {: #op-addcontentcategories }
+### Add Content Categories  {: #op-addcontentcategories }
+
+**`PUT /content/{id}/categories`**
 
 Add categories to the content.
 
@@ -4065,9 +4573,36 @@ Add categories to the content.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // AddContentCategoriesPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface AddContentCategoriesPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type AddContentCategoriesPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Request body (`application/x-www-form-urlencoded`)
 
@@ -4131,7 +4666,9 @@ Add categories to the content.
     }
     ```
 
-### `GET /channels` — Get Channels  {: #op-getchannels }
+### Get Channels  {: #op-getchannels }
+
+**`GET /channels`**
 
 Fetch all available channels.
 
@@ -4161,6 +4698,7 @@ Fetch all available channels.
       "items"?: "Channel[]"
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     // Channel
     {
       "id"?: "string",
@@ -4184,6 +4722,7 @@ Fetch all available channels.
       items?: Channel[];
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     interface Channel {
       id?: string;
       title?: string;
@@ -4206,13 +4745,16 @@ Fetch all available channels.
     	Items []Channel `json:"items,omitempty"`
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     type Channel struct {
     	Id *string `json:"id,omitempty"`
     	Title *string `json:"title,omitempty"`
     }
     ```
 
-### `GET /channels/{id}/items` — Get Channel Items  {: #op-getchannelitems }
+### Get Channel Items  {: #op-getchannelitems }
+
+**`GET /channels/{id}/items`**
 
 Paginate through content in a channel.
 
@@ -4221,9 +4763,36 @@ Paginate through content in a channel.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes | ID of the channel |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes | ID of the channel |
+
+=== "JSON"
+
+    ```json
+    // GetChannelItemsPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetChannelItemsPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetChannelItemsPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -4249,8 +4818,44 @@ Paginate through content in a channel.
       "paging"?: "PagingCursors"
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     // Content
     {
+      "id"?: "string",
+      "type"?: "ContentType",
+      "state"?: "enum(delayed, deleted, draft, published)",
+      "title"?: "string",
+      "url"?: "string",
+
+      "fixed_title"?: "string",
+      "description"?: "string",
+      "tags"?: "string[]",
+      "share_url"?: "string",
+      "canonical_url"?: "string",
+      "link"?: "string",
+      "date_create"?: "integer",
+      "publish_at"?: "integer",
+      "issue_at"?: "integer",
+
+      "creator"?: "User",
+      "num"?: "ContentNums",
+
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_abused"?: "boolean",
+      "is_featured"?: "boolean",
+      "is_republished"?: "boolean",
+      "is_pinned"?: "boolean",
+
+      "thumb"?: "ContentThumbnail",
+      "bg_color"?: "string",
+      "size"?: "ContentSize",
+      "has_header"?: "boolean",
+      "subtitle"?: "ContentSubtitle",
+
       "pic"?: "ContentPic",
       "caption"?: "ContentCaption",
       "comics"?: "ContentComics",
@@ -4261,50 +4866,29 @@ Paginate through content in a channel.
       "coub"?: "ContentCoub",
       "gif"?: "ContentGif",
       "app"?: "ContentApp",
-      "id"?: "string",
-      "type"?: "ContentType",
-      "url"?: "string",
-      "share_url"?: "string",
-      "old_watermark"?: "boolean",
-      "link"?: "string",
-      "title"?: "string",
-      "fixed_title"?: "string",
-      "description"?: "string",
-      "tags"?: "string[]",
-      "state"?: "enum(delayed, deleted, draft, published)",
-      "date_create"?: "integer",
-      "publish_at"?: "integer",
-      "is_smiled"?: "boolean",
-      "is_unsmiled"?: "boolean",
-      "is_abused"?: "boolean",
-      "is_featured"?: "boolean",
-      "is_republished"?: "boolean",
-      "is_pinned"?: "boolean",
-      "bg_color"?: "string",
-      "thumb"?: "ContentThumbnail",
-      "copyright"?: "ContentCopyright",
-      "num"?: "ContentNums",
-      "creator"?: "User",
-      "size"?: "ContentSize",
-      "issue_at"?: "integer",
-      "traceback_url"?: "string",
-      "engagement_rate"?: "string",
-      "engagement_rate_explain"?: "string",
+
       "visibility"?: "enum(public, subscribers, closed, chats)",
       "shot_status"?: "enum(approved, shot, hardShot)",
       "fast_start"?: "boolean",
-      "subtitle"?: "ContentSubtitle",
       "risk"?: "integer",
-      "canonical_url"?: "string",
-      "ocr_text"?: "string",
       "can_be_boosted"?: "boolean",
-      "lat"?: "number",
-      "lon"?: "number",
-      "has_header"?: "boolean",
+      "old_watermark"?: "boolean",
+
+      "copyright"?: "ContentCopyright",
       "source"?: "ContentSource",
-      "ftag"?: "string"
+      "traceback_url"?: "string",
+      "ftag"?: "string",
+
+      "engagement_rate"?: "string",
+      "engagement_rate_explain"?: "string",
+      "ocr_text"?: "string",
+      "lat"?: "number",
+      "lon"?: "number"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -4312,6 +4896,69 @@ Paginate through content in a channel.
       "hasPrev"?: "boolean",
       "has_next"?: "boolean",
       "has_prev"?: "boolean"
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    // ContentType
+    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    // User
+    {
+      "block_type"?: "enum(installation, user)",
+      "id"?: "string",
+      "is_banned"?: "boolean",
+      "is_blocked"?: "boolean",
+      "is_deleted"?: "boolean",
+      "is_in_subscribers"?: "boolean",
+      "is_in_subscriptions"?: "boolean",
+      "is_verified"?: "boolean",
+      "nick"?: "string",
+      "nick_color"?: "string",
+      "num"?: "UserNum",
+      "original_nick"?: "string",
+      "photo"?: "ProfilePhoto",
+      "total_posts"?: "integer"
+    }
+
+    // ContentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "guest_smiles"?: "integer",
+      "comments"?: "integer",
+      "views"?: "integer",
+      "republished"?: "integer",
+      "shares"?: "integer"
+    }
+
+    // ContentThumbnail
+    {
+      "small_url"?: "string",
+      "url"?: "string",
+      "large_url"?: "string",
+      "x640_url"?: "string",
+      "webp_url"?: "string",
+      "large_webp_url"?: "string",
+      "x640_webp_url"?: "string",
+      "proportional_url"?: "string",
+      "proportional_webp_url"?: "string",
+      "proportional_size"?: "ContentThumbnailProportionalSize"
+    }
+
+    // ContentSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
+    }
+
+    // ContentSubtitle
+    {
+      "lang"?: "string",
+      "url"?: "string"
     }
 
     // ContentPic
@@ -4380,67 +5027,9 @@ Paginate through content in a channel.
       "is_scroll_allowed"?: "boolean"
     }
 
-    // ContentType
-    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
-
-    // ContentThumbnail
-    {
-      "small_url"?: "string",
-      "url"?: "string",
-      "large_url"?: "string",
-      "x640_url"?: "string",
-      "webp_url"?: "string",
-      "large_webp_url"?: "string",
-      "x640_webp_url"?: "string",
-      "proportional_url"?: "string",
-      "proportional_webp_url"?: "string",
-      "proportional_size"?: "ContentThumbnailProportionalSize"
-    }
-
     // ContentCopyright
     {
       "note"?: "string",
-      "url"?: "string"
-    }
-
-    // ContentNums
-    {
-      "smiles"?: "integer",
-      "unsmiles"?: "integer",
-      "guest_smiles"?: "integer",
-      "comments"?: "integer",
-      "views"?: "integer",
-      "republished"?: "integer",
-      "shares"?: "integer"
-    }
-
-    // User
-    {
-      "block_type"?: "enum(installation, user)",
-      "id"?: "string",
-      "is_banned"?: "boolean",
-      "is_blocked"?: "boolean",
-      "is_deleted"?: "boolean",
-      "is_in_subscribers"?: "boolean",
-      "is_in_subscriptions"?: "boolean",
-      "is_verified"?: "boolean",
-      "nick"?: "string",
-      "nick_color"?: "string",
-      "num"?: "UserNum",
-      "original_nick"?: "string",
-      "photo"?: "ProfilePhoto",
-      "total_posts"?: "integer"
-    }
-
-    // ContentSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
-    // ContentSubtitle
-    {
-      "lang"?: "string",
       "url"?: "string"
     }
 
@@ -4457,12 +5046,6 @@ Paginate through content in a channel.
       "prev"?: "string"
     }
 
-    // ContentThumbnailProportionalSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
     // UserNum
     {
       "subscribers"?: "integer",
@@ -4474,6 +5057,12 @@ Paginate through content in a channel.
       "bg_color"?: "string",
       "thumb"?: "ProfilePhotoThumb",
       "url"?: "string"
+    }
+
+    // ContentThumbnailProportionalSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
     }
 
     // ProfilePhotoThumb
@@ -4501,7 +5090,43 @@ Paginate through content in a channel.
       paging?: PagingCursors;
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     interface Content {
+      id?: string;
+      type?: ContentType;
+      state?: 'delayed' | 'deleted' | 'draft' | 'published';
+      title?: string;
+      url?: string;
+
+      fixed_title?: string;
+      description?: string;
+      tags?: string[];
+      share_url?: string;
+      canonical_url?: string;
+      link?: string;
+      date_create?: number;
+      publish_at?: number;
+      issue_at?: number;
+
+      creator?: User;
+      num?: ContentNums;
+
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_abused?: boolean;
+      is_featured?: boolean;
+      is_republished?: boolean;
+      is_pinned?: boolean;
+
+      thumb?: ContentThumbnail;
+      bg_color?: string;
+      size?: ContentSize;
+      has_header?: boolean;
+      subtitle?: ContentSubtitle;
+
       pic?: ContentPic;
       caption?: ContentCaption;
       comics?: ContentComics;
@@ -4512,56 +5137,92 @@ Paginate through content in a channel.
       coub?: ContentCoub;
       gif?: ContentGif;
       app?: ContentApp;
-      id?: string;
-      type?: ContentType;
-      url?: string;
-      share_url?: string;
-      old_watermark?: boolean;
-      link?: string;
-      title?: string;
-      fixed_title?: string;
-      description?: string;
-      tags?: string[];
-      state?: 'delayed' | 'deleted' | 'draft' | 'published';
-      date_create?: number;
-      publish_at?: number;
-      is_smiled?: boolean;
-      is_unsmiled?: boolean;
-      is_abused?: boolean;
-      is_featured?: boolean;
-      is_republished?: boolean;
-      is_pinned?: boolean;
-      bg_color?: string;
-      thumb?: ContentThumbnail;
-      copyright?: ContentCopyright;
-      num?: ContentNums;
-      creator?: User;
-      size?: ContentSize;
-      issue_at?: number;
-      traceback_url?: string;
-      engagement_rate?: string;
-      engagement_rate_explain?: string;
+
       visibility?: 'public' | 'subscribers' | 'closed' | 'chats';
       shot_status?: 'approved' | 'shot' | 'hardShot';
       fast_start?: boolean;
-      subtitle?: ContentSubtitle;
       risk?: number;
-      canonical_url?: string;
-      ocr_text?: string;
       can_be_boosted?: boolean;
+      old_watermark?: boolean;
+
+      copyright?: ContentCopyright;
+      source?: ContentSource;
+      traceback_url?: string;
+      ftag?: string;
+
+      engagement_rate?: string;
+      engagement_rate_explain?: string;
+      ocr_text?: string;
       lat?: number;
       lon?: number;
-      has_header?: boolean;
-      source?: ContentSource;
-      ftag?: string;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
       hasPrev?: boolean;
       has_next?: boolean;
       has_prev?: boolean;
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    interface User {
+      block_type?: 'installation' | 'user';
+      id?: string;
+      is_banned?: boolean;
+      is_blocked?: boolean;
+      is_deleted?: boolean;
+      is_in_subscribers?: boolean;
+      is_in_subscriptions?: boolean;
+      is_verified?: boolean;
+      nick?: string;
+      nick_color?: string;
+      num?: UserNum;
+      original_nick?: string;
+      photo?: ProfilePhoto;
+      total_posts?: number;
+    }
+
+    interface ContentNums {
+      smiles?: number;
+      unsmiles?: number;
+      guest_smiles?: number;
+      comments?: number;
+      views?: number;
+      republished?: number;
+      shares?: number;
+    }
+
+    interface ContentThumbnail {
+      small_url?: string;
+      url?: string;
+      large_url?: string;
+      x640_url?: string;
+      webp_url?: string;
+      large_webp_url?: string;
+      x640_webp_url?: string;
+      proportional_url?: string;
+      proportional_webp_url?: string;
+      proportional_size?: ContentThumbnailProportionalSize;
+    }
+
+    interface ContentSize {
+      w?: number;
+      h?: number;
+    }
+
+    interface ContentSubtitle {
+      lang?: string;
+      url?: string;
     }
 
     interface ContentPic {
@@ -4620,60 +5281,8 @@ Paginate through content in a channel.
       is_scroll_allowed?: boolean;
     }
 
-    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
-
-    interface ContentThumbnail {
-      small_url?: string;
-      url?: string;
-      large_url?: string;
-      x640_url?: string;
-      webp_url?: string;
-      large_webp_url?: string;
-      x640_webp_url?: string;
-      proportional_url?: string;
-      proportional_webp_url?: string;
-      proportional_size?: ContentThumbnailProportionalSize;
-    }
-
     interface ContentCopyright {
       note?: string;
-      url?: string;
-    }
-
-    interface ContentNums {
-      smiles?: number;
-      unsmiles?: number;
-      guest_smiles?: number;
-      comments?: number;
-      views?: number;
-      republished?: number;
-      shares?: number;
-    }
-
-    interface User {
-      block_type?: 'installation' | 'user';
-      id?: string;
-      is_banned?: boolean;
-      is_blocked?: boolean;
-      is_deleted?: boolean;
-      is_in_subscribers?: boolean;
-      is_in_subscriptions?: boolean;
-      is_verified?: boolean;
-      nick?: string;
-      nick_color?: string;
-      num?: UserNum;
-      original_nick?: string;
-      photo?: ProfilePhoto;
-      total_posts?: number;
-    }
-
-    interface ContentSize {
-      w?: number;
-      h?: number;
-    }
-
-    interface ContentSubtitle {
-      lang?: string;
       url?: string;
     }
 
@@ -4688,11 +5297,6 @@ Paginate through content in a channel.
       prev?: string;
     }
 
-    interface ContentThumbnailProportionalSize {
-      w?: number;
-      h?: number;
-    }
-
     interface UserNum {
       subscribers?: number;
       subscriptions?: number;
@@ -4702,6 +5306,11 @@ Paginate through content in a channel.
       bg_color?: string;
       thumb?: ProfilePhotoThumb;
       url?: string;
+    }
+
+    interface ContentThumbnailProportionalSize {
+      w?: number;
+      h?: number;
     }
 
     interface ProfilePhotoThumb {
@@ -4728,7 +5337,43 @@ Paginate through content in a channel.
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     type Content struct {
+    	Id *string `json:"id,omitempty"`
+    	Type ContentType `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	Title *string `json:"title,omitempty"`
+    	Url *string `json:"url,omitempty"`
+
+    	FixedTitle *string `json:"fixed_title,omitempty"`
+    	Description *string `json:"description,omitempty"`
+    	Tags []string `json:"tags,omitempty"`
+    	ShareUrl *string `json:"share_url,omitempty"`
+    	CanonicalUrl *string `json:"canonical_url,omitempty"`
+    	Link *string `json:"link,omitempty"`
+    	DateCreate *int `json:"date_create,omitempty"`
+    	PublishAt *int `json:"publish_at,omitempty"`
+    	IssueAt *int `json:"issue_at,omitempty"`
+
+    	Creator User `json:"creator,omitempty"`
+    	Num ContentNums `json:"num,omitempty"`
+
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsAbused *bool `json:"is_abused,omitempty"`
+    	IsFeatured *bool `json:"is_featured,omitempty"`
+    	IsRepublished *bool `json:"is_republished,omitempty"`
+    	IsPinned *bool `json:"is_pinned,omitempty"`
+
+    	Thumb ContentThumbnail `json:"thumb,omitempty"`
+    	BgColor *string `json:"bg_color,omitempty"`
+    	Size ContentSize `json:"size,omitempty"`
+    	HasHeader *bool `json:"has_header,omitempty"`
+    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
+
     	Pic ContentPic `json:"pic,omitempty"`
     	Caption ContentCaption `json:"caption,omitempty"`
     	Comics ContentComics `json:"comics,omitempty"`
@@ -4739,56 +5384,92 @@ Paginate through content in a channel.
     	Coub ContentCoub `json:"coub,omitempty"`
     	Gif ContentGif `json:"gif,omitempty"`
     	App ContentApp `json:"app,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	Type ContentType `json:"type,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	ShareUrl *string `json:"share_url,omitempty"`
-    	OldWatermark *bool `json:"old_watermark,omitempty"`
-    	Link *string `json:"link,omitempty"`
-    	Title *string `json:"title,omitempty"`
-    	FixedTitle *string `json:"fixed_title,omitempty"`
-    	Description *string `json:"description,omitempty"`
-    	Tags []string `json:"tags,omitempty"`
-    	State *string `json:"state,omitempty"`
-    	DateCreate *int `json:"date_create,omitempty"`
-    	PublishAt *int `json:"publish_at,omitempty"`
-    	IsSmiled *bool `json:"is_smiled,omitempty"`
-    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
-    	IsAbused *bool `json:"is_abused,omitempty"`
-    	IsFeatured *bool `json:"is_featured,omitempty"`
-    	IsRepublished *bool `json:"is_republished,omitempty"`
-    	IsPinned *bool `json:"is_pinned,omitempty"`
-    	BgColor *string `json:"bg_color,omitempty"`
-    	Thumb ContentThumbnail `json:"thumb,omitempty"`
-    	Copyright ContentCopyright `json:"copyright,omitempty"`
-    	Num ContentNums `json:"num,omitempty"`
-    	Creator User `json:"creator,omitempty"`
-    	Size ContentSize `json:"size,omitempty"`
-    	IssueAt *int `json:"issue_at,omitempty"`
-    	TracebackUrl *string `json:"traceback_url,omitempty"`
-    	EngagementRate *string `json:"engagement_rate,omitempty"`
-    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+
     	Visibility *string `json:"visibility,omitempty"`
     	ShotStatus *string `json:"shot_status,omitempty"`
     	FastStart *bool `json:"fast_start,omitempty"`
-    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
     	Risk *int `json:"risk,omitempty"`
-    	CanonicalUrl *string `json:"canonical_url,omitempty"`
-    	OcrText *string `json:"ocr_text,omitempty"`
     	CanBeBoosted *bool `json:"can_be_boosted,omitempty"`
+    	OldWatermark *bool `json:"old_watermark,omitempty"`
+
+    	Copyright ContentCopyright `json:"copyright,omitempty"`
+    	Source ContentSource `json:"source,omitempty"`
+    	TracebackUrl *string `json:"traceback_url,omitempty"`
+    	Ftag *string `json:"ftag,omitempty"`
+
+    	EngagementRate *string `json:"engagement_rate,omitempty"`
+    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+    	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
-    	HasHeader *bool `json:"has_header,omitempty"`
-    	Source ContentSource `json:"source,omitempty"`
-    	Ftag *string `json:"ftag,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
     	HasPrev *bool `json:"hasPrev,omitempty"`
     	HasNext *bool `json:"has_next,omitempty"`
     	HasPrev *bool `json:"has_prev,omitempty"`
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType string
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    type User struct {
+    	BlockType *string `json:"block_type,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	IsBanned *bool `json:"is_banned,omitempty"`
+    	IsBlocked *bool `json:"is_blocked,omitempty"`
+    	IsDeleted *bool `json:"is_deleted,omitempty"`
+    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
+    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
+    	IsVerified *bool `json:"is_verified,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	NickColor *string `json:"nick_color,omitempty"`
+    	Num UserNum `json:"num,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
+    	Photo ProfilePhoto `json:"photo,omitempty"`
+    	TotalPosts *int `json:"total_posts,omitempty"`
+    }
+
+    type ContentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	GuestSmiles *int `json:"guest_smiles,omitempty"`
+    	Comments *int `json:"comments,omitempty"`
+    	Views *int `json:"views,omitempty"`
+    	Republished *int `json:"republished,omitempty"`
+    	Shares *int `json:"shares,omitempty"`
+    }
+
+    type ContentThumbnail struct {
+    	SmallUrl *string `json:"small_url,omitempty"`
+    	Url *string `json:"url,omitempty"`
+    	LargeUrl *string `json:"large_url,omitempty"`
+    	X640Url *string `json:"x640_url,omitempty"`
+    	WebpUrl *string `json:"webp_url,omitempty"`
+    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
+    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
+    	ProportionalUrl *string `json:"proportional_url,omitempty"`
+    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
+    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
+    }
+
+    type ContentSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
+    type ContentSubtitle struct {
+    	Lang *string `json:"lang,omitempty"`
+    	Url *string `json:"url,omitempty"`
     }
 
     type ContentPic struct {
@@ -4847,60 +5528,8 @@ Paginate through content in a channel.
     	IsScrollAllowed *bool `json:"is_scroll_allowed,omitempty"`
     }
 
-    type ContentType string
-
-    type ContentThumbnail struct {
-    	SmallUrl *string `json:"small_url,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	LargeUrl *string `json:"large_url,omitempty"`
-    	X640Url *string `json:"x640_url,omitempty"`
-    	WebpUrl *string `json:"webp_url,omitempty"`
-    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
-    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
-    	ProportionalUrl *string `json:"proportional_url,omitempty"`
-    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
-    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
-    }
-
     type ContentCopyright struct {
     	Note *string `json:"note,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    }
-
-    type ContentNums struct {
-    	Smiles *int `json:"smiles,omitempty"`
-    	Unsmiles *int `json:"unsmiles,omitempty"`
-    	GuestSmiles *int `json:"guest_smiles,omitempty"`
-    	Comments *int `json:"comments,omitempty"`
-    	Views *int `json:"views,omitempty"`
-    	Republished *int `json:"republished,omitempty"`
-    	Shares *int `json:"shares,omitempty"`
-    }
-
-    type User struct {
-    	BlockType *string `json:"block_type,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	IsBanned *bool `json:"is_banned,omitempty"`
-    	IsBlocked *bool `json:"is_blocked,omitempty"`
-    	IsDeleted *bool `json:"is_deleted,omitempty"`
-    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
-    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
-    	IsVerified *bool `json:"is_verified,omitempty"`
-    	Nick *string `json:"nick,omitempty"`
-    	NickColor *string `json:"nick_color,omitempty"`
-    	Num UserNum `json:"num,omitempty"`
-    	OriginalNick *string `json:"original_nick,omitempty"`
-    	Photo ProfilePhoto `json:"photo,omitempty"`
-    	TotalPosts *int `json:"total_posts,omitempty"`
-    }
-
-    type ContentSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
-    type ContentSubtitle struct {
-    	Lang *string `json:"lang,omitempty"`
     	Url *string `json:"url,omitempty"`
     }
 
@@ -4915,11 +5544,6 @@ Paginate through content in a channel.
     	Prev *string `json:"prev,omitempty"`
     }
 
-    type ContentThumbnailProportionalSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
     type UserNum struct {
     	Subscribers *int `json:"subscribers,omitempty"`
     	Subscriptions *int `json:"subscriptions,omitempty"`
@@ -4929,6 +5553,11 @@ Paginate through content in a channel.
     	BgColor *string `json:"bg_color,omitempty"`
     	Thumb ProfilePhotoThumb `json:"thumb,omitempty"`
     	Url *string `json:"url,omitempty"`
+    }
+
+    type ContentThumbnailProportionalSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
     }
 
     type ProfilePhotoThumb struct {
@@ -5018,7 +5647,9 @@ Paginate through content in a channel.
     }
     ```
 
-### `GET /tags/suggested` — Search Tags  {: #op-searchtags }
+### Search Tags  {: #op-searchtags }
+
+**`GET /tags/suggested`**
 
 Search tags suggested by iFunny.
 
@@ -5081,6 +5712,7 @@ Search tags suggested by iFunny.
       "items"?: "Tag[]"
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     // Tag
     {
       "title"?: "string"
@@ -5103,6 +5735,7 @@ Search tags suggested by iFunny.
       items?: Tag[];
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     interface Tag {
       title?: string;
     }
@@ -5124,12 +5757,15 @@ Search tags suggested by iFunny.
     	Items []Tag `json:"items,omitempty"`
     }
 
+    // Not fully documented in the source Markdown; fields inferred from usage.
     type Tag struct {
     	Title *string `json:"title,omitempty"`
     }
     ```
 
-### `GET /search/content` — Search Content  {: #op-searchcontent }
+### Search Content  {: #op-searchcontent }
+
+**`GET /search/content`**
 
 Search content by tag.
 
@@ -5194,8 +5830,44 @@ Search content by tag.
       "paging"?: "PagingCursors"
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     // Content
     {
+      "id"?: "string",
+      "type"?: "ContentType",
+      "state"?: "enum(delayed, deleted, draft, published)",
+      "title"?: "string",
+      "url"?: "string",
+
+      "fixed_title"?: "string",
+      "description"?: "string",
+      "tags"?: "string[]",
+      "share_url"?: "string",
+      "canonical_url"?: "string",
+      "link"?: "string",
+      "date_create"?: "integer",
+      "publish_at"?: "integer",
+      "issue_at"?: "integer",
+
+      "creator"?: "User",
+      "num"?: "ContentNums",
+
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_abused"?: "boolean",
+      "is_featured"?: "boolean",
+      "is_republished"?: "boolean",
+      "is_pinned"?: "boolean",
+
+      "thumb"?: "ContentThumbnail",
+      "bg_color"?: "string",
+      "size"?: "ContentSize",
+      "has_header"?: "boolean",
+      "subtitle"?: "ContentSubtitle",
+
       "pic"?: "ContentPic",
       "caption"?: "ContentCaption",
       "comics"?: "ContentComics",
@@ -5206,50 +5878,29 @@ Search content by tag.
       "coub"?: "ContentCoub",
       "gif"?: "ContentGif",
       "app"?: "ContentApp",
-      "id"?: "string",
-      "type"?: "ContentType",
-      "url"?: "string",
-      "share_url"?: "string",
-      "old_watermark"?: "boolean",
-      "link"?: "string",
-      "title"?: "string",
-      "fixed_title"?: "string",
-      "description"?: "string",
-      "tags"?: "string[]",
-      "state"?: "enum(delayed, deleted, draft, published)",
-      "date_create"?: "integer",
-      "publish_at"?: "integer",
-      "is_smiled"?: "boolean",
-      "is_unsmiled"?: "boolean",
-      "is_abused"?: "boolean",
-      "is_featured"?: "boolean",
-      "is_republished"?: "boolean",
-      "is_pinned"?: "boolean",
-      "bg_color"?: "string",
-      "thumb"?: "ContentThumbnail",
-      "copyright"?: "ContentCopyright",
-      "num"?: "ContentNums",
-      "creator"?: "User",
-      "size"?: "ContentSize",
-      "issue_at"?: "integer",
-      "traceback_url"?: "string",
-      "engagement_rate"?: "string",
-      "engagement_rate_explain"?: "string",
+
       "visibility"?: "enum(public, subscribers, closed, chats)",
       "shot_status"?: "enum(approved, shot, hardShot)",
       "fast_start"?: "boolean",
-      "subtitle"?: "ContentSubtitle",
       "risk"?: "integer",
-      "canonical_url"?: "string",
-      "ocr_text"?: "string",
       "can_be_boosted"?: "boolean",
-      "lat"?: "number",
-      "lon"?: "number",
-      "has_header"?: "boolean",
+      "old_watermark"?: "boolean",
+
+      "copyright"?: "ContentCopyright",
       "source"?: "ContentSource",
-      "ftag"?: "string"
+      "traceback_url"?: "string",
+      "ftag"?: "string",
+
+      "engagement_rate"?: "string",
+      "engagement_rate_explain"?: "string",
+      "ocr_text"?: "string",
+      "lat"?: "number",
+      "lon"?: "number"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -5257,6 +5908,69 @@ Search content by tag.
       "hasPrev"?: "boolean",
       "has_next"?: "boolean",
       "has_prev"?: "boolean"
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    // ContentType
+    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    // User
+    {
+      "block_type"?: "enum(installation, user)",
+      "id"?: "string",
+      "is_banned"?: "boolean",
+      "is_blocked"?: "boolean",
+      "is_deleted"?: "boolean",
+      "is_in_subscribers"?: "boolean",
+      "is_in_subscriptions"?: "boolean",
+      "is_verified"?: "boolean",
+      "nick"?: "string",
+      "nick_color"?: "string",
+      "num"?: "UserNum",
+      "original_nick"?: "string",
+      "photo"?: "ProfilePhoto",
+      "total_posts"?: "integer"
+    }
+
+    // ContentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "guest_smiles"?: "integer",
+      "comments"?: "integer",
+      "views"?: "integer",
+      "republished"?: "integer",
+      "shares"?: "integer"
+    }
+
+    // ContentThumbnail
+    {
+      "small_url"?: "string",
+      "url"?: "string",
+      "large_url"?: "string",
+      "x640_url"?: "string",
+      "webp_url"?: "string",
+      "large_webp_url"?: "string",
+      "x640_webp_url"?: "string",
+      "proportional_url"?: "string",
+      "proportional_webp_url"?: "string",
+      "proportional_size"?: "ContentThumbnailProportionalSize"
+    }
+
+    // ContentSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
+    }
+
+    // ContentSubtitle
+    {
+      "lang"?: "string",
+      "url"?: "string"
     }
 
     // ContentPic
@@ -5325,67 +6039,9 @@ Search content by tag.
       "is_scroll_allowed"?: "boolean"
     }
 
-    // ContentType
-    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
-
-    // ContentThumbnail
-    {
-      "small_url"?: "string",
-      "url"?: "string",
-      "large_url"?: "string",
-      "x640_url"?: "string",
-      "webp_url"?: "string",
-      "large_webp_url"?: "string",
-      "x640_webp_url"?: "string",
-      "proportional_url"?: "string",
-      "proportional_webp_url"?: "string",
-      "proportional_size"?: "ContentThumbnailProportionalSize"
-    }
-
     // ContentCopyright
     {
       "note"?: "string",
-      "url"?: "string"
-    }
-
-    // ContentNums
-    {
-      "smiles"?: "integer",
-      "unsmiles"?: "integer",
-      "guest_smiles"?: "integer",
-      "comments"?: "integer",
-      "views"?: "integer",
-      "republished"?: "integer",
-      "shares"?: "integer"
-    }
-
-    // User
-    {
-      "block_type"?: "enum(installation, user)",
-      "id"?: "string",
-      "is_banned"?: "boolean",
-      "is_blocked"?: "boolean",
-      "is_deleted"?: "boolean",
-      "is_in_subscribers"?: "boolean",
-      "is_in_subscriptions"?: "boolean",
-      "is_verified"?: "boolean",
-      "nick"?: "string",
-      "nick_color"?: "string",
-      "num"?: "UserNum",
-      "original_nick"?: "string",
-      "photo"?: "ProfilePhoto",
-      "total_posts"?: "integer"
-    }
-
-    // ContentSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
-    // ContentSubtitle
-    {
-      "lang"?: "string",
       "url"?: "string"
     }
 
@@ -5402,12 +6058,6 @@ Search content by tag.
       "prev"?: "string"
     }
 
-    // ContentThumbnailProportionalSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
     // UserNum
     {
       "subscribers"?: "integer",
@@ -5419,6 +6069,12 @@ Search content by tag.
       "bg_color"?: "string",
       "thumb"?: "ProfilePhotoThumb",
       "url"?: "string"
+    }
+
+    // ContentThumbnailProportionalSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
     }
 
     // ProfilePhotoThumb
@@ -5447,7 +6103,43 @@ Search content by tag.
       paging?: PagingCursors;
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     interface Content {
+      id?: string;
+      type?: ContentType;
+      state?: 'delayed' | 'deleted' | 'draft' | 'published';
+      title?: string;
+      url?: string;
+
+      fixed_title?: string;
+      description?: string;
+      tags?: string[];
+      share_url?: string;
+      canonical_url?: string;
+      link?: string;
+      date_create?: number;
+      publish_at?: number;
+      issue_at?: number;
+
+      creator?: User;
+      num?: ContentNums;
+
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_abused?: boolean;
+      is_featured?: boolean;
+      is_republished?: boolean;
+      is_pinned?: boolean;
+
+      thumb?: ContentThumbnail;
+      bg_color?: string;
+      size?: ContentSize;
+      has_header?: boolean;
+      subtitle?: ContentSubtitle;
+
       pic?: ContentPic;
       caption?: ContentCaption;
       comics?: ContentComics;
@@ -5458,56 +6150,92 @@ Search content by tag.
       coub?: ContentCoub;
       gif?: ContentGif;
       app?: ContentApp;
-      id?: string;
-      type?: ContentType;
-      url?: string;
-      share_url?: string;
-      old_watermark?: boolean;
-      link?: string;
-      title?: string;
-      fixed_title?: string;
-      description?: string;
-      tags?: string[];
-      state?: 'delayed' | 'deleted' | 'draft' | 'published';
-      date_create?: number;
-      publish_at?: number;
-      is_smiled?: boolean;
-      is_unsmiled?: boolean;
-      is_abused?: boolean;
-      is_featured?: boolean;
-      is_republished?: boolean;
-      is_pinned?: boolean;
-      bg_color?: string;
-      thumb?: ContentThumbnail;
-      copyright?: ContentCopyright;
-      num?: ContentNums;
-      creator?: User;
-      size?: ContentSize;
-      issue_at?: number;
-      traceback_url?: string;
-      engagement_rate?: string;
-      engagement_rate_explain?: string;
+
       visibility?: 'public' | 'subscribers' | 'closed' | 'chats';
       shot_status?: 'approved' | 'shot' | 'hardShot';
       fast_start?: boolean;
-      subtitle?: ContentSubtitle;
       risk?: number;
-      canonical_url?: string;
-      ocr_text?: string;
       can_be_boosted?: boolean;
+      old_watermark?: boolean;
+
+      copyright?: ContentCopyright;
+      source?: ContentSource;
+      traceback_url?: string;
+      ftag?: string;
+
+      engagement_rate?: string;
+      engagement_rate_explain?: string;
+      ocr_text?: string;
       lat?: number;
       lon?: number;
-      has_header?: boolean;
-      source?: ContentSource;
-      ftag?: string;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
       hasPrev?: boolean;
       has_next?: boolean;
       has_prev?: boolean;
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    interface User {
+      block_type?: 'installation' | 'user';
+      id?: string;
+      is_banned?: boolean;
+      is_blocked?: boolean;
+      is_deleted?: boolean;
+      is_in_subscribers?: boolean;
+      is_in_subscriptions?: boolean;
+      is_verified?: boolean;
+      nick?: string;
+      nick_color?: string;
+      num?: UserNum;
+      original_nick?: string;
+      photo?: ProfilePhoto;
+      total_posts?: number;
+    }
+
+    interface ContentNums {
+      smiles?: number;
+      unsmiles?: number;
+      guest_smiles?: number;
+      comments?: number;
+      views?: number;
+      republished?: number;
+      shares?: number;
+    }
+
+    interface ContentThumbnail {
+      small_url?: string;
+      url?: string;
+      large_url?: string;
+      x640_url?: string;
+      webp_url?: string;
+      large_webp_url?: string;
+      x640_webp_url?: string;
+      proportional_url?: string;
+      proportional_webp_url?: string;
+      proportional_size?: ContentThumbnailProportionalSize;
+    }
+
+    interface ContentSize {
+      w?: number;
+      h?: number;
+    }
+
+    interface ContentSubtitle {
+      lang?: string;
+      url?: string;
     }
 
     interface ContentPic {
@@ -5566,60 +6294,8 @@ Search content by tag.
       is_scroll_allowed?: boolean;
     }
 
-    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
-
-    interface ContentThumbnail {
-      small_url?: string;
-      url?: string;
-      large_url?: string;
-      x640_url?: string;
-      webp_url?: string;
-      large_webp_url?: string;
-      x640_webp_url?: string;
-      proportional_url?: string;
-      proportional_webp_url?: string;
-      proportional_size?: ContentThumbnailProportionalSize;
-    }
-
     interface ContentCopyright {
       note?: string;
-      url?: string;
-    }
-
-    interface ContentNums {
-      smiles?: number;
-      unsmiles?: number;
-      guest_smiles?: number;
-      comments?: number;
-      views?: number;
-      republished?: number;
-      shares?: number;
-    }
-
-    interface User {
-      block_type?: 'installation' | 'user';
-      id?: string;
-      is_banned?: boolean;
-      is_blocked?: boolean;
-      is_deleted?: boolean;
-      is_in_subscribers?: boolean;
-      is_in_subscriptions?: boolean;
-      is_verified?: boolean;
-      nick?: string;
-      nick_color?: string;
-      num?: UserNum;
-      original_nick?: string;
-      photo?: ProfilePhoto;
-      total_posts?: number;
-    }
-
-    interface ContentSize {
-      w?: number;
-      h?: number;
-    }
-
-    interface ContentSubtitle {
-      lang?: string;
       url?: string;
     }
 
@@ -5634,11 +6310,6 @@ Search content by tag.
       prev?: string;
     }
 
-    interface ContentThumbnailProportionalSize {
-      w?: number;
-      h?: number;
-    }
-
     interface UserNum {
       subscribers?: number;
       subscriptions?: number;
@@ -5648,6 +6319,11 @@ Search content by tag.
       bg_color?: string;
       thumb?: ProfilePhotoThumb;
       url?: string;
+    }
+
+    interface ContentThumbnailProportionalSize {
+      w?: number;
+      h?: number;
     }
 
     interface ProfilePhotoThumb {
@@ -5675,7 +6351,43 @@ Search content by tag.
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     type Content struct {
+    	Id *string `json:"id,omitempty"`
+    	Type ContentType `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	Title *string `json:"title,omitempty"`
+    	Url *string `json:"url,omitempty"`
+
+    	FixedTitle *string `json:"fixed_title,omitempty"`
+    	Description *string `json:"description,omitempty"`
+    	Tags []string `json:"tags,omitempty"`
+    	ShareUrl *string `json:"share_url,omitempty"`
+    	CanonicalUrl *string `json:"canonical_url,omitempty"`
+    	Link *string `json:"link,omitempty"`
+    	DateCreate *int `json:"date_create,omitempty"`
+    	PublishAt *int `json:"publish_at,omitempty"`
+    	IssueAt *int `json:"issue_at,omitempty"`
+
+    	Creator User `json:"creator,omitempty"`
+    	Num ContentNums `json:"num,omitempty"`
+
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsAbused *bool `json:"is_abused,omitempty"`
+    	IsFeatured *bool `json:"is_featured,omitempty"`
+    	IsRepublished *bool `json:"is_republished,omitempty"`
+    	IsPinned *bool `json:"is_pinned,omitempty"`
+
+    	Thumb ContentThumbnail `json:"thumb,omitempty"`
+    	BgColor *string `json:"bg_color,omitempty"`
+    	Size ContentSize `json:"size,omitempty"`
+    	HasHeader *bool `json:"has_header,omitempty"`
+    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
+
     	Pic ContentPic `json:"pic,omitempty"`
     	Caption ContentCaption `json:"caption,omitempty"`
     	Comics ContentComics `json:"comics,omitempty"`
@@ -5686,56 +6398,92 @@ Search content by tag.
     	Coub ContentCoub `json:"coub,omitempty"`
     	Gif ContentGif `json:"gif,omitempty"`
     	App ContentApp `json:"app,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	Type ContentType `json:"type,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	ShareUrl *string `json:"share_url,omitempty"`
-    	OldWatermark *bool `json:"old_watermark,omitempty"`
-    	Link *string `json:"link,omitempty"`
-    	Title *string `json:"title,omitempty"`
-    	FixedTitle *string `json:"fixed_title,omitempty"`
-    	Description *string `json:"description,omitempty"`
-    	Tags []string `json:"tags,omitempty"`
-    	State *string `json:"state,omitempty"`
-    	DateCreate *int `json:"date_create,omitempty"`
-    	PublishAt *int `json:"publish_at,omitempty"`
-    	IsSmiled *bool `json:"is_smiled,omitempty"`
-    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
-    	IsAbused *bool `json:"is_abused,omitempty"`
-    	IsFeatured *bool `json:"is_featured,omitempty"`
-    	IsRepublished *bool `json:"is_republished,omitempty"`
-    	IsPinned *bool `json:"is_pinned,omitempty"`
-    	BgColor *string `json:"bg_color,omitempty"`
-    	Thumb ContentThumbnail `json:"thumb,omitempty"`
-    	Copyright ContentCopyright `json:"copyright,omitempty"`
-    	Num ContentNums `json:"num,omitempty"`
-    	Creator User `json:"creator,omitempty"`
-    	Size ContentSize `json:"size,omitempty"`
-    	IssueAt *int `json:"issue_at,omitempty"`
-    	TracebackUrl *string `json:"traceback_url,omitempty"`
-    	EngagementRate *string `json:"engagement_rate,omitempty"`
-    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+
     	Visibility *string `json:"visibility,omitempty"`
     	ShotStatus *string `json:"shot_status,omitempty"`
     	FastStart *bool `json:"fast_start,omitempty"`
-    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
     	Risk *int `json:"risk,omitempty"`
-    	CanonicalUrl *string `json:"canonical_url,omitempty"`
-    	OcrText *string `json:"ocr_text,omitempty"`
     	CanBeBoosted *bool `json:"can_be_boosted,omitempty"`
+    	OldWatermark *bool `json:"old_watermark,omitempty"`
+
+    	Copyright ContentCopyright `json:"copyright,omitempty"`
+    	Source ContentSource `json:"source,omitempty"`
+    	TracebackUrl *string `json:"traceback_url,omitempty"`
+    	Ftag *string `json:"ftag,omitempty"`
+
+    	EngagementRate *string `json:"engagement_rate,omitempty"`
+    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+    	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
-    	HasHeader *bool `json:"has_header,omitempty"`
-    	Source ContentSource `json:"source,omitempty"`
-    	Ftag *string `json:"ftag,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
     	HasPrev *bool `json:"hasPrev,omitempty"`
     	HasNext *bool `json:"has_next,omitempty"`
     	HasPrev *bool `json:"has_prev,omitempty"`
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType string
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    type User struct {
+    	BlockType *string `json:"block_type,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	IsBanned *bool `json:"is_banned,omitempty"`
+    	IsBlocked *bool `json:"is_blocked,omitempty"`
+    	IsDeleted *bool `json:"is_deleted,omitempty"`
+    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
+    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
+    	IsVerified *bool `json:"is_verified,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	NickColor *string `json:"nick_color,omitempty"`
+    	Num UserNum `json:"num,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
+    	Photo ProfilePhoto `json:"photo,omitempty"`
+    	TotalPosts *int `json:"total_posts,omitempty"`
+    }
+
+    type ContentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	GuestSmiles *int `json:"guest_smiles,omitempty"`
+    	Comments *int `json:"comments,omitempty"`
+    	Views *int `json:"views,omitempty"`
+    	Republished *int `json:"republished,omitempty"`
+    	Shares *int `json:"shares,omitempty"`
+    }
+
+    type ContentThumbnail struct {
+    	SmallUrl *string `json:"small_url,omitempty"`
+    	Url *string `json:"url,omitempty"`
+    	LargeUrl *string `json:"large_url,omitempty"`
+    	X640Url *string `json:"x640_url,omitempty"`
+    	WebpUrl *string `json:"webp_url,omitempty"`
+    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
+    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
+    	ProportionalUrl *string `json:"proportional_url,omitempty"`
+    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
+    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
+    }
+
+    type ContentSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
+    type ContentSubtitle struct {
+    	Lang *string `json:"lang,omitempty"`
+    	Url *string `json:"url,omitempty"`
     }
 
     type ContentPic struct {
@@ -5794,60 +6542,8 @@ Search content by tag.
     	IsScrollAllowed *bool `json:"is_scroll_allowed,omitempty"`
     }
 
-    type ContentType string
-
-    type ContentThumbnail struct {
-    	SmallUrl *string `json:"small_url,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	LargeUrl *string `json:"large_url,omitempty"`
-    	X640Url *string `json:"x640_url,omitempty"`
-    	WebpUrl *string `json:"webp_url,omitempty"`
-    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
-    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
-    	ProportionalUrl *string `json:"proportional_url,omitempty"`
-    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
-    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
-    }
-
     type ContentCopyright struct {
     	Note *string `json:"note,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    }
-
-    type ContentNums struct {
-    	Smiles *int `json:"smiles,omitempty"`
-    	Unsmiles *int `json:"unsmiles,omitempty"`
-    	GuestSmiles *int `json:"guest_smiles,omitempty"`
-    	Comments *int `json:"comments,omitempty"`
-    	Views *int `json:"views,omitempty"`
-    	Republished *int `json:"republished,omitempty"`
-    	Shares *int `json:"shares,omitempty"`
-    }
-
-    type User struct {
-    	BlockType *string `json:"block_type,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	IsBanned *bool `json:"is_banned,omitempty"`
-    	IsBlocked *bool `json:"is_blocked,omitempty"`
-    	IsDeleted *bool `json:"is_deleted,omitempty"`
-    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
-    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
-    	IsVerified *bool `json:"is_verified,omitempty"`
-    	Nick *string `json:"nick,omitempty"`
-    	NickColor *string `json:"nick_color,omitempty"`
-    	Num UserNum `json:"num,omitempty"`
-    	OriginalNick *string `json:"original_nick,omitempty"`
-    	Photo ProfilePhoto `json:"photo,omitempty"`
-    	TotalPosts *int `json:"total_posts,omitempty"`
-    }
-
-    type ContentSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
-    type ContentSubtitle struct {
-    	Lang *string `json:"lang,omitempty"`
     	Url *string `json:"url,omitempty"`
     }
 
@@ -5862,11 +6558,6 @@ Search content by tag.
     	Prev *string `json:"prev,omitempty"`
     }
 
-    type ContentThumbnailProportionalSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
     type UserNum struct {
     	Subscribers *int `json:"subscribers,omitempty"`
     	Subscriptions *int `json:"subscriptions,omitempty"`
@@ -5878,6 +6569,11 @@ Search content by tag.
     	Url *string `json:"url,omitempty"`
     }
 
+    type ContentThumbnailProportionalSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
     type ProfilePhotoThumb struct {
     	LargeUrl *string `json:"large_url,omitempty"`
     	MediumUrl *string `json:"medium_url,omitempty"`
@@ -5885,7 +6581,9 @@ Search content by tag.
     }
     ```
 
-### `PUT /content/{id}/tags` — Modify Content Tags  {: #op-modifycontenttags }
+### Modify Content Tags  {: #op-modifycontenttags }
+
+**`PUT /content/{id}/tags`**
 
 Replace the set of tags on a post owned by the client.
 
@@ -5894,9 +6592,36 @@ Replace the set of tags on a post owned by the client.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // ModifyContentTagsPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface ModifyContentTagsPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type ModifyContentTagsPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Request body (`application/x-www-form-urlencoded`)
 
@@ -6017,7 +6742,9 @@ No response body.
     }
     ```
 
-### `PUT /content/{id}/pinned` — Pin Content  {: #op-pincontent }
+### Pin Content  {: #op-pincontent }
+
+**`PUT /content/{id}/pinned`**
 
 Pin the post to the top of the client's profile timeline.
 Client must be the author.
@@ -6027,9 +6754,36 @@ Client must be the author.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // PinContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface PinContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type PinContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -6117,7 +6871,9 @@ No response body.
     }
     ```
 
-### `DELETE /content/{id}/pinned` — Unpin Content  {: #op-unpincontent }
+### Unpin Content  {: #op-unpincontent }
+
+**`DELETE /content/{id}/pinned`**
 
 Remove the pin from the post.
 
@@ -6126,9 +6882,36 @@ Remove the pin from the post.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // UnpinContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface UnpinContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type UnpinContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Responses
 
@@ -6176,7 +6959,9 @@ No response body.
     }
     ```
 
-### `PUT /content/{id}/abuses` — Report Content  {: #op-reportcontent }
+### Report Content  {: #op-reportcontent }
+
+**`PUT /content/{id}/abuses`**
 
 Report a post for abuse. Query parameter `type` categorizes the report.
 
@@ -6185,9 +6970,36 @@ Report a post for abuse. Query parameter `type` categorizes the report.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `id` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `id` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // ReportContentPath
+    {
+      "id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface ReportContentPath {
+      id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type ReportContentPath struct {
+    	Id string `path:"id"`
+    }
+    ```
 
 #### Query parameters
 
@@ -6268,7 +7080,9 @@ No response body.
     }
     ```
 
-### `GET /timelines/users/by_nick/{nick}` — Get User Timeline by Nick  {: #op-getusertimelinebynick }
+### Get User Timeline by Nick  {: #op-getusertimelinebynick }
+
+**`GET /timelines/users/by_nick/{nick}`**
 
 Paginated posts on a user's profile timeline, addressed by nickname.
 Cursor-paginated. `/timelines/user/{id}` (root spec) is the equivalent
@@ -6279,9 +7093,36 @@ addressed by user id.
 
 #### Path parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `nick` | `String` | yes |  |
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `nick` | `String` | yes |  |
+
+=== "JSON"
+
+    ```json
+    // GetUserTimelineByNickPath
+    {
+      "nick": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetUserTimelineByNickPath {
+      nick: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetUserTimelineByNickPath struct {
+    	Nick string `path:"nick"`
+    }
+    ```
 
 #### Query parameters
 
@@ -6366,8 +7207,44 @@ addressed by user id.
       "map"?: "integer"
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     // Content
     {
+      "id"?: "string",
+      "type"?: "ContentType",
+      "state"?: "enum(delayed, deleted, draft, published)",
+      "title"?: "string",
+      "url"?: "string",
+
+      "fixed_title"?: "string",
+      "description"?: "string",
+      "tags"?: "string[]",
+      "share_url"?: "string",
+      "canonical_url"?: "string",
+      "link"?: "string",
+      "date_create"?: "integer",
+      "publish_at"?: "integer",
+      "issue_at"?: "integer",
+
+      "creator"?: "User",
+      "num"?: "ContentNums",
+
+      "is_smiled"?: "boolean",
+      "is_unsmiled"?: "boolean",
+      "is_abused"?: "boolean",
+      "is_featured"?: "boolean",
+      "is_republished"?: "boolean",
+      "is_pinned"?: "boolean",
+
+      "thumb"?: "ContentThumbnail",
+      "bg_color"?: "string",
+      "size"?: "ContentSize",
+      "has_header"?: "boolean",
+      "subtitle"?: "ContentSubtitle",
+
       "pic"?: "ContentPic",
       "caption"?: "ContentCaption",
       "comics"?: "ContentComics",
@@ -6378,50 +7255,29 @@ addressed by user id.
       "coub"?: "ContentCoub",
       "gif"?: "ContentGif",
       "app"?: "ContentApp",
-      "id"?: "string",
-      "type"?: "ContentType",
-      "url"?: "string",
-      "share_url"?: "string",
-      "old_watermark"?: "boolean",
-      "link"?: "string",
-      "title"?: "string",
-      "fixed_title"?: "string",
-      "description"?: "string",
-      "tags"?: "string[]",
-      "state"?: "enum(delayed, deleted, draft, published)",
-      "date_create"?: "integer",
-      "publish_at"?: "integer",
-      "is_smiled"?: "boolean",
-      "is_unsmiled"?: "boolean",
-      "is_abused"?: "boolean",
-      "is_featured"?: "boolean",
-      "is_republished"?: "boolean",
-      "is_pinned"?: "boolean",
-      "bg_color"?: "string",
-      "thumb"?: "ContentThumbnail",
-      "copyright"?: "ContentCopyright",
-      "num"?: "ContentNums",
-      "creator"?: "User",
-      "size"?: "ContentSize",
-      "issue_at"?: "integer",
-      "traceback_url"?: "string",
-      "engagement_rate"?: "string",
-      "engagement_rate_explain"?: "string",
+
       "visibility"?: "enum(public, subscribers, closed, chats)",
       "shot_status"?: "enum(approved, shot, hardShot)",
       "fast_start"?: "boolean",
-      "subtitle"?: "ContentSubtitle",
       "risk"?: "integer",
-      "canonical_url"?: "string",
-      "ocr_text"?: "string",
       "can_be_boosted"?: "boolean",
-      "lat"?: "number",
-      "lon"?: "number",
-      "has_header"?: "boolean",
+      "old_watermark"?: "boolean",
+
+      "copyright"?: "ContentCopyright",
       "source"?: "ContentSource",
-      "ftag"?: "string"
+      "traceback_url"?: "string",
+      "ftag"?: "string",
+
+      "engagement_rate"?: "string",
+      "engagement_rate_explain"?: "string",
+      "ocr_text"?: "string",
+      "lat"?: "number",
+      "lon"?: "number"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -6429,6 +7285,69 @@ addressed by user id.
       "hasPrev"?: "boolean",
       "has_next"?: "boolean",
       "has_prev"?: "boolean"
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    // ContentType
+    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    // User
+    {
+      "block_type"?: "enum(installation, user)",
+      "id"?: "string",
+      "is_banned"?: "boolean",
+      "is_blocked"?: "boolean",
+      "is_deleted"?: "boolean",
+      "is_in_subscribers"?: "boolean",
+      "is_in_subscriptions"?: "boolean",
+      "is_verified"?: "boolean",
+      "nick"?: "string",
+      "nick_color"?: "string",
+      "num"?: "UserNum",
+      "original_nick"?: "string",
+      "photo"?: "ProfilePhoto",
+      "total_posts"?: "integer"
+    }
+
+    // ContentNums
+    {
+      "smiles"?: "integer",
+      "unsmiles"?: "integer",
+      "guest_smiles"?: "integer",
+      "comments"?: "integer",
+      "views"?: "integer",
+      "republished"?: "integer",
+      "shares"?: "integer"
+    }
+
+    // ContentThumbnail
+    {
+      "small_url"?: "string",
+      "url"?: "string",
+      "large_url"?: "string",
+      "x640_url"?: "string",
+      "webp_url"?: "string",
+      "large_webp_url"?: "string",
+      "x640_webp_url"?: "string",
+      "proportional_url"?: "string",
+      "proportional_webp_url"?: "string",
+      "proportional_size"?: "ContentThumbnailProportionalSize"
+    }
+
+    // ContentSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
+    }
+
+    // ContentSubtitle
+    {
+      "lang"?: "string",
+      "url"?: "string"
     }
 
     // ContentPic
@@ -6497,67 +7416,9 @@ addressed by user id.
       "is_scroll_allowed"?: "boolean"
     }
 
-    // ContentType
-    "ContentType": "enum(pic, mem, comics, caption, video_clip, video, vine, coub, gif, gif_caption, app, old, dem, special)"
-
-    // ContentThumbnail
-    {
-      "small_url"?: "string",
-      "url"?: "string",
-      "large_url"?: "string",
-      "x640_url"?: "string",
-      "webp_url"?: "string",
-      "large_webp_url"?: "string",
-      "x640_webp_url"?: "string",
-      "proportional_url"?: "string",
-      "proportional_webp_url"?: "string",
-      "proportional_size"?: "ContentThumbnailProportionalSize"
-    }
-
     // ContentCopyright
     {
       "note"?: "string",
-      "url"?: "string"
-    }
-
-    // ContentNums
-    {
-      "smiles"?: "integer",
-      "unsmiles"?: "integer",
-      "guest_smiles"?: "integer",
-      "comments"?: "integer",
-      "views"?: "integer",
-      "republished"?: "integer",
-      "shares"?: "integer"
-    }
-
-    // User
-    {
-      "block_type"?: "enum(installation, user)",
-      "id"?: "string",
-      "is_banned"?: "boolean",
-      "is_blocked"?: "boolean",
-      "is_deleted"?: "boolean",
-      "is_in_subscribers"?: "boolean",
-      "is_in_subscriptions"?: "boolean",
-      "is_verified"?: "boolean",
-      "nick"?: "string",
-      "nick_color"?: "string",
-      "num"?: "UserNum",
-      "original_nick"?: "string",
-      "photo"?: "ProfilePhoto",
-      "total_posts"?: "integer"
-    }
-
-    // ContentSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
-    // ContentSubtitle
-    {
-      "lang"?: "string",
       "url"?: "string"
     }
 
@@ -6574,12 +7435,6 @@ addressed by user id.
       "prev"?: "string"
     }
 
-    // ContentThumbnailProportionalSize
-    {
-      "w"?: "integer",
-      "h"?: "integer"
-    }
-
     // UserNum
     {
       "subscribers"?: "integer",
@@ -6591,6 +7446,12 @@ addressed by user id.
       "bg_color"?: "string",
       "thumb"?: "ProfilePhotoThumb",
       "url"?: "string"
+    }
+
+    // ContentThumbnailProportionalSize
+    {
+      "w"?: "integer",
+      "h"?: "integer"
     }
 
     // ProfilePhotoThumb
@@ -6633,7 +7494,43 @@ addressed by user id.
       map?: number;
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     interface Content {
+      id?: string;
+      type?: ContentType;
+      state?: 'delayed' | 'deleted' | 'draft' | 'published';
+      title?: string;
+      url?: string;
+
+      fixed_title?: string;
+      description?: string;
+      tags?: string[];
+      share_url?: string;
+      canonical_url?: string;
+      link?: string;
+      date_create?: number;
+      publish_at?: number;
+      issue_at?: number;
+
+      creator?: User;
+      num?: ContentNums;
+
+      is_smiled?: boolean;
+      is_unsmiled?: boolean;
+      is_abused?: boolean;
+      is_featured?: boolean;
+      is_republished?: boolean;
+      is_pinned?: boolean;
+
+      thumb?: ContentThumbnail;
+      bg_color?: string;
+      size?: ContentSize;
+      has_header?: boolean;
+      subtitle?: ContentSubtitle;
+
       pic?: ContentPic;
       caption?: ContentCaption;
       comics?: ContentComics;
@@ -6644,56 +7541,92 @@ addressed by user id.
       coub?: ContentCoub;
       gif?: ContentGif;
       app?: ContentApp;
-      id?: string;
-      type?: ContentType;
-      url?: string;
-      share_url?: string;
-      old_watermark?: boolean;
-      link?: string;
-      title?: string;
-      fixed_title?: string;
-      description?: string;
-      tags?: string[];
-      state?: 'delayed' | 'deleted' | 'draft' | 'published';
-      date_create?: number;
-      publish_at?: number;
-      is_smiled?: boolean;
-      is_unsmiled?: boolean;
-      is_abused?: boolean;
-      is_featured?: boolean;
-      is_republished?: boolean;
-      is_pinned?: boolean;
-      bg_color?: string;
-      thumb?: ContentThumbnail;
-      copyright?: ContentCopyright;
-      num?: ContentNums;
-      creator?: User;
-      size?: ContentSize;
-      issue_at?: number;
-      traceback_url?: string;
-      engagement_rate?: string;
-      engagement_rate_explain?: string;
+
       visibility?: 'public' | 'subscribers' | 'closed' | 'chats';
       shot_status?: 'approved' | 'shot' | 'hardShot';
       fast_start?: boolean;
-      subtitle?: ContentSubtitle;
       risk?: number;
-      canonical_url?: string;
-      ocr_text?: string;
       can_be_boosted?: boolean;
+      old_watermark?: boolean;
+
+      copyright?: ContentCopyright;
+      source?: ContentSource;
+      traceback_url?: string;
+      ftag?: string;
+
+      engagement_rate?: string;
+      engagement_rate_explain?: string;
+      ocr_text?: string;
       lat?: number;
       lon?: number;
-      has_header?: boolean;
-      source?: ContentSource;
-      ftag?: string;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
       hasPrev?: boolean;
       has_next?: boolean;
       has_prev?: boolean;
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    interface User {
+      block_type?: 'installation' | 'user';
+      id?: string;
+      is_banned?: boolean;
+      is_blocked?: boolean;
+      is_deleted?: boolean;
+      is_in_subscribers?: boolean;
+      is_in_subscriptions?: boolean;
+      is_verified?: boolean;
+      nick?: string;
+      nick_color?: string;
+      num?: UserNum;
+      original_nick?: string;
+      photo?: ProfilePhoto;
+      total_posts?: number;
+    }
+
+    interface ContentNums {
+      smiles?: number;
+      unsmiles?: number;
+      guest_smiles?: number;
+      comments?: number;
+      views?: number;
+      republished?: number;
+      shares?: number;
+    }
+
+    interface ContentThumbnail {
+      small_url?: string;
+      url?: string;
+      large_url?: string;
+      x640_url?: string;
+      webp_url?: string;
+      large_webp_url?: string;
+      x640_webp_url?: string;
+      proportional_url?: string;
+      proportional_webp_url?: string;
+      proportional_size?: ContentThumbnailProportionalSize;
+    }
+
+    interface ContentSize {
+      w?: number;
+      h?: number;
+    }
+
+    interface ContentSubtitle {
+      lang?: string;
+      url?: string;
     }
 
     interface ContentPic {
@@ -6752,60 +7685,8 @@ addressed by user id.
       is_scroll_allowed?: boolean;
     }
 
-    type ContentType = 'pic' | 'mem' | 'comics' | 'caption' | 'video_clip' | 'video' | 'vine' | 'coub' | 'gif' | 'gif_caption' | 'app' | 'old' | 'dem' | 'special';
-
-    interface ContentThumbnail {
-      small_url?: string;
-      url?: string;
-      large_url?: string;
-      x640_url?: string;
-      webp_url?: string;
-      large_webp_url?: string;
-      x640_webp_url?: string;
-      proportional_url?: string;
-      proportional_webp_url?: string;
-      proportional_size?: ContentThumbnailProportionalSize;
-    }
-
     interface ContentCopyright {
       note?: string;
-      url?: string;
-    }
-
-    interface ContentNums {
-      smiles?: number;
-      unsmiles?: number;
-      guest_smiles?: number;
-      comments?: number;
-      views?: number;
-      republished?: number;
-      shares?: number;
-    }
-
-    interface User {
-      block_type?: 'installation' | 'user';
-      id?: string;
-      is_banned?: boolean;
-      is_blocked?: boolean;
-      is_deleted?: boolean;
-      is_in_subscribers?: boolean;
-      is_in_subscriptions?: boolean;
-      is_verified?: boolean;
-      nick?: string;
-      nick_color?: string;
-      num?: UserNum;
-      original_nick?: string;
-      photo?: ProfilePhoto;
-      total_posts?: number;
-    }
-
-    interface ContentSize {
-      w?: number;
-      h?: number;
-    }
-
-    interface ContentSubtitle {
-      lang?: string;
       url?: string;
     }
 
@@ -6820,11 +7701,6 @@ addressed by user id.
       prev?: string;
     }
 
-    interface ContentThumbnailProportionalSize {
-      w?: number;
-      h?: number;
-    }
-
     interface UserNum {
       subscribers?: number;
       subscriptions?: number;
@@ -6834,6 +7710,11 @@ addressed by user id.
       bg_color?: string;
       thumb?: ProfilePhotoThumb;
       url?: string;
+    }
+
+    interface ContentThumbnailProportionalSize {
+      w?: number;
+      h?: number;
     }
 
     interface ProfilePhotoThumb {
@@ -6875,7 +7756,43 @@ addressed by user id.
     	Map *int `json:"map,omitempty"`
     }
 
+    // A single piece of iFunny content. The `type` field discriminates the
+    // variant, and exactly one of the media-variant fields (`pic`, `caption`,
+    // `comics`, `mem`, `video_clip`, `video`, `vine`, `coub`, `gif`, `app`)
+    // will be present per item — they are mutually exclusive.
     type Content struct {
+    	Id *string `json:"id,omitempty"`
+    	Type ContentType `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	Title *string `json:"title,omitempty"`
+    	Url *string `json:"url,omitempty"`
+
+    	FixedTitle *string `json:"fixed_title,omitempty"`
+    	Description *string `json:"description,omitempty"`
+    	Tags []string `json:"tags,omitempty"`
+    	ShareUrl *string `json:"share_url,omitempty"`
+    	CanonicalUrl *string `json:"canonical_url,omitempty"`
+    	Link *string `json:"link,omitempty"`
+    	DateCreate *int `json:"date_create,omitempty"`
+    	PublishAt *int `json:"publish_at,omitempty"`
+    	IssueAt *int `json:"issue_at,omitempty"`
+
+    	Creator User `json:"creator,omitempty"`
+    	Num ContentNums `json:"num,omitempty"`
+
+    	IsSmiled *bool `json:"is_smiled,omitempty"`
+    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
+    	IsAbused *bool `json:"is_abused,omitempty"`
+    	IsFeatured *bool `json:"is_featured,omitempty"`
+    	IsRepublished *bool `json:"is_republished,omitempty"`
+    	IsPinned *bool `json:"is_pinned,omitempty"`
+
+    	Thumb ContentThumbnail `json:"thumb,omitempty"`
+    	BgColor *string `json:"bg_color,omitempty"`
+    	Size ContentSize `json:"size,omitempty"`
+    	HasHeader *bool `json:"has_header,omitempty"`
+    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
+
     	Pic ContentPic `json:"pic,omitempty"`
     	Caption ContentCaption `json:"caption,omitempty"`
     	Comics ContentComics `json:"comics,omitempty"`
@@ -6886,56 +7803,92 @@ addressed by user id.
     	Coub ContentCoub `json:"coub,omitempty"`
     	Gif ContentGif `json:"gif,omitempty"`
     	App ContentApp `json:"app,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	Type ContentType `json:"type,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	ShareUrl *string `json:"share_url,omitempty"`
-    	OldWatermark *bool `json:"old_watermark,omitempty"`
-    	Link *string `json:"link,omitempty"`
-    	Title *string `json:"title,omitempty"`
-    	FixedTitle *string `json:"fixed_title,omitempty"`
-    	Description *string `json:"description,omitempty"`
-    	Tags []string `json:"tags,omitempty"`
-    	State *string `json:"state,omitempty"`
-    	DateCreate *int `json:"date_create,omitempty"`
-    	PublishAt *int `json:"publish_at,omitempty"`
-    	IsSmiled *bool `json:"is_smiled,omitempty"`
-    	IsUnsmiled *bool `json:"is_unsmiled,omitempty"`
-    	IsAbused *bool `json:"is_abused,omitempty"`
-    	IsFeatured *bool `json:"is_featured,omitempty"`
-    	IsRepublished *bool `json:"is_republished,omitempty"`
-    	IsPinned *bool `json:"is_pinned,omitempty"`
-    	BgColor *string `json:"bg_color,omitempty"`
-    	Thumb ContentThumbnail `json:"thumb,omitempty"`
-    	Copyright ContentCopyright `json:"copyright,omitempty"`
-    	Num ContentNums `json:"num,omitempty"`
-    	Creator User `json:"creator,omitempty"`
-    	Size ContentSize `json:"size,omitempty"`
-    	IssueAt *int `json:"issue_at,omitempty"`
-    	TracebackUrl *string `json:"traceback_url,omitempty"`
-    	EngagementRate *string `json:"engagement_rate,omitempty"`
-    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+
     	Visibility *string `json:"visibility,omitempty"`
     	ShotStatus *string `json:"shot_status,omitempty"`
     	FastStart *bool `json:"fast_start,omitempty"`
-    	Subtitle ContentSubtitle `json:"subtitle,omitempty"`
     	Risk *int `json:"risk,omitempty"`
-    	CanonicalUrl *string `json:"canonical_url,omitempty"`
-    	OcrText *string `json:"ocr_text,omitempty"`
     	CanBeBoosted *bool `json:"can_be_boosted,omitempty"`
+    	OldWatermark *bool `json:"old_watermark,omitempty"`
+
+    	Copyright ContentCopyright `json:"copyright,omitempty"`
+    	Source ContentSource `json:"source,omitempty"`
+    	TracebackUrl *string `json:"traceback_url,omitempty"`
+    	Ftag *string `json:"ftag,omitempty"`
+
+    	EngagementRate *string `json:"engagement_rate,omitempty"`
+    	EngagementRateExplain *string `json:"engagement_rate_explain,omitempty"`
+    	OcrText *string `json:"ocr_text,omitempty"`
     	Lat *float64 `json:"lat,omitempty"`
     	Lon *float64 `json:"lon,omitempty"`
-    	HasHeader *bool `json:"has_header,omitempty"`
-    	Source ContentSource `json:"source,omitempty"`
-    	Ftag *string `json:"ftag,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
     	HasPrev *bool `json:"hasPrev,omitempty"`
     	HasNext *bool `json:"has_next,omitempty"`
     	HasPrev *bool `json:"has_prev,omitempty"`
+    }
+
+    // Images: pic, mem, comics, caption.
+    // Videos: video_clip, video, vine, coub.
+    // Gif: gif, gif_caption.
+    // Unknown/likely deprecated: app, old, dem, special.
+    type ContentType string
+
+    // Minimal user representation used in lists (comments, timelines, etc).
+    type User struct {
+    	BlockType *string `json:"block_type,omitempty"`
+    	Id *string `json:"id,omitempty"`
+    	IsBanned *bool `json:"is_banned,omitempty"`
+    	IsBlocked *bool `json:"is_blocked,omitempty"`
+    	IsDeleted *bool `json:"is_deleted,omitempty"`
+    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
+    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
+    	IsVerified *bool `json:"is_verified,omitempty"`
+    	Nick *string `json:"nick,omitempty"`
+    	NickColor *string `json:"nick_color,omitempty"`
+    	Num UserNum `json:"num,omitempty"`
+    	OriginalNick *string `json:"original_nick,omitempty"`
+    	Photo ProfilePhoto `json:"photo,omitempty"`
+    	TotalPosts *int `json:"total_posts,omitempty"`
+    }
+
+    type ContentNums struct {
+    	Smiles *int `json:"smiles,omitempty"`
+    	Unsmiles *int `json:"unsmiles,omitempty"`
+    	GuestSmiles *int `json:"guest_smiles,omitempty"`
+    	Comments *int `json:"comments,omitempty"`
+    	Views *int `json:"views,omitempty"`
+    	Republished *int `json:"republished,omitempty"`
+    	Shares *int `json:"shares,omitempty"`
+    }
+
+    type ContentThumbnail struct {
+    	SmallUrl *string `json:"small_url,omitempty"`
+    	Url *string `json:"url,omitempty"`
+    	LargeUrl *string `json:"large_url,omitempty"`
+    	X640Url *string `json:"x640_url,omitempty"`
+    	WebpUrl *string `json:"webp_url,omitempty"`
+    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
+    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
+    	ProportionalUrl *string `json:"proportional_url,omitempty"`
+    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
+    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
+    }
+
+    type ContentSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
+    }
+
+    type ContentSubtitle struct {
+    	Lang *string `json:"lang,omitempty"`
+    	Url *string `json:"url,omitempty"`
     }
 
     type ContentPic struct {
@@ -6994,60 +7947,8 @@ addressed by user id.
     	IsScrollAllowed *bool `json:"is_scroll_allowed,omitempty"`
     }
 
-    type ContentType string
-
-    type ContentThumbnail struct {
-    	SmallUrl *string `json:"small_url,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    	LargeUrl *string `json:"large_url,omitempty"`
-    	X640Url *string `json:"x640_url,omitempty"`
-    	WebpUrl *string `json:"webp_url,omitempty"`
-    	LargeWebpUrl *string `json:"large_webp_url,omitempty"`
-    	X640WebpUrl *string `json:"x640_webp_url,omitempty"`
-    	ProportionalUrl *string `json:"proportional_url,omitempty"`
-    	ProportionalWebpUrl *string `json:"proportional_webp_url,omitempty"`
-    	ProportionalSize ContentThumbnailProportionalSize `json:"proportional_size,omitempty"`
-    }
-
     type ContentCopyright struct {
     	Note *string `json:"note,omitempty"`
-    	Url *string `json:"url,omitempty"`
-    }
-
-    type ContentNums struct {
-    	Smiles *int `json:"smiles,omitempty"`
-    	Unsmiles *int `json:"unsmiles,omitempty"`
-    	GuestSmiles *int `json:"guest_smiles,omitempty"`
-    	Comments *int `json:"comments,omitempty"`
-    	Views *int `json:"views,omitempty"`
-    	Republished *int `json:"republished,omitempty"`
-    	Shares *int `json:"shares,omitempty"`
-    }
-
-    type User struct {
-    	BlockType *string `json:"block_type,omitempty"`
-    	Id *string `json:"id,omitempty"`
-    	IsBanned *bool `json:"is_banned,omitempty"`
-    	IsBlocked *bool `json:"is_blocked,omitempty"`
-    	IsDeleted *bool `json:"is_deleted,omitempty"`
-    	IsInSubscribers *bool `json:"is_in_subscribers,omitempty"`
-    	IsInSubscriptions *bool `json:"is_in_subscriptions,omitempty"`
-    	IsVerified *bool `json:"is_verified,omitempty"`
-    	Nick *string `json:"nick,omitempty"`
-    	NickColor *string `json:"nick_color,omitempty"`
-    	Num UserNum `json:"num,omitempty"`
-    	OriginalNick *string `json:"original_nick,omitempty"`
-    	Photo ProfilePhoto `json:"photo,omitempty"`
-    	TotalPosts *int `json:"total_posts,omitempty"`
-    }
-
-    type ContentSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
-    type ContentSubtitle struct {
-    	Lang *string `json:"lang,omitempty"`
     	Url *string `json:"url,omitempty"`
     }
 
@@ -7062,11 +7963,6 @@ addressed by user id.
     	Prev *string `json:"prev,omitempty"`
     }
 
-    type ContentThumbnailProportionalSize struct {
-    	W *int `json:"w,omitempty"`
-    	H *int `json:"h,omitempty"`
-    }
-
     type UserNum struct {
     	Subscribers *int `json:"subscribers,omitempty"`
     	Subscriptions *int `json:"subscriptions,omitempty"`
@@ -7076,6 +7972,11 @@ addressed by user id.
     	BgColor *string `json:"bg_color,omitempty"`
     	Thumb ProfilePhotoThumb `json:"thumb,omitempty"`
     	Url *string `json:"url,omitempty"`
+    }
+
+    type ContentThumbnailProportionalSize struct {
+    	W *int `json:"w,omitempty"`
+    	H *int `json:"h,omitempty"`
     }
 
     type ProfilePhotoThumb struct {
@@ -7117,6 +8018,169 @@ addressed by user id.
 
     ```go
     type GetUserTimelineByNick404Response Error
+
+    type Error struct {
+    	Error *string `json:"error,omitempty"`
+    	ErrorDescription *string `json:"error_description,omitempty"`
+    	Status *int `json:"status,omitempty"`
+    }
+    ```
+
+### Get Task Status  {: #op-gettaskstatus }
+
+**`GET /tasks/{task_id}`**
+
+Poll the status of an asynchronous task returned from a previous call
+(e.g. `POST /content` upload). Response shape matches the 202 envelope
+returned when the task was created.
+
+**Base URL:** `https://api.ifunny.mobi/v4`  
+**Auth:** BearerAuth + ProjectId
+
+#### Path parameters
+
+=== "Fields"
+
+    | Name | Type | Required | Description |
+    | ---- | ---- | -------- | ----------- |
+    | `task_id` | `String` | yes | UUID v1 task ID. |
+
+=== "JSON"
+
+    ```json
+    // GetTaskStatusPath
+    {
+      "task_id": "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetTaskStatusPath {
+      task_id: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetTaskStatusPath struct {
+    	TaskId string `path:"task_id"`
+    }
+    ```
+
+#### Responses
+
+##### `200 OK` — Task status
+
+=== "JSON"
+
+    ```json
+    // GetTaskStatus200Response
+    {
+      "data"?: "Task",
+      "status"?: "200"
+    }
+
+    // Task
+    {
+      "id"?: "string",
+      "type"?: "string",
+      "state"?: "enum(pending, success, failure)",
+      "retry_after"?: "integer",
+      "result"?: "TaskResult",
+      "error"?: "string",
+      "error_description"?: "string"
+    }
+
+    // Present only on `success`.
+    // TaskResult
+    {
+      "cid"?: "string"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    interface GetTaskStatus200Response {
+      data?: Task;
+      status?: 200;
+    }
+
+    interface Task {
+      id?: string;
+      type?: string;
+      state?: 'pending' | 'success' | 'failure';
+      retry_after?: number;
+      result?: TaskResult;
+      error?: string;
+      error_description?: string;
+    }
+
+    // Present only on `success`.
+    interface TaskResult {
+      cid?: string;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetTaskStatus200Response struct {
+    	Data Task `json:"data,omitempty"`
+    	Status *int `json:"status,omitempty"`
+    }
+
+    type Task struct {
+    	Id *string `json:"id,omitempty"`
+    	Type *string `json:"type,omitempty"`
+    	State *string `json:"state,omitempty"`
+    	RetryAfter *int `json:"retry_after,omitempty"`
+    	Result TaskResult `json:"result,omitempty"`
+    	Error *string `json:"error,omitempty"`
+    	ErrorDescription *string `json:"error_description,omitempty"`
+    }
+
+    // Present only on `success`.
+    type TaskResult struct {
+    	Cid *string `json:"cid,omitempty"`
+    }
+    ```
+
+##### `404 Not Found` — Not Found
+
+=== "JSON"
+
+    ```json
+    // GetTaskStatus404Response
+    "GetTaskStatus404Response": "Error"
+
+    // Error
+    {
+      "error"?: "string",
+      "error_description"?: "string",
+      "status"?: "integer"
+    }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    type GetTaskStatus404Response = Error;
+
+    interface Error {
+      error?: string;
+      error_description?: string;
+      status?: number;
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    type GetTaskStatus404Response Error
 
     type Error struct {
     	Error *string `json:"error,omitempty"`

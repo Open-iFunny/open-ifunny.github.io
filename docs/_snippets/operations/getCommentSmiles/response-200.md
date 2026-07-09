@@ -18,6 +18,7 @@
       "paging"?: "PagingCursors"
     }
 
+    // Minimal user representation used in lists (comments, timelines, etc).
     // User
     {
       "block_type"?: "enum(installation, user)",
@@ -36,6 +37,9 @@
       "total_posts"?: "integer"
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     // PagingCursors
     {
       "cursors"?: "PagingCursorsCursors",
@@ -89,6 +93,7 @@
       paging?: PagingCursors;
     }
 
+    // Minimal user representation used in lists (comments, timelines, etc).
     interface User {
       block_type?: 'installation' | 'user';
       id?: string;
@@ -106,6 +111,9 @@
       total_posts?: number;
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     interface PagingCursors {
       cursors?: PagingCursorsCursors;
       hasNext?: boolean;
@@ -154,6 +162,7 @@
     	Paging PagingCursors `json:"paging,omitempty"`
     }
 
+    // Minimal user representation used in lists (comments, timelines, etc).
     type User struct {
     	BlockType *string `json:"block_type,omitempty"`
     	Id *string `json:"id,omitempty"`
@@ -171,6 +180,9 @@
     	TotalPosts *int `json:"total_posts,omitempty"`
     }
 
+    // Cursor pagination block. Field naming (`hasNext`/`hasPrev` vs
+    // `has_next`/`has_prev`) is inconsistent across endpoints in the source API;
+    // both are accepted here.
     type PagingCursors struct {
     	Cursors PagingCursorsCursors `json:"cursors,omitempty"`
     	HasNext *bool `json:"hasNext,omitempty"`
