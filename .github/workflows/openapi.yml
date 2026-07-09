@@ -3,7 +3,7 @@ name: Docs (OpenAPI + WAMP)
 on:
   push:
     branches: [main]
-    paths:
+    paths: &site_paths
       - "gitbook/openapi/**"
       - "wamp/**"
       - "docs/**"
@@ -16,18 +16,7 @@ on:
       - "default.nix"
       - ".github/workflows/openapi.yml"
   pull_request:
-    paths:
-      - "gitbook/openapi/**"
-      - "wamp/**"
-      - "docs/**"
-      - "scripts/**"
-      - "mkdocs.yml"
-      - "package.json"
-      - "yarn.lock"
-      - "flake.nix"
-      - "flake.lock"
-      - "default.nix"
-      - ".github/workflows/openapi.yml"
+    paths: *site_paths
 
 permissions:
   contents: read
@@ -66,6 +55,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
             experimental-features = nix-command flakes
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
       # `.#site` runs generate-docs.js under yarnBuildHook to render the
       # API reference into docs/, then mkdocs build --strict against the
       # combined tree. --strict fails on broken links, so this doubles as
@@ -78,7 +68,6 @@ jobs:
       - name: Materialize site into ./public
         if: github.ref == 'refs/heads/main'
         run: |
-          rm -rf public
           cp -rL result public
           chmod -R u+w public
       - name: Package for Pages
