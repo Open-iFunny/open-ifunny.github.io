@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Lint OpenAPI spec
-        run: npx --yes @redocly/cli@1.34.17 lint gitbook/openapi/ifunny-api.yaml
+        run: npx --yes @redocly/cli@2.38.0 lint gitbook/openapi/ifunny-api.yaml
 
   lint-wamp:
     runs-on: ubuntu-latest
