@@ -137,17 +137,17 @@ paths:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/Error"
-                examples:
-                  invalid_email:
-                    value:
-                      error: invalid_email
-                      error_description: Domain of email was found in disposable domains list
-                      status: 403
-                  email_exists:
-                    value:
-                      error: email_exists
-                      error_description: There is a user with this email
-                      status: 403
+              examples:
+                invalid_email:
+                  value:
+                    error: invalid_email
+                    error_description: Domain of email was found in disposable domains list
+                    status: 403
+                email_exists:
+                  value:
+                    error: email_exists
+                    error_description: There is a user with this email
+                    status: 403
 
   /oauth2/login:
     post:
